@@ -20,18 +20,18 @@ Projet complet pour apprendre :
 - Versioning via Git
 
 ## Structure du projet :
-|  Program.cs
-|  Lexer.cs
-|  Parser.cs
-|  AST /
-| ----- Node.Cs
-| ----- Node.Cs
-| ----- Node.Cs
-| ----- Node.Cs
-| ----- ...
-|  Interpreter.cs
-|  ILGenerator.cs
-|_ Token.cs
+|  Program.cs  
+|  Lexer.cs  
+|  Parser.cs  
+|  AST /  
+||----- Node.cs  
+||----- Expression.cs  
+||----- Statement.cs  
+||----- Block.cs  
+||----- ...  
+|  Interpreter.cs  
+|  ILGenerator.cs  
+|_ Token.cs  
 
 ## Fonctionnalités principales :
 - Lexer : découpage du code en token.
