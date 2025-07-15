@@ -34,22 +34,42 @@ Jordan Boisdenghien
 
 ## Grammar rules
 
-program = { statement } ;
-statement = expression ";"
-| assignement ";" ;
-assignement = Identifier "=" expression ;
-expression = term { ("*" | "/") term } ;
-term = factor { ("*"|"/") factor } ;
-factor = number
-| identifier
-| "(" expression ")" ;
-identifier = letter { letter | digit } ;
-number = integer | float ;
-integer = digit { digit } ;
-float (digit { digit } "." [ digit { digit } ] )
-| ( "." digit { digit } ) ;
-letter = "A".."Z" | "a".."z" ;
-digit = "0".."9" ;
+```ebnf
+program         = { statement } ;
+
+statement       = expression ";"  
+                | assignement ";"  
+                | ifStatement  
+                | whileStatement ;
+
+assignement     = Identifier "=" expression ;
+
+ifStatement     = "if" "(" expression ")" block [ "else" block ] ;
+
+whileStatement  = "while" "(" expression ")" block ;
+
+block           = "{" { statement } "}" ;  
+
+expression      = term { ("*" | "/") term } ;  
+
+term            = factor { ("*" | "/") factor } ;  
+
+factor          = number  
+                | identifier  
+                | "(" expression ")" ;  
+
+identifier      = letter { letter | digit } ;  
+
+number          = integer | float ;  
+
+integer         = digit { digit } ;  
+
+float           = (digit { digit } "." [ digit { digit } ] )  
+                | ( "." digit { digit } ) ;  
+
+letter          = "A".."Z" | "a".."z" ;  
+digit           = "0".."9" ;  
+```
 
 ## Futures extensions
 
