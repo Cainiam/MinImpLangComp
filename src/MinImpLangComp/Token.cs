@@ -23,7 +23,13 @@ namespace MinImpLangComp
         RightBrace,
         EOF,
         LexicalError,
-        Unknow
+        Unknow,
+        Let,
+        If,
+        Else,
+        While,
+        For,
+        StringLiteral
     }
 
     public class Token

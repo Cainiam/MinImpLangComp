@@ -20,8 +20,10 @@ namespace MinImpLangComp
             SkipWhiteSpace();
             if (_position >= _input.Length) return new Token(TokenType.EOF, string.Empty);
             char current = _input[_position];
+
             if (char.IsDigit(current) || current == '.') return Number();
             if (char.IsLetter(current)) return Identifier();
+            if (_input[_position] == '"') return String(); 
 
             switch (current)
             {
@@ -109,7 +111,68 @@ namespace MinImpLangComp
                 _position++;
             }
             string value = _input.Substring(start, _position - start);
-            return new Token(TokenType.Identifier, value);
+            
+            switch (value)
+            {
+                case "let":
+                    return new Token(TokenType.Let, value);
+                case "if":
+                    return new Token(TokenType.If, value);
+                case "else":
+                    return new Token(TokenType.Else, value);
+                case "while":
+                    return new Token(TokenType.While, value);
+                case "for":
+                    return new Token(TokenType.For, value);
+                default:
+                    return new Token(TokenType.Identifier, value);
+            }
+        }
+
+        private Token String()
+        {
+            int start = _position;
+            _position++;
+            var stringB = new StringBuilder();
+            while (_position < _input.Length && _input[_position] != '"')
+            {
+                if (_input[_position] == '\\')
+                {
+                    _position++;
+                    if (_position >= _input.Length) return new Token(TokenType.LexicalError, _input.Substring(start, _position - start));
+                    char escapeChar = _input[_position];
+                    switch(escapeChar)
+                    {
+                        case 'n':
+                            stringB.Append('\n');
+                            break;
+                        case 't':
+                            stringB.Append('\t');
+                            break;
+                        case 'r':
+                            stringB.Append('\r');
+                            break;
+                        case '\\':
+                            stringB.Append('\\');
+                            break;
+                        case '"':
+                            stringB.Append('\"');
+                            break;
+                        default:
+                            stringB.Append(escapeChar);
+                            break;
+                    }
+                }
+                else
+                {
+                    stringB.Append(_input[_position]);
+                }
+                _position++;
+            }
+            if (_position >= _input.Length) return new Token(TokenType.LexicalError, _input.Substring(start, _position - start));
+            _position++;
+            string value = stringB.ToString();
+            return new Token(TokenType.StringLiteral, value);
         }
 
         private void SkipWhiteSpace()

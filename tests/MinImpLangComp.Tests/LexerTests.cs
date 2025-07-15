@@ -23,7 +23,7 @@ namespace MinImpLangComp.Tests
         [InlineData(")", TokenType.RightParen, ")")]
         [InlineData("{", TokenType.LeftBrace, "{")]
         [InlineData("}", TokenType.RightBrace, "}")]
-        public void GetNextToken_ReturnsExpecetedToken(string input, TokenType expectedType, string expectedValue)
+        public void GetNextToken_ReturnsExpectedToken(string input, TokenType expectedType, string expectedValue)
         {
             var lexer = new Lexer(input);
             var token = lexer.GetNextToken();
@@ -108,6 +108,62 @@ namespace MinImpLangComp.Tests
             Assert.Equal(";", tokens[5].Value);
 
             Assert.Equal(TokenType.EOF, tokens[6].Type);
+        }
+
+        [Theory]
+        [InlineData("let", TokenType.Let, "let")]
+        [InlineData("if", TokenType.If, "if")]
+        [InlineData("else", TokenType.Else, "else")]
+        [InlineData("while", TokenType.While, "while")]
+        [InlineData("for", TokenType.For, "for")]
+        public void GetNextToken_ReturnsKeywordTokens(string input, TokenType expectedType, string expectedValue)
+        {
+            var lexer= new Lexer(input);
+            var token= lexer.GetNextToken();
+
+            Assert.Equal(expectedType, token.Type);
+            Assert.Equal(expectedValue, token.Value);
+        }
+
+        [Fact]
+        public void GetNextToken_ReturnsStringLiteralWithEscapedQuote()
+        {
+            var lexer = new Lexer("\"hello \\\"world\\\"\"");
+            var token= lexer.GetNextToken();
+
+            Assert.Equal(TokenType.StringLiteral, token.Type);
+            Assert.Equal("hello \"world\"", token.Value);
+        }
+
+        [Fact]
+        public void GetNextToken_ReturnsStringLiteralWithNewline()
+        {
+            var lexer = new Lexer("\"line1\\nline2\"");
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(TokenType.StringLiteral, token.Type);
+            Assert.Equal("line1\nline2", token.Value);
+        }
+
+        [Fact]
+        public void GetNextToken_ReturnsStringLiteralWithBackSlash()
+        {
+            var lexer = new Lexer("\"C:\\\\Program Files\\\\\"");
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(TokenType.StringLiteral, token.Type);
+            Assert.Equal("C:\\Program Files\\", token.Value);
+        }
+
+        [Fact]
+        public void GetNextToken_UnterminatedString_ReturnsLexicalError()
+        {
+            var lexer = new Lexer("\"unclosed string");
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(TokenType.LexicalError, token.Type);
+            Assert.Contains("unclosed string", token.Value);
+            Assert.StartsWith("\"", token.Value);
         }
     }
 }
