@@ -57,10 +57,10 @@ namespace MinImpLangComp
                     return new Token(TokenType.RightParen, ")");
                 case '{':
                     _position++;
-                    return new Token(TokenType.RightBrace, "{");
+                    return new Token(TokenType.LeftBrace, "{");
                 case '}':
                     _position++;
-                    return new Token(TokenType.LeftBrace, "}");
+                    return new Token(TokenType.RightBrace, "}");
                 default:
                     _position++;
                     return new Token(TokenType.Unknow, current.ToString());

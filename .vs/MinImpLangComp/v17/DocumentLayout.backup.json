@@ -3,8 +3,8 @@
   "WorkspaceRootPath": "C:\\Users\\jorda\\Documents\\GitHub\\MinImpLangComp\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{2531BF60-31D6-4E35-B8A1-57BB1BF6A074}|src\\MinImpLangComp\\MinImpLangComp.csproj|c:\\users\\jorda\\documents\\github\\minimplangcomp\\src\\minimplangcomp\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{2531BF60-31D6-4E35-B8A1-57BB1BF6A074}|src\\MinImpLangComp\\MinImpLangComp.csproj|solutionrelative:src\\minimplangcomp\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{2A63B173-F099-42D2-AEDD-72FE1E500A8D}|tests\\MinImpLangComp.Tests\\MinImpLangComp.Tests.csproj|c:\\users\\jorda\\documents\\github\\minimplangcomp\\tests\\minimplangcomp.tests\\lexertests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2A63B173-F099-42D2-AEDD-72FE1E500A8D}|tests\\MinImpLangComp.Tests\\MinImpLangComp.Tests.csproj|solutionrelative:tests\\minimplangcomp.tests\\lexertests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{2531BF60-31D6-4E35-B8A1-57BB1BF6A074}|src\\MinImpLangComp\\MinImpLangComp.csproj|c:\\users\\jorda\\documents\\github\\minimplangcomp\\src\\minimplangcomp\\lexer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -13,6 +13,10 @@
     {
       "AbsoluteMoniker": "D:0:0:{2531BF60-31D6-4E35-B8A1-57BB1BF6A074}|src\\MinImpLangComp\\MinImpLangComp.csproj|c:\\users\\jorda\\documents\\github\\minimplangcomp\\src\\minimplangcomp\\token.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{2531BF60-31D6-4E35-B8A1-57BB1BF6A074}|src\\MinImpLangComp\\MinImpLangComp.csproj|solutionrelative:src\\minimplangcomp\\token.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2531BF60-31D6-4E35-B8A1-57BB1BF6A074}|src\\MinImpLangComp\\MinImpLangComp.csproj|c:\\users\\jorda\\documents\\github\\minimplangcomp\\src\\minimplangcomp\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2531BF60-31D6-4E35-B8A1-57BB1BF6A074}|src\\MinImpLangComp\\MinImpLangComp.csproj|solutionrelative:src\\minimplangcomp\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,8 +26,21 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 0,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "LexerTests.cs",
+              "DocumentMoniker": "C:\\Users\\jorda\\Documents\\GitHub\\MinImpLangComp\\tests\\MinImpLangComp.Tests\\LexerTests.cs",
+              "RelativeDocumentMoniker": "tests\\MinImpLangComp.Tests\\LexerTests.cs",
+              "ToolTip": "C:\\Users\\jorda\\Documents\\GitHub\\MinImpLangComp\\tests\\MinImpLangComp.Tests\\LexerTests.cs",
+              "RelativeToolTip": "tests\\MinImpLangComp.Tests\\LexerTests.cs",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAxwBgAAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-15T11:50:14.904Z",
+              "EditorCaption": ""
+            },
             {
               "$type": "Document",
               "DocumentIndex": 1,
@@ -32,7 +49,7 @@
               "RelativeDocumentMoniker": "src\\MinImpLangComp\\Lexer.cs",
               "ToolTip": "C:\\Users\\jorda\\Documents\\GitHub\\MinImpLangComp\\src\\MinImpLangComp\\Lexer.cs",
               "RelativeToolTip": "src\\MinImpLangComp\\Lexer.cs",
-              "ViewState": "AgIAAFMAAAAAAAAAAAAwwGYAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAACEAAAAAAAAAAAAowD4AAAA0AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-15T10:47:45.81Z",
               "EditorCaption": ""
@@ -45,14 +62,14 @@
               "RelativeDocumentMoniker": "src\\MinImpLangComp\\Token.cs",
               "ToolTip": "C:\\Users\\jorda\\Documents\\GitHub\\MinImpLangComp\\src\\MinImpLangComp\\Token.cs",
               "RelativeToolTip": "src\\MinImpLangComp\\Token.cs",
-              "ViewState": "AgIAAA4AAAAAAAAAAAAQwBgAAAAUAAAAAAAAAA==",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAAAAUAAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-15T10:47:28.203Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 3,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\jorda\\Documents\\GitHub\\MinImpLangComp\\src\\MinImpLangComp\\Program.cs",
               "RelativeDocumentMoniker": "src\\MinImpLangComp\\Program.cs",
@@ -60,8 +77,7 @@
               "RelativeToolTip": "src\\MinImpLangComp\\Program.cs",
               "ViewState": "AgIAAAoAAAAAAAAAAAAgwCIAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-15T10:45:16.528Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-15T10:45:16.528Z"
             }
           ]
         }

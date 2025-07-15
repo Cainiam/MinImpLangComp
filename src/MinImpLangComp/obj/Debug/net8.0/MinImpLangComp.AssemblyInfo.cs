@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MinImpLangComp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8112f2764636cd2bdad0618526884536b52618f5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3e85ac7ee5ff818244f2d55b92438dc16e245439")]
 [assembly: System.Reflection.AssemblyProductAttribute("MinImpLangComp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MinImpLangComp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
