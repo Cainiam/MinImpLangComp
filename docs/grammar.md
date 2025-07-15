@@ -14,7 +14,13 @@ Jordan Boisdenghien
 |------------|-------------|----------|  
 | Integer | Integer numbers | "10", "0", "1369" |  
 | Float | Floating point numbers | "3.14", "0.9", ".5", "97." |  
+| StringLiteral | string literal with escapes | "hello"; "line\n" |  
 | Identifier | Function or variable name | "x", "var1", "lastSum" |  
+| Let | Keyword for declarations | let |
+| If | Keyword for conditional | if |
+| Else | Keyword for conditional else | else |
+| While | Keyword for loop | while |
+| For | Keyword for loop | for |
 | Plus | Addition operator | "+" |  
 | Minus | Subtraction operator | "-" |  
 | Multiply | Multplication operator | "*" |  
@@ -27,7 +33,7 @@ Jordan Boisdenghien
 | RightParen | Right parenthesis | ")" |  
 | LeftBrace | Left curly bracket | "{" |
 | RightBrace | Right curly bracket | "]" |
-| LexicalError | Invalid token (malformed number) | "1.2.3" |
+| LexicalError | Invalid token (malformed number, string) | "1.2.3" |
 | Unknow | Any unrecognized character | "@", "#" |
 | EOF | End of input |  |
 
@@ -48,6 +54,8 @@ ifStatement     = "if" "(" expression ")" block [ "else" block ] ;
 
 whileStatement  = "while" "(" expression ")" block ;
 
+forStatement    = "for" "(" [ assignement ] ";" [ expression ] ";" [ assignement ] ")" block ;  
+
 block           = "{" { statement } "}" ;  
 
 expression      = term { ("*" | "/") term } ;  
@@ -65,10 +73,15 @@ number          = integer | float ;
 integer         = digit { digit } ;  
 
 float           = (digit { digit } "." [ digit { digit } ] )  
-                | ( "." digit { digit } ) ;  
+                | ( "." digit { digit } ) ;
+
+string          = "\"" { character | escapeSequence } "\"" ;  
+
+escapeSequence  = "\\" ( "n" | "t" | "t" | "\"" | "\\" ) ;  
 
 letter          = "A".."Z" | "a".."z" ;  
-digit           = "0".."9" ;  
+digit           = "0".."9" ;
+character       = ? any character except " and \ ? ;  
 ```
 
 ## Futures extensions
