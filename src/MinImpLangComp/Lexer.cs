@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MinImpLangComp
+namespace MinImpLangComp.LexerSpace
 {
     public class Lexer
     {
@@ -75,16 +75,6 @@ namespace MinImpLangComp
             bool hasDot = false;
             bool isInvalid = false;
 
-            if (_input[_position] == '.')
-            {
-                hasDot = true;
-                _position++;
-                if(_position >= _input.Length || !char.IsDigit(_input[_position]))
-                {
-                    return new Token(TokenType.Dot, ".");
-                }
-            }
-
             while(_position < _input.Length && (char.IsDigit(_input[_position]) || _input[_position] == '.' ))
             {
                 if (_input[_position] == '.')
@@ -98,6 +88,7 @@ namespace MinImpLangComp
                 _position++;
             }
             string value = _input.Substring(start, _position - start);
+            if (value == ".") return new Token(TokenType.Dot, ".");
             if (isInvalid) return new Token(TokenType.LexicalError, value);
             else if (hasDot) return new Token(TokenType.Float, value);
             else return new Token(TokenType.Integer, value);
