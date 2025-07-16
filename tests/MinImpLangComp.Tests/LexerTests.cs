@@ -1,4 +1,4 @@
-﻿using MinImpLangComp;
+﻿using MinImpLangComp.LexerSpace;
 using Xunit;
 
 namespace MinImpLangComp.Tests
