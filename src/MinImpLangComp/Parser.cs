@@ -69,12 +69,18 @@ namespace MinImpLangComp.ParserSpace
                 Eat(TokenType.RightParen);
                 return expr;
             }
+            else if (_currentToken.Type == TokenType.Identifier)
+            {
+                string name = _currentToken.Value;
+                Eat(TokenType.Identifier);
+                return new VariableReference(name);
+            }
             else throw new Exception($"Unexpected token; {_currentToken.Type}");
         }
 
         public Statement ParseStatement()
         {
-            if(_currentToken.Type == TokenType.Let)
+            if (_currentToken.Type == TokenType.Let)
             {
                 Eat(TokenType.Let);
                 string identifier = _currentToken.Value;
@@ -84,6 +90,7 @@ namespace MinImpLangComp.ParserSpace
                 Eat(TokenType.Semicolon);
                 return new Assignment(identifier, expr);
             }
+            else if (_currentToken.Type == TokenType.LeftBrace) return ParseBlock();
             else
             {
                 var expr = ParseExpression();
