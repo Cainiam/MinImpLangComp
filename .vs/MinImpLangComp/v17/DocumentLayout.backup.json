@@ -7,20 +7,20 @@
       "RelativeMoniker": "D:0:0:{2531BF60-31D6-4E35-B8A1-57BB1BF6A074}|src\\MinImpLangComp\\MinImpLangComp.csproj|solutionrelative:src\\minimplangcomp\\parser.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{2531BF60-31D6-4E35-B8A1-57BB1BF6A074}|src\\MinImpLangComp\\MinImpLangComp.csproj|c:\\users\\jorda\\documents\\github\\minimplangcomp\\src\\minimplangcomp\\lexer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{2531BF60-31D6-4E35-B8A1-57BB1BF6A074}|src\\MinImpLangComp\\MinImpLangComp.csproj|solutionrelative:src\\minimplangcomp\\lexer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{2A63B173-F099-42D2-AEDD-72FE1E500A8D}|tests\\MinImpLangComp.Tests\\MinImpLangComp.Tests.csproj|c:\\users\\jorda\\documents\\github\\minimplangcomp\\tests\\minimplangcomp.tests\\lexertests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{2A63B173-F099-42D2-AEDD-72FE1E500A8D}|tests\\MinImpLangComp.Tests\\MinImpLangComp.Tests.csproj|solutionrelative:tests\\minimplangcomp.tests\\lexertests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{2A63B173-F099-42D2-AEDD-72FE1E500A8D}|tests\\MinImpLangComp.Tests\\MinImpLangComp.Tests.csproj|c:\\users\\jorda\\documents\\github\\minimplangcomp\\tests\\minimplangcomp.tests\\parsertests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{2A63B173-F099-42D2-AEDD-72FE1E500A8D}|tests\\MinImpLangComp.Tests\\MinImpLangComp.Tests.csproj|solutionrelative:tests\\minimplangcomp.tests\\parsertests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{2531BF60-31D6-4E35-B8A1-57BB1BF6A074}|src\\MinImpLangComp\\MinImpLangComp.csproj|c:\\users\\jorda\\documents\\github\\minimplangcomp\\src\\minimplangcomp\\ast\\expression.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{2531BF60-31D6-4E35-B8A1-57BB1BF6A074}|src\\MinImpLangComp\\MinImpLangComp.csproj|solutionrelative:src\\minimplangcomp\\ast\\expression.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2A63B173-F099-42D2-AEDD-72FE1E500A8D}|tests\\MinImpLangComp.Tests\\MinImpLangComp.Tests.csproj|c:\\users\\jorda\\documents\\github\\minimplangcomp\\tests\\minimplangcomp.tests\\lexertests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2A63B173-F099-42D2-AEDD-72FE1E500A8D}|tests\\MinImpLangComp.Tests\\MinImpLangComp.Tests.csproj|solutionrelative:tests\\minimplangcomp.tests\\lexertests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2531BF60-31D6-4E35-B8A1-57BB1BF6A074}|src\\MinImpLangComp\\MinImpLangComp.csproj|c:\\users\\jorda\\documents\\github\\minimplangcomp\\src\\minimplangcomp\\lexer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2531BF60-31D6-4E35-B8A1-57BB1BF6A074}|src\\MinImpLangComp\\MinImpLangComp.csproj|solutionrelative:src\\minimplangcomp\\lexer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{2531BF60-31D6-4E35-B8A1-57BB1BF6A074}|src\\MinImpLangComp\\MinImpLangComp.csproj|c:\\users\\jorda\\documents\\github\\minimplangcomp\\src\\minimplangcomp\\token.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -42,16 +42,15 @@
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 1,
               "Title": "ParserTests.cs",
               "DocumentMoniker": "C:\\Users\\jorda\\Documents\\GitHub\\MinImpLangComp\\tests\\MinImpLangComp.Tests\\ParserTests.cs",
               "RelativeDocumentMoniker": "tests\\MinImpLangComp.Tests\\ParserTests.cs",
               "ToolTip": "C:\\Users\\jorda\\Documents\\GitHub\\MinImpLangComp\\tests\\MinImpLangComp.Tests\\ParserTests.cs",
               "RelativeToolTip": "tests\\MinImpLangComp.Tests\\ParserTests.cs",
-              "ViewState": "AgIAAAIAAAAAAAAAAAD4vxYAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAEYAAAAAAAAAAAAcwBIAAAAmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-16T13:25:39.672Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-16T13:25:39.672Z"
             },
             {
               "$type": "Document",
@@ -61,14 +60,14 @@
               "RelativeDocumentMoniker": "src\\MinImpLangComp\\Parser.cs",
               "ToolTip": "C:\\Users\\jorda\\Documents\\GitHub\\MinImpLangComp\\src\\MinImpLangComp\\Parser.cs",
               "RelativeToolTip": "src\\MinImpLangComp\\Parser.cs",
-              "ViewState": "AgIAACMAAAAAAAAAAAAwwEMAAAAtAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEMAAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-16T12:55:08.383Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 2,
               "Title": "Expression.cs",
               "DocumentMoniker": "C:\\Users\\jorda\\Documents\\GitHub\\MinImpLangComp\\src\\MinImpLangComp\\AST\\Expression.cs",
               "RelativeDocumentMoniker": "src\\MinImpLangComp\\AST\\Expression.cs",
@@ -76,12 +75,11 @@
               "RelativeToolTip": "src\\MinImpLangComp\\AST\\Expression.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-16T12:53:39.816Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-16T12:53:39.816Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "LexerTests.cs",
               "DocumentMoniker": "C:\\Users\\jorda\\Documents\\GitHub\\MinImpLangComp\\tests\\MinImpLangComp.Tests\\LexerTests.cs",
               "RelativeDocumentMoniker": "tests\\MinImpLangComp.Tests\\LexerTests.cs",
@@ -89,21 +87,19 @@
               "RelativeToolTip": "tests\\MinImpLangComp.Tests\\LexerTests.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-15T14:37:15.044Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-15T14:37:15.044Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 4,
               "Title": "Lexer.cs",
               "DocumentMoniker": "C:\\Users\\jorda\\Documents\\GitHub\\MinImpLangComp\\src\\MinImpLangComp\\Lexer.cs",
               "RelativeDocumentMoniker": "src\\MinImpLangComp\\Lexer.cs",
               "ToolTip": "C:\\Users\\jorda\\Documents\\GitHub\\MinImpLangComp\\src\\MinImpLangComp\\Lexer.cs",
               "RelativeToolTip": "src\\MinImpLangComp\\Lexer.cs",
-              "ViewState": "AgIAAEoAAAAAAAAAAAAwwEsAAAAjAAAAAAAAAA==",
+              "ViewState": "AgIAAD8AAAAAAAAAAAAowEsAAAAjAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-15T10:47:45.81Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-15T10:47:45.81Z"
             },
             {
               "$type": "Document",
@@ -115,8 +111,7 @@
               "RelativeToolTip": "src\\MinImpLangComp\\Token.cs",
               "ViewState": "AgIAABQAAAAAAAAAAAAQwAQAAAAYAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-15T10:47:28.203Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-15T10:47:28.203Z"
             },
             {
               "$type": "Document",
