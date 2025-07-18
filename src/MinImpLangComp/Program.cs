@@ -1,7 +1,4 @@
-﻿using System;
-using MinImpLangComp.ParserSpace;
-using MinImpLangComp.LexerSpace;
-using MinImpLangComp.AST;
+﻿using MinImpLangComp.LexerSpace;
 
 namespace MinImpLangComp
 {

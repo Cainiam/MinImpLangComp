@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MinImpLangComp.AST
+﻿namespace MinImpLangComp.AST
 {
     public class Assignment : Statement
     {

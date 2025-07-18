@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace MinImpLangComp.AST
+﻿namespace MinImpLangComp.AST
 {
-    public abstract class Expression
+    public abstract class Expression : Node
     {
     }
 
