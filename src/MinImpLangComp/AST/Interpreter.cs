@@ -31,6 +31,8 @@ namespace MinImpLangComp.AST
                             "-" => leftInteger - rightInteger,
                             "*" => leftInteger * rightInteger,
                             "/" => leftInteger / rightInteger,
+                            "<" => leftInteger < rightInteger,
+                            ">" => leftInteger > rightInteger,
                             _ => throw new Exception($"Unknown operator {binary.Operator}")
                         };
                     }
@@ -44,6 +46,8 @@ namespace MinImpLangComp.AST
                             "-" => leftValue - rightValue,
                             "*" => leftValue * rightValue,
                             "/" => leftValue / rightValue,
+                            "<" => leftValue < rightValue,
+                            ">" => leftValue > rightValue,
                             _ => throw new Exception($"Unknown operator {binary.Operator}")
                         };
                     }
@@ -76,11 +80,10 @@ namespace MinImpLangComp.AST
                     object? lastFor = null;
                     int StartValue = Convert.ToInt32(Evaluate(forStatement.Start));
                     int endValue = Convert.ToInt32(Evaluate(forStatement.End));
-                    _environment[forStatement.Variable] = StartValue;
-                    while (Convert.ToInt32(_environment[forStatement.Variable]) <= endValue)
+                    for (int i = StartValue; i <= endValue; i++)
                     {
+                        _environment[forStatement.Variable] = i;
                         lastFor = Evaluate(forStatement.Body);
-                        _environment[forStatement.Variable] = Convert.ToInt32(_environment[forStatement.Variable]) + 1;
                     }
                     return lastFor;
                 default:
