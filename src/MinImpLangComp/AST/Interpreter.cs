@@ -31,6 +31,8 @@ namespace MinImpLangComp.AST
                             "-" => leftInteger - rightInteger,
                             "*" => leftInteger * rightInteger,
                             "/" => leftInteger / rightInteger,
+                            "<" => leftInteger < rightInteger,
+                            ">" => leftInteger > rightInteger,
                             _ => throw new Exception($"Unknown operator {binary.Operator}")
                         };
                     }
@@ -44,6 +46,8 @@ namespace MinImpLangComp.AST
                             "-" => leftValue - rightValue,
                             "*" => leftValue * rightValue,
                             "/" => leftValue / rightValue,
+                            "<" => leftValue < rightValue,
+                            ">" => leftValue > rightValue,
                             _ => throw new Exception($"Unknown operator {binary.Operator}")
                         };
                     }
@@ -55,14 +59,33 @@ namespace MinImpLangComp.AST
                     _environment[assign.Identifier] = assignedValue;
                     return assignedValue;
                 case Block block:
-                    object? last = null;
+                    object? lastBlock = null;
                     foreach(var statement in block.Statements)
                     {
-                        last = Evaluate(statement);
+                        lastBlock = Evaluate(statement);
                     }
-                    return last;
+                    return lastBlock;
                 case ExpressionStatement expressStatement:
                     return Evaluate(expressStatement.Expression);
+                case IfStatement ifStatement:
+                    var conditionValue = Evaluate(ifStatement.Condition);
+                    if (Convert.ToBoolean(conditionValue)) return Evaluate(ifStatement.ThenBranch);
+                    else if (ifStatement.ElseBranch != null) return Evaluate(ifStatement.ElseBranch);
+                    return null;
+                case WhileStatement whileStatement:
+                    object? lastWhile = null;
+                    while (Convert.ToBoolean(Evaluate(whileStatement.Condition))) lastWhile = Evaluate(whileStatement.Body);
+                    return lastWhile;
+                case ForStatement forStatement:
+                    object? lastFor = null;
+                    int StartValue = Convert.ToInt32(Evaluate(forStatement.Start));
+                    int endValue = Convert.ToInt32(Evaluate(forStatement.End));
+                    for (int i = StartValue; i <= endValue; i++)
+                    {
+                        _environment[forStatement.Variable] = i;
+                        lastFor = Evaluate(forStatement.Body);
+                    }
+                    return lastFor;
                 default:
                     throw new Exception($"Unsupported node type: {node.GetType().Name}");
                 }
