@@ -15,7 +15,7 @@ Projet complet pour apprendre :
 - Génération de code IL pour .NET.
 
 ## Technologies utilisées :
-- Langage : C# (.NET => 6)
+- Langage : C# (.NET 8 LTS)
 - IDE Visual Studio 2022
 - Versioning via Git
 
@@ -38,11 +38,11 @@ Projet complet pour apprendre :
 - Parser : construction de l'AST.
 - Interpréteur : exécution des instructions.
 - Transpileur : génèration du code c# à partir du langage.
-- Générateur IL : compilatio vers l'assembly .NET.
+- Générateur IL : compilation vers l'assembly .NET.
 - REPL : interface interactive en ligne de commande.
 
 ## Exemple de code :
 [TODO]
 
-## License :
+## Licence :
 Ce projet est publié sous licence MIT (voir le fichier LICENSE).
