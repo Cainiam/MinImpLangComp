@@ -90,6 +90,9 @@ namespace MinImpLangComp.ParserSpace
                 return new Assignment(identifier, expr);
             }
             else if (_currentToken.Type == TokenType.LeftBrace) return ParseBlock();
+            else if (_currentToken.Type == TokenType.If) return ParseIfStatement();
+            else if (_currentToken.Type == TokenType.While) return ParseWhileStatement();
+            else if (_currentToken.Type == TokenType.For) return ParseForStatement();
             else
             {
                 var expr = ParseExpression();
@@ -108,6 +111,47 @@ namespace MinImpLangComp.ParserSpace
             }
             Eat(TokenType.RightBrace);
             return new Block(statements);
+        }
+
+        public Statement ParseIfStatement()
+        {
+            Eat(TokenType.If);
+            Eat(TokenType.LeftParen);
+            var condition = ParseExpression();
+            Eat(TokenType.RightParen);
+            var thenBranch = ParseForStatement();
+            Statement? elseBranch = null;
+            if(_currentToken.Type == TokenType.Else)
+            {
+                Eat(TokenType.Else);
+                elseBranch = ParseForStatement();
+            }
+            return new IfStatement(condition, thenBranch, elseBranch);
+        }
+
+        public Statement ParseWhileStatement()
+        {
+            Eat(TokenType.While);
+            Eat(TokenType.LeftParen);
+            var condition = ParseExpression();
+            Eat(TokenType.RightParen);
+            var body = ParseStatement();
+            return new WhileStatement(condition, body);
+        }
+
+        public Statement ParseForStatement()
+        {
+            Eat(TokenType.For);
+            Eat(TokenType.LeftParen);
+            string variable = _currentToken.Value;
+            Eat(TokenType.Identifier);
+            Eat(TokenType.Assign);
+            var start = ParseExpression();
+            Eat(TokenType.Semicolon);
+            var end = ParseExpression();
+            Eat(TokenType.RightParen);
+            var body = ParseStatement();
+            return new ForStatement(variable, start, end, body);
         }
     }
 }
