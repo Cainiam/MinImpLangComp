@@ -7,6 +7,11 @@ namespace MinImpLangComp.AST
     {
         private readonly Dictionary<string, object> _environment = new Dictionary<string, object>();
 
+        public Dictionary<string, object> GetEnvironment()
+        {
+            return _environment;
+        }
+
         public object Evaluate (Node node)
         {
             switch (node)
@@ -49,6 +54,15 @@ namespace MinImpLangComp.AST
                     var assignedValue = Evaluate(assign.Expression);
                     _environment[assign.Identifier] = assignedValue;
                     return assignedValue;
+                case Block block:
+                    object? last = null;
+                    foreach(var statement in block.Statements)
+                    {
+                        last = Evaluate(statement);
+                    }
+                    return last;
+                case ExpressionStatement expressStatement:
+                    return Evaluate(expressStatement.Expression);
                 default:
                     throw new Exception($"Unsupported node type: {node.GetType().Name}");
                 }
