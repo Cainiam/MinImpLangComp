@@ -1,5 +1,6 @@
 ﻿using MinImpLangComp.AST;
 using MinImpLangComp.LexerSpace;
+using MinImpLangComp.Exceptions;
 using System.Globalization;
 
 namespace MinImpLangComp.ParserSpace
@@ -18,7 +19,7 @@ namespace MinImpLangComp.ParserSpace
         private void Eat(TokenType type)
         {
             if (_currentToken.Type == type) _currentToken = _lexer.GetNextToken();
-            else throw new Exception($"Unexpected token: {_currentToken.Type}, expected: {type}");
+            else throw new ParsingException($"Unexpected token: {_currentToken.Type}, expected: {type}");
         }
 
         public Expression ParseExpression()
@@ -74,7 +75,7 @@ namespace MinImpLangComp.ParserSpace
                 Eat(TokenType.Identifier);
                 return new VariableReference(name);
             }
-            else throw new Exception($"Unexpected token; {_currentToken.Type}");
+            else throw new ParsingException($"Unexpected token; {_currentToken.Type}");
         }
 
         public Statement ParseStatement()

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MinImpLangComp.Exceptions;
+using System;
 using System.Collections.Generic;
 
 namespace MinImpLangComp.AST
@@ -33,7 +34,7 @@ namespace MinImpLangComp.AST
                             "/" => leftInteger / rightInteger,
                             "<" => leftInteger < rightInteger,
                             ">" => leftInteger > rightInteger,
-                            _ => throw new Exception($"Unknown operator {binary.Operator}")
+                            _ => throw new RuntimeException($"Unknown operator {binary.Operator}")
                         };
                     }
                     else
@@ -48,12 +49,12 @@ namespace MinImpLangComp.AST
                             "/" => leftValue / rightValue,
                             "<" => leftValue < rightValue,
                             ">" => leftValue > rightValue,
-                            _ => throw new Exception($"Unknown operator {binary.Operator}")
+                            _ => throw new RuntimeException($"Unknown operator {binary.Operator}")
                         };
                     }
                 case VariableReference variable:
                     if (_environment.TryGetValue(variable.Name, out var value)) return value;
-                    else throw new Exception($"Undefined variable {variable.Name}");
+                    else throw new RuntimeException($"Undefined variable {variable.Name}");
                 case Assignment assign:
                     var assignedValue = Evaluate(assign.Expression);
                     _environment[assign.Identifier] = assignedValue;
@@ -87,7 +88,7 @@ namespace MinImpLangComp.AST
                     }
                     return lastFor;
                 default:
-                    throw new Exception($"Unsupported node type: {node.GetType().Name}");
+                    throw new RuntimeException($"Unsupported node type: {node.GetType().Name}");
                 }
         }
     }
