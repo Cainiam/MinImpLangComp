@@ -196,5 +196,35 @@ namespace MinImpLangComp.Tests
             Assert.IsType<bool>(result);
             Assert.True((bool)result);
         }
+
+        [Fact]
+        public void Evaluate_LogicalAnd_ReturnsExpected()
+        {
+            var interp = new Interpreter();
+            var node = new BinaryExpression(
+                new BooleanLiteral(true),
+                OperatorType.AndAnd,
+                new BooleanLiteral(false)
+            );
+            var result = interp.Evaluate(node);
+
+            Assert.IsType<bool>(result);
+            Assert.False((bool)result);
+        }
+
+        [Fact]
+        public void Evaluate_LogicalOr_ReturnsExpected()
+        {
+            var interp = new Interpreter();
+            var node = new BinaryExpression(
+                new BooleanLiteral(false),
+                OperatorType.OrOr,
+                new BooleanLiteral(true)
+            );
+            var result = interp.Evaluate(node);
+
+            Assert.IsType<bool>(result);
+            Assert.True((bool)result);
+        }
     }
 }

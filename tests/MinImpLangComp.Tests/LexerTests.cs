@@ -191,5 +191,18 @@ namespace MinImpLangComp.Tests
             Assert.Equal(expectedType, token.Type);
             Assert.Equal(excpectedValue, token.Value);
         }
+
+        [Fact]
+        public void GetNextToken_ReturnsAndAndOrOrTokens()
+        {
+            var lexer = new Lexer("&& ||");
+
+            var token1 = lexer.GetNextToken();
+            Assert.Equal(TokenType.AndAnd, token1.Type);
+            Assert.Equal("&&", token1.Value);
+            var token2 = lexer.GetNextToken();
+            Assert.Equal(TokenType.OrOr, token2.Type);
+            Assert.Equal("||", token2.Value);
+        }
     }
 }

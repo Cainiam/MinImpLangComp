@@ -90,6 +90,22 @@ namespace MinImpLangComp.Lexing
                         return new Token(TokenType.NotEqual, "!=");
                     }
                     return new Token(TokenType.Unknow, "!");
+                case '&':
+                    _position++;
+                    if(_position < _input.Length && _input[_position] == '&')
+                    {
+                        _position++;
+                        return new Token(TokenType.AndAnd, "&&");
+                    }
+                    return new Token(TokenType.Unknow, "&");
+                case '|':
+                    _position++;
+                    if(_position < _input.Length && _input[_position] == '|')
+                    {
+                        _position++;
+                        return new Token(TokenType.OrOr, "||");
+                    }
+                    return new Token(TokenType.Unknow, "|");
                 default:
                     _position++;
                     return new Token(TokenType.Unknow, current.ToString());

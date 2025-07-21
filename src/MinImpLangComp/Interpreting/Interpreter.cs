@@ -37,6 +37,8 @@ namespace MinImpLangComp.Interpreting
                             OperatorType.GreaterEqual => leftInteger >= rightInteger,
                             OperatorType.Equalequal => leftInteger == rightInteger,
                             OperatorType.NotEqual => leftInteger != rightInteger,
+                            OperatorType.AndAnd => Convert.ToBoolean(leftInteger) && Convert.ToBoolean(rightInteger),
+                            OperatorType.OrOr => Convert.ToBoolean(leftInteger) || Convert.ToBoolean(rightInteger),
                             _ => throw new RuntimeException($"Unknown operator {binary.Operator}")
                         };
                     }
@@ -56,6 +58,8 @@ namespace MinImpLangComp.Interpreting
                             OperatorType.GreaterEqual => leftValue >= rightValue,
                             OperatorType.Equalequal => leftValue == rightValue,
                             OperatorType.NotEqual => leftValue != rightValue,
+                            OperatorType.AndAnd => Convert.ToBoolean(leftValue) && Convert.ToBoolean(rightValue),
+                            OperatorType.OrOr => Convert.ToBoolean(leftValue) || Convert.ToBoolean(rightValue),
                             _ => throw new RuntimeException($"Unknown operator {binary.Operator}")
                         };
                     }

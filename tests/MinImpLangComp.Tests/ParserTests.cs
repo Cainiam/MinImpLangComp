@@ -134,5 +134,31 @@ namespace MinImpLangComp.Tests
             var boolLiteral = Assert.IsType<BooleanLiteral>(expr);
             Assert.False(boolLiteral.Value);
         }
+
+        [Fact]
+        public void ParseExpression_LogicalAnd_ReturnsBinaryExpression()
+        {
+            var lexer = new Lexer("true && false");
+            var parser = new Parser(lexer);
+            var expr = parser.ParseExpression();
+            
+            var binary = Assert.IsType<BinaryExpression>(expr);
+            Assert.Equal(OperatorType.AndAnd, binary.Operator);
+            Assert.IsType<BooleanLiteral>(binary.Left);
+            Assert.IsType<BooleanLiteral>(binary.Right);
+        }
+
+        [Fact]
+        public void ParseExpresion_LogicalOr_ReturnsBinaryExpression()
+        {
+            var lexer = new Lexer("true || false");
+            var parser = new Parser(lexer);
+            var expr = parser.ParseExpression();
+
+            var binary = Assert.IsType<BinaryExpression>(expr);
+            Assert.Equal(OperatorType.OrOr, binary.Operator);
+            Assert.IsType<BooleanLiteral>(binary.Left);
+            Assert.IsType<BooleanLiteral>(binary.Right);
+        }
     }
 }

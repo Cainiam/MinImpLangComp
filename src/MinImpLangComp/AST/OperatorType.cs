@@ -11,6 +11,8 @@
         LessEqual,
         GreaterEqual,
         Equalequal,
-        NotEqual
+        NotEqual,
+        AndAnd,
+        OrOr
     }
 }

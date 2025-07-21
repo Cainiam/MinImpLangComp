@@ -33,7 +33,9 @@
         Equalequal,
         NotEqual,
         True,
-        False
+        False,
+        AndAnd,
+        OrOr
     }
 
     public class Token
