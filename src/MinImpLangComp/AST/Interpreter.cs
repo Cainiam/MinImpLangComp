@@ -79,12 +79,11 @@ namespace MinImpLangComp.AST
                     return lastWhile;
                 case ForStatement forStatement:
                     object? lastFor = null;
-                    int StartValue = Convert.ToInt32(Evaluate(forStatement.Start));
-                    int endValue = Convert.ToInt32(Evaluate(forStatement.End));
-                    for (int i = StartValue; i <= endValue; i++)
+                    if (forStatement.Initializer != null) Evaluate(forStatement.Initializer);
+                    while (Convert.ToBoolean(Evaluate(forStatement.Condition)))
                     {
-                        _environment[forStatement.Variable] = i;
                         lastFor = Evaluate(forStatement.Body);
+                        if(forStatement.Increment != null) Evaluate(forStatement.Increment);
                     }
                     return lastFor;
                 default:

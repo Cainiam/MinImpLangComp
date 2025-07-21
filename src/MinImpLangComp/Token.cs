@@ -25,7 +25,9 @@
         Else,
         While,
         For,
-        StringLiteral
+        StringLiteral,
+        Less,
+        Greater
     }
 
     public class Token
