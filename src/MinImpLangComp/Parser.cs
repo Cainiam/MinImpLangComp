@@ -1,5 +1,6 @@
 ﻿using MinImpLangComp.AST;
 using MinImpLangComp.LexerSpace;
+using MinImpLangComp.Exceptions;
 using System.Globalization;
 
 namespace MinImpLangComp.ParserSpace
@@ -18,13 +19,13 @@ namespace MinImpLangComp.ParserSpace
         private void Eat(TokenType type)
         {
             if (_currentToken.Type == type) _currentToken = _lexer.GetNextToken();
-            else throw new Exception($"Unexpected token: {_currentToken.Type}, expected: {type}");
+            else throw new ParsingException($"Unexpected token: {_currentToken.Type}, expected: {type}");
         }
 
         public Expression ParseExpression()
         {
             var left = ParseTerm();
-            while (_currentToken.Type == TokenType.Plus || _currentToken.Type == TokenType.Minus)
+            while (_currentToken.Type == TokenType.Plus || _currentToken.Type == TokenType.Minus || _currentToken.Type == TokenType.Less || _currentToken.Type == TokenType.Greater)
             {
                 string oper = _currentToken.Value;
                 Eat(_currentToken.Type);
@@ -74,7 +75,7 @@ namespace MinImpLangComp.ParserSpace
                 Eat(TokenType.Identifier);
                 return new VariableReference(name);
             }
-            else throw new Exception($"Unexpected token; {_currentToken.Type}");
+            else throw new ParsingException($"Unexpected token; {_currentToken.Type}");
         }
 
         public Statement ParseStatement()
@@ -88,6 +89,23 @@ namespace MinImpLangComp.ParserSpace
                 var expr = ParseExpression();
                 Eat(TokenType.Semicolon);
                 return new Assignment(identifier, expr);
+            }
+            else if (_currentToken.Type == TokenType.Identifier)
+            {
+                string identifier = _currentToken.Value;
+                Eat(TokenType.Identifier);
+                if (_currentToken.Type == TokenType.Assign)
+                {
+                    Eat(TokenType.Assign);
+                    var expr = ParseExpression();
+                    Eat(TokenType.Semicolon);
+                    return new Assignment(identifier, expr);
+                }
+                else
+                {
+                    Eat(TokenType.Semicolon);
+                    return new ExpressionStatement(new VariableReference(identifier));
+                }
             }
             else if (_currentToken.Type == TokenType.LeftBrace) return ParseBlock();
             else if (_currentToken.Type == TokenType.If) return ParseIfStatement();
@@ -119,12 +137,12 @@ namespace MinImpLangComp.ParserSpace
             Eat(TokenType.LeftParen);
             var condition = ParseExpression();
             Eat(TokenType.RightParen);
-            var thenBranch = ParseForStatement();
+            var thenBranch = ParseStatement();
             Statement? elseBranch = null;
             if(_currentToken.Type == TokenType.Else)
             {
                 Eat(TokenType.Else);
-                elseBranch = ParseForStatement();
+                elseBranch = ParseStatement();
             }
             return new IfStatement(condition, thenBranch, elseBranch);
         }
@@ -143,15 +161,32 @@ namespace MinImpLangComp.ParserSpace
         {
             Eat(TokenType.For);
             Eat(TokenType.LeftParen);
-            string variable = _currentToken.Value;
-            Eat(TokenType.Identifier);
-            Eat(TokenType.Assign);
-            var start = ParseExpression();
+            Statement? initializer;
+            if (_currentToken.Type != TokenType.Semicolon) initializer = ParseStatement();
+            else
+            {
+                initializer = null;
+                Eat(TokenType.Semicolon);
+            }
+            Expression? condition = null;
+            if (_currentToken.Type != TokenType.Semicolon) condition = ParseExpression();
             Eat(TokenType.Semicolon);
-            var end = ParseExpression();
+            Statement? increment = null;
+            if (_currentToken.Type != TokenType.RightParen)
+            {
+                if (_currentToken.Type == TokenType.Identifier)
+                {
+                    string identifier = _currentToken.Value;
+                    Eat(TokenType.Identifier);
+                    Eat(TokenType.Assign);
+                    var expr = ParseExpression();
+                    increment = new Assignment(identifier, expr);
+                }
+                else increment = ParseStatement();
+            }
             Eat(TokenType.RightParen);
             var body = ParseStatement();
-            return new ForStatement(variable, start, end, body);
+            return new ForStatement(initializer, condition, increment, body);
         }
     }
 }

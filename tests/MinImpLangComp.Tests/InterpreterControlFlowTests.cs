@@ -68,15 +68,25 @@ namespace MinImpLangComp.Tests
         public void Evaluate_ForStatement_ExecutesBodyForEachIteration()
         {
             var interp = new Interpreter();
-            var forStatement = new ForStatement(
-                "i",
-                new IntegerLiteral(1),
-                new IntegerLiteral(3),
-                new Assignment("x", new VariableReference("i"))
+            var initializer = new Assignment("i", new IntegerLiteral(1));
+            var condition = new BinaryExpression(
+                new VariableReference("i"), 
+                "<", 
+                new IntegerLiteral(3)
             );
+            var increment = new Assignment(
+                "i",
+                new BinaryExpression(
+                    new VariableReference("i"),
+                    "+",
+                    new IntegerLiteral(1)
+                )
+            );
+            var body = new Assignment("x", new VariableReference("i"));
+            var forStatement = new ForStatement(initializer, condition, increment, body);
             interp.Evaluate(forStatement);
 
-            Assert.Equal(3, interp.GetEnvironment()["x"]);
+            Assert.Equal(2, interp.GetEnvironment()["x"]);
             Assert.Equal(3, interp.GetEnvironment()["i"]);
         }
     }

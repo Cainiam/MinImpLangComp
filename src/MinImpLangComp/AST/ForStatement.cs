@@ -1,23 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MinImpLangComp.AST
+﻿namespace MinImpLangComp.AST
 {
     public class ForStatement : Statement
     {
-        public string Variable { get; }
-        public Expression Start { get; }
-        public Expression End { get; }
+        public Statement Initializer { get; }
+        public Expression Condition { get; }
+        public Statement Increment { get; }
         public Statement Body { get; }
 
-        public ForStatement(string variable, Expression start, Expression end, Statement body)
+        public ForStatement(Statement initializer, Expression condition, Statement increment, Statement body)
         {
-            Variable = variable;
-            Start = start;
-            End = end;
+            Initializer = initializer;
+            Condition = condition;
+            Increment = increment;
             Body = body;
         }
     }

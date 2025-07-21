@@ -61,6 +61,12 @@ namespace MinImpLangComp.LexerSpace
                 case '}':
                     _position++;
                     return new Token(TokenType.RightBrace, "}");
+                case '<':
+                    _position++;
+                    return new Token(TokenType.Less, "<");
+                case '>':
+                    _position++;
+                    return new Token(TokenType.Greater, ">");
                 default:
                     _position++;
                     return new Token(TokenType.Unknow, current.ToString());
