@@ -34,7 +34,7 @@ namespace MinImpLangComp.Tests
             var interp = new Interpreter();
             var node = new BinaryExpression(
                 new IntegerLiteral(1),
-                "+",
+                OperatorType.Plus,
                 new IntegerLiteral(2)
             );
             var result = interp.Evaluate(node);
@@ -49,7 +49,7 @@ namespace MinImpLangComp.Tests
             var interp = new Interpreter();
             var node = new BinaryExpression(
                 new IntegerLiteral(5),
-                "*",
+                OperatorType.Multiply,
                 new IntegerLiteral(6)
             );
             var result = interp.Evaluate(node);
@@ -64,7 +64,7 @@ namespace MinImpLangComp.Tests
             var interp = new Interpreter();
             var node = new BinaryExpression(
                 new FloatLiteral(5.5),
-                "+",
+                OperatorType.Plus,
                 new IntegerLiteral(4)
             );
             var result = interp.Evaluate(node);
@@ -80,7 +80,7 @@ namespace MinImpLangComp.Tests
             var node = new Assignment("x",
                 new BinaryExpression(
                     new IntegerLiteral(2),
-                    "+",
+                    OperatorType.Plus,
                     new IntegerLiteral(3)
                 )
             );
@@ -110,8 +110,8 @@ namespace MinImpLangComp.Tests
             var block = new Block(new List<Statement>
             {
                 new Assignment("x", new IntegerLiteral(2)),
-                new Assignment("y", new BinaryExpression(new VariableReference("x"), "+", new IntegerLiteral(3))),
-                new ExpressionStatement(new BinaryExpression(new VariableReference("y"), "*", new IntegerLiteral(2)))
+                new Assignment("y", new BinaryExpression(new VariableReference("x"), OperatorType.Plus, new IntegerLiteral(3))),
+                new ExpressionStatement(new BinaryExpression(new VariableReference("y"), OperatorType.Multiply, new IntegerLiteral(2)))
             });
             var result = interp.Evaluate(block);
 

@@ -38,7 +38,7 @@ namespace MinImpLangComp.Tests
             var expr = parser.ParseExpression();
 
             var binary = Assert.IsType<BinaryExpression>(expr);
-            Assert.Equal("+", binary.Operator);
+            Assert.Equal(OperatorType.Plus, binary.Operator);
             var left = Assert.IsType<IntegerLiteral>(binary.Left);
             Assert.Equal(1, left.Value);
             var right = Assert.IsType<IntegerLiteral>(binary.Right);
@@ -56,7 +56,7 @@ namespace MinImpLangComp.Tests
             var left = Assert.IsType<IntegerLiteral>(binary.Left);
             Assert.Equal(1, left.Value);
             var right = Assert.IsType<BinaryExpression>(binary.Right);
-            Assert.Equal("*", right.Operator);
+            Assert.Equal(OperatorType.Multiply, right.Operator);
             var rightL = Assert.IsType<IntegerLiteral> (right.Left);
             Assert.Equal (2, rightL.Value);
             var rightR = Assert.IsType<IntegerLiteral> (right.Right);
@@ -71,9 +71,9 @@ namespace MinImpLangComp.Tests
             var expr = parser.ParseExpression();
 
             var binary = Assert.IsType<BinaryExpression>(expr);
-            Assert.Equal("*", binary.Operator);
+            Assert.Equal(OperatorType.Multiply, binary.Operator);
             var left = Assert.IsType<BinaryExpression>(binary.Left);
-            Assert.Equal("+", left.Operator);
+            Assert.Equal(OperatorType.Plus, left.Operator);
             var leftL = Assert.IsType<IntegerLiteral>(left.Left);
             Assert.Equal(1, leftL.Value);
             var leftR = Assert.IsType <IntegerLiteral> (left.Right);

@@ -17,7 +17,7 @@ namespace MinImpLangComp.Tests
             var assignment = Assert.IsType<Assignment>(statement);
             Assert.Equal("x", assignment.Identifier);
             var binary = Assert.IsType<BinaryExpression>(assignment.Expression);
-            Assert.Equal("+", binary.Operator);
+            Assert.Equal(OperatorType.Plus, binary.Operator);
             var left = Assert.IsType<IntegerLiteral>(binary.Left);
             Assert.Equal(1, left.Value);
             var right = Assert.IsType<IntegerLiteral>(binary.Right);
@@ -56,7 +56,7 @@ namespace MinImpLangComp.Tests
             var statement2 = Assert.IsType<Assignment>(block.Statements[1]);
             Assert.Equal("b", statement2.Identifier);
             var express2 = Assert.IsType<BinaryExpression>(statement2.Expression);
-            Assert.Equal("+", express2.Operator);
+            Assert.Equal(OperatorType.Plus, express2.Operator);
             var left = Assert.IsType<VariableReference>(express2.Left);
             Assert.Equal("a", left.Name);
             var right = Assert.IsType<IntegerLiteral>(express2.Right);
