@@ -1,4 +1,4 @@
-﻿namespace MinImpLangComp
+﻿namespace MinImpLangComp.Lexing
 { 
     public enum TokenType
     {

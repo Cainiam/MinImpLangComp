@@ -1,9 +1,9 @@
 ﻿using MinImpLangComp.AST;
-using MinImpLangComp.LexerSpace;
+using MinImpLangComp.Lexing;
 using MinImpLangComp.Exceptions;
 using System.Globalization;
 
-namespace MinImpLangComp.ParserSpace
+namespace MinImpLangComp.Parsing
 {
     public class Parser
     {

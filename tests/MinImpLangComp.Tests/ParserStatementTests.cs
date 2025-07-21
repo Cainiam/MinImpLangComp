@@ -1,5 +1,5 @@
-﻿using MinImpLangComp.LexerSpace;
-using MinImpLangComp.ParserSpace;
+﻿using MinImpLangComp.Lexing;
+using MinImpLangComp.Parsing;
 using MinImpLangComp.AST;
 using Xunit;
 

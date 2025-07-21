@@ -1,4 +1,4 @@
-﻿using MinImpLangComp.ReplSpace;
+﻿using MinImpLangComp.ReplLoop;
 
 namespace MinImpLangComp
 {

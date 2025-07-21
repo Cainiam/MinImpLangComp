@@ -1,9 +1,5 @@
 ﻿using MinImpLangComp.AST;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using MinImpLangComp.Interpreting;
 
 namespace MinImpLangComp.Tests
 {

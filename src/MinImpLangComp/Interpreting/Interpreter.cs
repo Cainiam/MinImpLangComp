@@ -1,8 +1,7 @@
 ﻿using MinImpLangComp.Exceptions;
-using System;
-using System.Collections.Generic;
+using MinImpLangComp.AST;
 
-namespace MinImpLangComp.AST
+namespace MinImpLangComp.Interpreting
 {
     public class Interpreter
     {

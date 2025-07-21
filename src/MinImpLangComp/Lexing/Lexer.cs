@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace MinImpLangComp.LexerSpace
+namespace MinImpLangComp.Lexing
 {
     public class Lexer
     {

@@ -1,10 +1,10 @@
 ﻿using System;
-using MinImpLangComp.LexerSpace;
-using MinImpLangComp.ParserSpace;
-using MinImpLangComp.AST;
+using MinImpLangComp.Lexing;
+using MinImpLangComp.Parsing;
 using MinImpLangComp.Exceptions;
+using MinImpLangComp.Interpreting;
 
-namespace MinImpLangComp.ReplSpace
+namespace MinImpLangComp.ReplLoop
 {
     public static class Repl
     {
