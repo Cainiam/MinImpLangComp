@@ -25,7 +25,7 @@ namespace MinImpLangComp.Parsing
         public Expression ParseExpression()
         {
             var left = ParseTerm();
-            while (_currentToken.Type == TokenType.Plus || _currentToken.Type == TokenType.Minus || _currentToken.Type == TokenType.Less || _currentToken.Type == TokenType.Greater)
+            while (_currentToken.Type == TokenType.Plus || _currentToken.Type == TokenType.Minus || _currentToken.Type == TokenType.Less || _currentToken.Type == TokenType.Greater || _currentToken.Type == TokenType.LessEqual || _currentToken.Type == TokenType.GreaterEqual || _currentToken.Type == TokenType.Equalequal || _currentToken.Type == TokenType.NotEqual)
             {
                 OperatorType oper;
                 switch(_currentToken.Type)
@@ -41,6 +41,18 @@ namespace MinImpLangComp.Parsing
                         break;
                     case TokenType.Greater:
                         oper = OperatorType.Greater;
+                        break;
+                    case TokenType.LessEqual:
+                        oper = OperatorType.LessEqual;
+                        break;
+                    case TokenType.GreaterEqual:
+                        oper = OperatorType.GreaterEqual;
+                        break;
+                    case TokenType.Equalequal:
+                        oper = OperatorType.Equalequal;
+                        break;
+                    case TokenType.NotEqual:
+                        oper = OperatorType.NotEqual;
                         break;
                     default:
                         throw new ParsingException($"Unexpected operator token: {_currentToken.Type}");

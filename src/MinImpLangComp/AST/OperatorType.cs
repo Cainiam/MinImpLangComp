@@ -7,6 +7,10 @@
         Multiply,
         Divide,
         Less,
-        Greater
+        Greater,
+        LessEqual,
+        GreaterEqual,
+        Equalequal,
+        NotEqual
     }
 }

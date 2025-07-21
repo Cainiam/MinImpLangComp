@@ -27,7 +27,11 @@
         For,
         StringLiteral,
         Less,
-        Greater
+        Greater,
+        LessEqual,
+        GreaterEqual,
+        Equalequal,
+        NotEqual
     }
 
     public class Token

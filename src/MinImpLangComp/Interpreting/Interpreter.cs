@@ -33,6 +33,10 @@ namespace MinImpLangComp.Interpreting
                             OperatorType.Divide => leftInteger / rightInteger,
                             OperatorType.Less => leftInteger < rightInteger,
                             OperatorType.Greater => leftInteger > rightInteger,
+                            OperatorType.LessEqual => leftInteger <= rightInteger,
+                            OperatorType.GreaterEqual => leftInteger >= rightInteger,
+                            OperatorType.Equalequal => leftInteger == rightInteger,
+                            OperatorType.NotEqual => leftInteger != rightInteger,
                             _ => throw new RuntimeException($"Unknown operator {binary.Operator}")
                         };
                     }
@@ -48,6 +52,10 @@ namespace MinImpLangComp.Interpreting
                             OperatorType.Divide => leftValue / rightValue,
                             OperatorType.Less => leftValue < rightValue,
                             OperatorType.Greater => leftValue > rightValue,
+                            OperatorType.LessEqual => leftValue <= rightValue,
+                            OperatorType.GreaterEqual => leftValue >= rightValue,
+                            OperatorType.Equalequal => leftValue == rightValue,
+                            OperatorType.NotEqual => leftValue != rightValue,
                             _ => throw new RuntimeException($"Unknown operator {binary.Operator}")
                         };
                     }

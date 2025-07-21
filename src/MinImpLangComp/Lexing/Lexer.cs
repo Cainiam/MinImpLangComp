@@ -39,6 +39,11 @@ namespace MinImpLangComp.Lexing
                     return new Token(TokenType.Divide, "/");
                 case '=':
                     _position++;
+                    if (_position < _input.Length && _input[_position] == '=')
+                    {
+                        _position++;
+                        return new Token(TokenType.Equalequal, "==");
+                    }
                     return new Token(TokenType.Assign, "=");
                 case ';':
                     _position++;
@@ -63,10 +68,28 @@ namespace MinImpLangComp.Lexing
                     return new Token(TokenType.RightBrace, "}");
                 case '<':
                     _position++;
+                    if(_position < _input.Length && _input[_position] == '=')
+                    {
+                        _position++;
+                        return new Token(TokenType.LessEqual, "<=");
+                    }
                     return new Token(TokenType.Less, "<");
                 case '>':
                     _position++;
+                    if(_position < _input.Length && _input[_position] == '=')
+                    {
+                        _position++;
+                        return new Token(TokenType.GreaterEqual, ">=");
+                    }
                     return new Token(TokenType.Greater, ">");
+                case '!':
+                    _position++;
+                    if (_position < _input.Length && _input[_position] == '=')
+                    {
+                        _position++;
+                        return new Token(TokenType.NotEqual, "!=");
+                    }
+                    return new Token(TokenType.Unknow, "!");
                 default:
                     _position++;
                     return new Token(TokenType.Unknow, current.ToString());
