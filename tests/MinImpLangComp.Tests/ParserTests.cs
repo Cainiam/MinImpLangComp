@@ -2,6 +2,7 @@
 using MinImpLangComp.Parsing;
 using MinImpLangComp.AST;
 using Xunit;
+using System.Reflection.Emit;
 
 
 namespace MinImpLangComp.Tests
@@ -80,6 +81,36 @@ namespace MinImpLangComp.Tests
             Assert.Equal(2, leftR.Value);
             var right = Assert.IsType<IntegerLiteral>(binary.Right);
             Assert.Equal(3, right.Value);
+        }
+
+        [Fact]
+        public void ParseExpression_Equality_ReturnsBinaryExpression()
+        {
+            var lexer = new Lexer("5 == 5");
+            var parser = new Parser(lexer);
+            var expr = parser.ParseExpression();
+
+            var binary = Assert.IsType<BinaryExpression> (expr);
+            Assert.Equal(OperatorType.Equalequal, binary.Operator);
+            var left = Assert.IsType<IntegerLiteral> (binary.Left);
+            Assert.Equal(5, left.Value);
+            var right = Assert.IsType<IntegerLiteral>(binary.Right);
+            Assert.Equal(5, right.Value);
+        }
+
+        [Fact]
+        public void ParseExpression_NotEqual_ReturnsBinaryExpression()
+        {
+            var lexer = new Lexer("3 != 4");
+            var parser = new Parser(lexer);
+            var expr = parser.ParseExpression();
+
+            var binary = Assert.IsType<BinaryExpression>(expr);
+            Assert.Equal(OperatorType.NotEqual, binary.Operator);
+            var left = Assert.IsType<IntegerLiteral>(binary.Left);
+            Assert.Equal(3, left.Value);
+            var right = Assert.IsType<IntegerLiteral>(binary.Right);
+            Assert.Equal(4, right.Value);
         }
     }
 }

@@ -123,5 +123,34 @@ namespace MinImpLangComp.Tests
             Assert.Equal(5, interp.GetEnvironment()["y"]);
         }
 
+        [Fact]
+        public void Evaluate_BinaryExpression_EqualEqual_ReturnsTrue()
+        {
+            var interp = new Interpreter();
+            var node = new BinaryExpression(
+                new IntegerLiteral(5),
+                OperatorType.Equalequal,
+                new IntegerLiteral(5)
+            );
+            var result = interp.Evaluate(node);
+
+            Assert.IsType<bool>(result);
+            Assert.True((bool)result);
+        }
+
+        [Fact]
+        public void Evaluate_BinaryExpression_NotEqual_ReturnsTrue()
+        {
+            var interp = new Interpreter();
+            var node = new BinaryExpression(
+                new IntegerLiteral(3),
+                OperatorType.NotEqual,
+                new IntegerLiteral(4)
+            );
+            var result = interp.Evaluate(node);
+
+            Assert.IsType<bool>(result);
+            Assert.True((bool)result);
+        }
     }
 }

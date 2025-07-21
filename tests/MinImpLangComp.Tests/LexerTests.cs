@@ -118,8 +118,8 @@ namespace MinImpLangComp.Tests
         [InlineData("for", TokenType.For, "for")]
         public void GetNextToken_ReturnsKeywordTokens(string input, TokenType expectedType, string expectedValue)
         {
-            var lexer= new Lexer(input);
-            var token= lexer.GetNextToken();
+            var lexer = new Lexer(input);
+            var token = lexer.GetNextToken();
 
             Assert.Equal(expectedType, token.Type);
             Assert.Equal(expectedValue, token.Value);
@@ -129,7 +129,7 @@ namespace MinImpLangComp.Tests
         public void GetNextToken_ReturnsStringLiteralWithEscapedQuote()
         {
             var lexer = new Lexer("\"hello \\\"world\\\"\"");
-            var token= lexer.GetNextToken();
+            var token = lexer.GetNextToken();
 
             Assert.Equal(TokenType.StringLiteral, token.Type);
             Assert.Equal("hello \"world\"", token.Value);
@@ -164,6 +164,20 @@ namespace MinImpLangComp.Tests
             Assert.Equal(TokenType.LexicalError, token.Type);
             Assert.Contains("unclosed string", token.Value);
             Assert.StartsWith("\"", token.Value);
+        }
+
+        [Theory]
+        [InlineData("<=", TokenType.LessEqual, "<=")]
+        [InlineData(">=", TokenType.GreaterEqual, ">=")]
+        [InlineData("==", TokenType.Equalequal, "==")]
+        [InlineData("!=", TokenType.NotEqual, "!=")]
+        public void GetNextToken_ReturnsComparisonAndEqualityOperators(string input, TokenType expectedType, string expectedValue)
+        {
+            var lexer = new Lexer(input);
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(expectedType, token.Type);
+            Assert.Equal(expectedValue, token.Value);
         }
     }
 }
