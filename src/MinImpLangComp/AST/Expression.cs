@@ -28,9 +28,9 @@
     {
         public Expression Left { get; }
         public Expression Right { get; }
-        public string Operator { get; }
+        public OperatorType Operator { get; }
 
-        public BinaryExpression(Expression left, string oper , Expression right)
+        public BinaryExpression(Expression left, OperatorType oper , Expression right)
         {
             Left = left;
             Right = right;

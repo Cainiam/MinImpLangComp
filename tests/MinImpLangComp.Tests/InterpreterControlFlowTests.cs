@@ -6,7 +6,7 @@ namespace MinImpLangComp.Tests
     public class InterpreterControlFlowTests
     {
         [Fact]
-        public void Evaluate_IfStattement_ExecutesThenBranch_WhenConditionIsTrue()
+        public void Evaluate_IfStatement_ExecutesThenBranch_WhenConditionIsTrue()
         {
             var interp = new Interpreter();
             var ifStatement = new IfStatement(

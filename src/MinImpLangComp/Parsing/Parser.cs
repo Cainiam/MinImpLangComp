@@ -27,7 +27,24 @@ namespace MinImpLangComp.Parsing
             var left = ParseTerm();
             while (_currentToken.Type == TokenType.Plus || _currentToken.Type == TokenType.Minus || _currentToken.Type == TokenType.Less || _currentToken.Type == TokenType.Greater)
             {
-                string oper = _currentToken.Value;
+                OperatorType oper;
+                switch(_currentToken.Type)
+                {
+                    case TokenType.Plus:
+                        oper = OperatorType.Plus;
+                        break;
+                    case TokenType.Minus:
+                        oper = OperatorType.Minus;
+                        break;
+                    case TokenType.Less:
+                        oper = OperatorType.Less;
+                        break;
+                    case TokenType.Greater:
+                        oper = OperatorType.Greater;
+                        break;
+                    default:
+                        throw new ParsingException($"Unexpected operator token: {_currentToken.Type}");
+                }
                 Eat(_currentToken.Type);
                 var right = ParseTerm();
                 left = new BinaryExpression(left, oper, right);
@@ -40,7 +57,18 @@ namespace MinImpLangComp.Parsing
             var left = ParseFactor();
             while(_currentToken.Type == TokenType.Multiply || _currentToken.Type == TokenType.Divide)
             {
-                string oper = _currentToken.Value;
+                OperatorType oper;
+                switch(_currentToken.Type)
+                {
+                    case TokenType.Multiply:
+                        oper = OperatorType.Multiply;
+                        break;
+                    case TokenType.Divide:
+                        oper = OperatorType.Divide;
+                        break;
+                    default:
+                        throw new ParsingException($"Unexpected operator token: {_currentToken.Type}");
+                }
                 Eat(_currentToken.Type);
                 var right = ParseFactor();
                 left = new BinaryExpression(left, oper, right);

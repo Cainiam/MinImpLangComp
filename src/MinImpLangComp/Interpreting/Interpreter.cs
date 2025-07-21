@@ -27,12 +27,12 @@ namespace MinImpLangComp.Interpreting
                     {
                         return binary.Operator switch
                         {
-                            "+" => leftInteger + rightInteger,
-                            "-" => leftInteger - rightInteger,
-                            "*" => leftInteger * rightInteger,
-                            "/" => leftInteger / rightInteger,
-                            "<" => leftInteger < rightInteger,
-                            ">" => leftInteger > rightInteger,
+                            OperatorType.Plus => leftInteger + rightInteger,
+                            OperatorType.Minus => leftInteger - rightInteger,
+                            OperatorType.Multiply => leftInteger * rightInteger,
+                            OperatorType.Divide => leftInteger / rightInteger,
+                            OperatorType.Less => leftInteger < rightInteger,
+                            OperatorType.Greater => leftInteger > rightInteger,
                             _ => throw new RuntimeException($"Unknown operator {binary.Operator}")
                         };
                     }
@@ -42,12 +42,12 @@ namespace MinImpLangComp.Interpreting
                         double rightValue = Convert.ToDouble(right);
                         return binary.Operator switch
                         {
-                            "+" => leftValue + rightValue,
-                            "-" => leftValue - rightValue,
-                            "*" => leftValue * rightValue,
-                            "/" => leftValue / rightValue,
-                            "<" => leftValue < rightValue,
-                            ">" => leftValue > rightValue,
+                            OperatorType.Plus => leftValue + rightValue,
+                            OperatorType.Minus => leftValue - rightValue,
+                            OperatorType.Multiply => leftValue * rightValue,
+                            OperatorType.Divide => leftValue / rightValue,
+                            OperatorType.Less => leftValue < rightValue,
+                            OperatorType.Greater => leftValue > rightValue,
                             _ => throw new RuntimeException($"Unknown operator {binary.Operator}")
                         };
                     }
