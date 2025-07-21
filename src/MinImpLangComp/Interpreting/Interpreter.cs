@@ -93,6 +93,8 @@ namespace MinImpLangComp.Interpreting
                         if(forStatement.Increment != null) Evaluate(forStatement.Increment);
                     }
                     return lastFor;
+                case BooleanLiteral booleanLiteral:
+                    return booleanLiteral.Value;
                 default:
                     throw new RuntimeException($"Unsupported node type: {node.GetType().Name}");
                 }

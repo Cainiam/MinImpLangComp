@@ -179,5 +179,17 @@ namespace MinImpLangComp.Tests
             Assert.Equal(expectedType, token.Type);
             Assert.Equal(expectedValue, token.Value);
         }
+
+        [Theory]
+        [InlineData("true", TokenType.True, "true")]
+        [InlineData("false", TokenType.False, "false")]
+        public void GetNextToken_ReturnsTrueAndFalseTokens(string input, TokenType expectedType, string excpectedValue)
+        {
+            var lexer = new Lexer(input);
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(expectedType, token.Type);
+            Assert.Equal(excpectedValue, token.Value);
+        }
     }
 }

@@ -31,7 +31,9 @@
         LessEqual,
         GreaterEqual,
         Equalequal,
-        NotEqual
+        NotEqual,
+        True,
+        False
     }
 
     public class Token

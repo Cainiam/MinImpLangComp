@@ -115,6 +115,16 @@ namespace MinImpLangComp.Parsing
                 Eat(TokenType.Identifier);
                 return new VariableReference(name);
             }
+            else if (_currentToken.Type == TokenType.True)
+            {
+                Eat(TokenType.True);
+                return new BooleanLiteral(true);
+            }
+            else if (_currentToken.Type == TokenType.False)
+            {
+                Eat(TokenType.False);
+                return new BooleanLiteral(false);
+            }
             else throw new ParsingException($"Unexpected token; {_currentToken.Type}");
         }
 

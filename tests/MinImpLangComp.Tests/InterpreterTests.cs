@@ -152,5 +152,49 @@ namespace MinImpLangComp.Tests
             Assert.IsType<bool>(result);
             Assert.True((bool)result);
         }
+
+        [Fact]
+        public void Evaluate_BooleanLiteral_ReturnsBooleanValue()
+        {
+            var interp = new Interpreter();
+            var trueNode = new BooleanLiteral(true);
+            var falseNode = new BooleanLiteral(false);
+            var trueResult = interp.Evaluate(trueNode);
+            var falseResult = interp.Evaluate(falseNode);
+
+            Assert.IsType<bool>(trueResult);
+            Assert.True((bool)trueResult);
+            Assert.IsType<bool>(falseResult);
+            Assert.False((bool)falseResult);
+        }
+
+        [Fact]
+        public void Evaluate_IfStatement_WithBooleanLiteralCondition_WorksCorreclty()
+        {
+            var interp = new Interpreter();
+            var ifStatement = new IfStatement(
+                new BooleanLiteral(true),
+                new Assignment("x", new IntegerLiteral(11)),
+                new Assignment("x", new IntegerLiteral(22))
+            );
+            interp.Evaluate(ifStatement);
+
+            Assert.Equal(11, interp.GetEnvironment()["x"]);
+        }
+
+        [Fact]
+        public void Evaluate_BinaryExpression_BooleanComparison_ReturnsCorrectResult()
+        {
+            var interp = new Interpreter();
+            var node = new BinaryExpression(
+                new IntegerLiteral(5),
+                OperatorType.Less,
+                new IntegerLiteral(10)
+            );
+            var result = interp.Evaluate(node);
+
+            Assert.IsType<bool>(result);
+            Assert.True((bool)result);
+        }
     }
 }
