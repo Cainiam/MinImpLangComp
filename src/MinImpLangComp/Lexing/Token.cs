@@ -37,7 +37,8 @@
         AndAnd,
         OrOr,
         PlusPlus,
-        MinusMinus
+        MinusMinus,
+        Print
     }
 
     public class Token

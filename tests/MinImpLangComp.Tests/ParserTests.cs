@@ -186,5 +186,17 @@ namespace MinImpLangComp.Tests
             Assert.Equal(OperatorType.MinusMinus, unary.Operator);
             Assert.Equal("y", unary.Identifier);
         }
+
+        [Fact]
+        public void ParseStatement_Print_ReturnsPrintStatement()
+        {
+            var lexer = new Lexer("print(x);");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            var printStatement = Assert.IsType<PrintStatement>(statement);
+            var variable = Assert.IsType<VariableReference>(printStatement.Expression);
+            Assert.Equal("x", variable.Name);
+        }
     }
 }

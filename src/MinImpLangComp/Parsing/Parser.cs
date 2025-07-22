@@ -177,6 +177,15 @@ namespace MinImpLangComp.Parsing
                 Eat(TokenType.Semicolon);
                 return new ExpressionStatement(new UnaryExpression(oper, identifier));
             }
+            else if(_currentToken.Type == TokenType.Print)
+            {
+                Eat(TokenType.Print);
+                Eat(TokenType.LeftParen);
+                var expr = ParseExpression();
+                Eat(TokenType.RightParen);
+                Eat(TokenType.Semicolon);
+                return new PrintStatement(expr);
+            }
             else
             {
                 var expr = ParseExpression();

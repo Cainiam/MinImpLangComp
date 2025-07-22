@@ -113,6 +113,10 @@ namespace MinImpLangComp.Interpreting
                         return newValue;
                     }
                     else throw new RuntimeException($"Unsupported type for unary operation: {unary.Identifier}");
+                case PrintStatement printStatement:
+                    var valueToPrint = Evaluate(printStatement.Expression);
+                    Console.WriteLine(valueToPrint);
+                    return valueToPrint;
                 default:
                     throw new RuntimeException($"Unsupported node type: {node.GetType().Name}");
                 }
