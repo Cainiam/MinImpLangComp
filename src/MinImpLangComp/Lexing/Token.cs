@@ -35,7 +35,9 @@
         True,
         False,
         AndAnd,
-        OrOr
+        OrOr,
+        PlusPlus,
+        MinusMinus
     }
 
     public class Token

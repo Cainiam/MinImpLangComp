@@ -13,6 +13,8 @@
         Equalequal,
         NotEqual,
         AndAnd,
-        OrOr
+        OrOr,
+        PlusPlus,
+        MinusMinus
     }
 }

@@ -167,6 +167,16 @@ namespace MinImpLangComp.Parsing
             else if (_currentToken.Type == TokenType.If) return ParseIfStatement();
             else if (_currentToken.Type == TokenType.While) return ParseWhileStatement();
             else if (_currentToken.Type == TokenType.For) return ParseForStatement();
+            else if (_currentToken.Type == TokenType.PlusPlus || _currentToken.Type == TokenType.MinusMinus)
+            {
+                OperatorType oper = _currentToken.Type == TokenType.PlusPlus ? OperatorType.PlusPlus : OperatorType.MinusMinus;
+                Eat(_currentToken.Type);
+                if (_currentToken.Type != TokenType.Identifier) throw new ParsingException($"Expected identifier after {oper}");
+                string identifier = _currentToken.Value;
+                Eat(TokenType.Identifier);
+                Eat(TokenType.Semicolon);
+                return new ExpressionStatement(new UnaryExpression(oper, identifier));
+            }
             else
             {
                 var expr = ParseExpression();

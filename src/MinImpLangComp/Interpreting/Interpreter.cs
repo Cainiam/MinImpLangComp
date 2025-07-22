@@ -99,6 +99,20 @@ namespace MinImpLangComp.Interpreting
                     return lastFor;
                 case BooleanLiteral booleanLiteral:
                     return booleanLiteral.Value;
+                case UnaryExpression unary:
+                    if (!_environment.ContainsKey(unary.Identifier)) throw new RuntimeException($"Undefined variable {unary.Identifier}");
+                    if (_environment[unary.Identifier] is int currentInt)
+                    {
+                        int newValue = unary.Operator switch
+                        {
+                            OperatorType.PlusPlus => currentInt + 1,
+                            OperatorType.MinusMinus => currentInt - 1,
+                            _ => throw new RuntimeException($"Unknow unary operator {unary.Operator}")
+                        };
+                        _environment[unary.Identifier] = newValue;
+                        return newValue;
+                    }
+                    else throw new RuntimeException($"Unsupported type for unary operation: {unary.Identifier}");
                 default:
                     throw new RuntimeException($"Unsupported node type: {node.GetType().Name}");
                 }

@@ -226,5 +226,29 @@ namespace MinImpLangComp.Tests
             Assert.IsType<bool>(result);
             Assert.True((bool)result);
         }
+
+        [Fact]
+        public void Evaluate_UnaryIncrement_IncrementsVariable()
+        {
+            var interp = new Interpreter();
+            interp.Evaluate(new Assignment("x", new IntegerLiteral(5)));
+            var unary = new UnaryExpression(OperatorType.PlusPlus, "x");
+            var result = interp.Evaluate(unary);
+
+            Assert.Equal(6, result);
+            Assert.Equal(6, interp.GetEnvironment()["x"]);
+        }
+
+        [Fact]
+        public void Evaluate_UnaryDecrement_DecrementsVariable()
+        {
+            var interp = new Interpreter();
+            interp.Evaluate(new Assignment("y", new IntegerLiteral(3)));
+            var unary = new UnaryExpression(OperatorType.MinusMinus, "y");
+            var result = interp.Evaluate(unary);
+
+            Assert.Equal(2, result);
+            Assert.Equal(2, interp.GetEnvironment()["y"]);
+        }
     }
 }

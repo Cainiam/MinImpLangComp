@@ -27,9 +27,19 @@ namespace MinImpLangComp.Lexing
             {
                 case '+':
                     _position++;
+                    if( _position < _input.Length && _input[_position] == '+')
+                    {
+                        _position++;
+                        return new Token(TokenType.PlusPlus, "++");
+                    }
                     return new Token(TokenType.Plus, "+");
                 case '-':
                     _position++;
+                    if (_position < _input.Length && _input[_position] == '-')
+                    {
+                        _position++;
+                        return new Token(TokenType.MinusMinus, "--");
+                    }
                     return new Token(TokenType.Minus, "-");
                 case '*':
                     _position++;

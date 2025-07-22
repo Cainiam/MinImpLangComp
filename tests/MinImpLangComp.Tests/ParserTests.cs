@@ -160,5 +160,31 @@ namespace MinImpLangComp.Tests
             Assert.IsType<BooleanLiteral>(binary.Left);
             Assert.IsType<BooleanLiteral>(binary.Right);
         }
+
+        [Fact]
+        public void ParseStatement_UnaryIncrement_ReturnsUnaryExpression()
+        {
+            var lexer = new Lexer("++ x;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            var exprSt = Assert.IsType<ExpressionStatement>(statement);
+            var unary = Assert.IsType<UnaryExpression>(exprSt.Expression);
+            Assert.Equal(OperatorType.PlusPlus, unary.Operator);
+            Assert.Equal("x", unary.Identifier);
+        }
+
+        [Fact]
+        public void ParseStatement_UnaryDecrement_ReturnsUnaryExpression()
+        {
+            var lexer = new Lexer("-- y;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            var exprSt = Assert.IsType<ExpressionStatement>(statement);
+            var unary = Assert.IsType<UnaryExpression>(exprSt.Expression);
+            Assert.Equal(OperatorType.MinusMinus, unary.Operator);
+            Assert.Equal("y", unary.Identifier);
+        }
     }
 }
