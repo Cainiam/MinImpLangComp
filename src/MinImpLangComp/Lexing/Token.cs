@@ -43,7 +43,9 @@
         Modulo,
         Not,
         BitwiseAnd,
-        BitwiseOr
+        BitwiseOr,
+        LeftBracket,
+        RightBracket
     }
 
     public class Token

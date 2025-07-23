@@ -181,6 +181,32 @@ namespace MinImpLangComp.Interpreting
                 case FunctionDeclaration functionDeclaration:
                     _environment[functionDeclaration.Name] = functionDeclaration;
                     return null;
+                case ArrayLiteral arrayLiteral:
+                    List<object> evaluatedElements = new List<object>();
+                    foreach (var element in arrayLiteral.Elements) evaluatedElements.Add(Evaluate(element));
+                    return evaluatedElements;
+                case ArrayAccess arrayAccess:
+                    if (!_environment.ContainsKey(arrayAccess.Identifier)) throw new RuntimeException($"Undefined array {arrayAccess.Identifier}");
+                    var arrayObj = _environment[arrayAccess.Identifier];
+                    if (arrayObj is List<object> list)
+                    {
+                        int index = Convert.ToInt32(Evaluate(arrayAccess.Index));
+                        if (index < 0 || index >= list.Count) throw new RuntimeException($"Index out of range for array {arrayAccess.Identifier}");
+                        return list[index];
+                    }
+                    else throw new RuntimeException($"{arrayAccess.Identifier} is not an array");
+                case ArrayAssignment arrayAssignment:
+                    if (!_environment.ContainsKey(arrayAssignment.Identifier)) throw new RuntimeException($"Undefined array {arrayAssignment.Identifier}");
+                    var arrObj = _environment[arrayAssignment.Identifier];
+                    if (arrObj is List<object> list2)
+                    {
+                        int indx = Convert.ToInt32(Evaluate(arrayAssignment.Index));
+                        var val = Evaluate(arrayAssignment.Value);
+                        if (indx < 0 || indx >= list2.Count) throw new RuntimeException($"Index out of range for array {arrayAssignment.Identifier}");
+                        list2[indx] = val;
+                        return null;
+                    }
+                    else throw new RuntimeException($"{arrayAssignment.Identifier} is not an array");
                 default:
                     throw new RuntimeException($"Unsupported node type: {node.GetType().Name}");
                 }

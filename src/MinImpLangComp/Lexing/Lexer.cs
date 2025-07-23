@@ -119,6 +119,12 @@ namespace MinImpLangComp.Lexing
                 case '%':
                     _position++;
                     return new Token(TokenType.Modulo, "%");
+                case '[':
+                    _position++;
+                    return new Token(TokenType.LeftBracket, "[");
+                case ']':
+                    _position++;
+                    return new Token(TokenType.RightBracket, "]");
                 default:
                     _position++;
                     return new Token(TokenType.Unknow, current.ToString());

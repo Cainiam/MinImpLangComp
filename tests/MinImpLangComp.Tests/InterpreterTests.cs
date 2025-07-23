@@ -470,5 +470,42 @@ namespace MinImpLangComp.Tests
 
             Assert.Equal(7, interp.Evaluate(expr));
         }
+
+        [Fact]
+        public void Evaluate_ArrayLiteral_ReturnsList()
+        {
+            var interp = new Interpreter();
+            var array = new ArrayLiteral(new List<Expression> { new IntegerLiteral(1), new IntegerLiteral(2), new IntegerLiteral(3) });
+            var result = interp.Evaluate(array);
+
+            Assert.IsType<List<object>>(result);
+            Assert.Equal(3, ((List<object>)result).Count);
+        }
+
+        [Fact]
+        public void Evaluate_ArrayAccess_ReturnsCorrectElement()
+        {
+            var interp = new Interpreter();
+            var assign = new Assignment("a", new ArrayLiteral(new List<Expression> { new IntegerLiteral(10), new IntegerLiteral(20) }));
+            interp.Evaluate(assign);
+            var access = new ArrayAccess("a", new IntegerLiteral(1));
+            var result = interp.Evaluate(access);
+
+            Assert.Equal(20, result);
+        }
+
+        [Fact]
+        public void Evaluate_ArrayAssignment_UpdatesArrayElement()
+        {
+            var interp = new Interpreter();
+            var assign = new Assignment("a", new ArrayLiteral(new List<Expression> { new IntegerLiteral(10), new IntegerLiteral(20) }));
+            interp.Evaluate(assign);
+            var arrayAssign = new ArrayAssignment("a", new IntegerLiteral(0), new IntegerLiteral(99));
+            interp.Evaluate(arrayAssign);
+            var access = new ArrayAccess("a", new IntegerLiteral(0));
+            var result = interp.Evaluate(access);
+
+            Assert.Equal(99, result);
+        }
     }
 }

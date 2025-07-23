@@ -133,15 +133,31 @@ namespace MinImpLangComp.Parsing
                 Eat(TokenType.RightParen);
                 return expr;
             }
+            else if (_currentToken.Type == TokenType.LeftBracket)
+            {
+                Eat(TokenType.LeftBracket);
+                List<Expression> elements = new List<Expression>();
+                if (_currentToken.Type != TokenType.RightBracket)
+                {
+                    elements.Add(ParseExpression());
+                    while(_currentToken.Type == TokenType.Comma)
+                    {
+                        Eat(TokenType.Comma);
+                        elements.Add(ParseExpression());
+                    }
+                }
+                Eat(TokenType.RightBracket);
+                return new ArrayLiteral(elements);
+            }
             else if (_currentToken.Type == TokenType.Identifier)
             {
                 string name = _currentToken.Value;
                 Eat(TokenType.Identifier);
-                if(_currentToken.Type == TokenType.LeftParen)
+                if (_currentToken.Type == TokenType.LeftParen)
                 {
                     Eat(TokenType.LeftParen);
                     List<Expression> arguments = new List<Expression>();
-                    if(_currentToken.Type != TokenType.RightParen)
+                    if (_currentToken.Type != TokenType.RightParen)
                     {
                         arguments.Add(ParseExpression());
                         while (_currentToken.Type == TokenType.Comma)
@@ -152,6 +168,13 @@ namespace MinImpLangComp.Parsing
                     }
                     Eat(TokenType.RightParen);
                     return new FunctionCall(name, arguments);
+                }
+                else if (_currentToken.Type == TokenType.LeftBracket)
+                {
+                    Eat(TokenType.LeftBracket);
+                    var indexExpr = ParseExpression();
+                    Eat(TokenType.RightBracket);
+                    return new ArrayAccess(name, indexExpr);
                 }
                 else return new VariableReference(name);
             }
@@ -188,9 +211,56 @@ namespace MinImpLangComp.Parsing
             }
             else if (_currentToken.Type == TokenType.Identifier)
             {
-                var expr = ParseExpression();
-                Eat(TokenType.Semicolon);
-                return new ExpressionStatement(expr);
+                string identifier = _currentToken.Value;
+                Eat(TokenType.Identifier);
+                if(_currentToken.Type == TokenType.LeftBracket)
+                {
+                    Eat(TokenType.LeftBracket);
+                    var indexEpr = ParseExpression();
+                    Eat(TokenType.RightBracket);
+                    if(_currentToken.Type == TokenType.Assign)
+                    {
+                        Eat(TokenType.Assign);
+                        var valueExpr = ParseExpression();
+                        Eat(TokenType.Semicolon);
+                        return new ArrayAssignment(identifier, indexEpr, valueExpr);
+                    }
+                    else
+                    {
+                        Eat(TokenType.Semicolon);
+                        return new ExpressionStatement(new ArrayAccess(identifier, indexEpr));
+                    }
+                }
+                else if (_currentToken.Type == TokenType.LeftParen)
+                {
+                    Eat(TokenType.LeftParen);
+                    List<Expression> arguments = new List<Expression>();
+                    if (_currentToken.Type != TokenType.RightParen)
+                    {
+                        arguments.Add(ParseExpression());
+                        while(_currentToken.Type == TokenType.Comma)
+                        {
+                            Eat(TokenType.Comma);
+                            arguments.Add(ParseExpression());
+                        }
+                    }
+                    Eat(TokenType.RightParen);
+                    Eat(TokenType.Semicolon);
+                    return new ExpressionStatement(new FunctionCall(identifier, arguments));
+                }
+                else if (_currentToken.Type == TokenType.Assign)
+                {
+                    Eat(TokenType.Assign);
+                    var expr = ParseExpression();
+                    Eat(TokenType.Semicolon);
+                    return new Assignment(identifier, expr);
+                }
+                else
+                {
+                    var expr = new VariableReference(identifier);
+                    Eat(TokenType.Semicolon);
+                    return new ExpressionStatement(expr);
+                }
             }
             else if (_currentToken.Type == TokenType.LeftBrace) return ParseBlock();
             else if (_currentToken.Type == TokenType.If) return ParseIfStatement();
