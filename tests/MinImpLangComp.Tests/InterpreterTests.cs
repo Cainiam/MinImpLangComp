@@ -298,7 +298,69 @@ namespace MinImpLangComp.Tests
                 string console = sw.ToString().Trim();
 
                 Assert.Equal("999", console);
-                Assert.Equal(5, result);
+                Assert.Null(result);
+            }
+        }
+
+        [Fact]
+        public void Evaluate_Function_ReturnStatement_ReturnsValue()
+        {
+            var interp = new Interpreter();
+            var function = new FunctionDeclaration("testFunc", new List<string>(), new Block(new List<Statement>
+            {
+                new ReturnStatement(new IntegerLiteral(99))
+            }));
+            interp.Evaluate(function);
+            var call = new FunctionCall("testFunc", new List<Expression>());
+            var result = interp.Evaluate(call);
+
+            Assert.Equal(99, result);
+        }
+
+        [Fact]
+        public void Evaluate_FunctionCall_WithReturn_ReturnsCorrectValue()
+        {
+            var interp = new Interpreter();
+            var funct = new FunctionDeclaration(
+                "double",
+                new List<string> { "x" },
+                new Block(new List<Statement>
+                {
+                    new ReturnStatement(new BinaryExpression(
+                        new VariableReference("x"),
+                        OperatorType.Multiply,
+                        new FloatLiteral(2.5)
+                    ))
+                })
+            );
+            interp.Evaluate(funct);
+            var result = interp.Evaluate(new FunctionCall("double", new List<Expression> { new IntegerLiteral(4) }));
+
+            Assert.Equal(10.0, result);
+        }
+
+        [Fact]
+        public void Evaluate_FunctionCall_Returns_StopsExecutionAfterReturn()
+        {
+            var interp = new Interpreter();
+            var funct = new FunctionDeclaration(
+                "earlyReturn",
+                new List<string> { },
+                new Block(new List<Statement>
+                {
+                    new ReturnStatement(new IntegerLiteral(10)),
+                    new ExpressionStatement(new FunctionCall("print", new List<Expression> { new IntegerLiteral(999) }))
+                })
+            );
+            interp.Evaluate(funct);
+            using(var sw = new StringWriter())
+            {
+                Console.SetOut(sw);
+                var result = interp.Evaluate(new FunctionCall("earlyReturn", new List<Expression> { }));
+                string output = sw.ToString().Trim();
+
+                Assert.Equal(10, result);
+                Assert.Equal("", output);
             }
         }
     }

@@ -113,6 +113,9 @@ namespace MinImpLangComp.Interpreting
                         return newValue;
                     }
                     else throw new RuntimeException($"Unsupported type for unary operation: {unary.Identifier}");
+                case ReturnStatement returnStatement:
+                    var returnValue = Evaluate(returnStatement.Expression);
+                    throw new ReturnException(returnValue);
                 case FunctionCall functionCall:
                     {
                         switch(functionCall.Name)
@@ -137,10 +140,19 @@ namespace MinImpLangComp.Interpreting
                                     var argValue = Evaluate(functionCall.Arguments[i]);
                                     _environment[functionDeclaration.Parameters[i]] = argValue;
                                 }
-                                var result = Evaluate(functionDeclaration.Body);
-                                _environment.Clear();
-                                foreach (var kvp in previousEnv) _environment[kvp.Key] = kvp.Value;
-                                return result;
+                                try 
+                                {
+                                    Evaluate(functionDeclaration.Body);
+                                    _environment.Clear();
+                                    foreach (var kvp in previousEnv) _environment[kvp.Key] = kvp.Value;
+                                    return null;
+                                }
+                                catch(ReturnException re)
+                                {
+                                    _environment.Clear();
+                                    foreach (var kvp in previousEnv) _environment[kvp.Key] = kvp.Value;
+                                    return re.ReturnValue;
+                                }
                         }
                     }
                 case FunctionDeclaration functionDeclaration:
