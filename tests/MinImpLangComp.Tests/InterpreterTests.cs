@@ -409,5 +409,30 @@ namespace MinImpLangComp.Tests
 
             Assert.Equal("100 dogs", result);
         }
+
+        [Fact]
+        public void Evaluate_FunctionCall_Input_ReadsUserInput()
+        {
+            var interp = new Interpreter();
+            using (var sr = new StringReader("123\n"))
+            using (var sw = new StringWriter())
+            {
+                Console.SetIn(sr);
+                Console.SetOut(sw);
+                var result = interp.Evaluate(new FunctionCall("input", new List<Expression>()));
+
+                Assert.Equal(123, result);
+            }
+
+            using (var sr = new StringReader("hello world\n"))
+            using (var sw = new StringWriter())
+            {
+                Console.SetIn(sr);
+                Console.SetOut(sw);
+                var result = interp.Evaluate(new FunctionCall("input", new List<Expression>()));
+
+                Assert.Equal("hello world", result);
+            }
+        }
     }
 }

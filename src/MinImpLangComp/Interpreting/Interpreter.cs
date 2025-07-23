@@ -130,6 +130,12 @@ namespace MinImpLangComp.Interpreting
                                     Console.WriteLine(valueCall);
                                 }
                                 return null;
+                            case "input":
+                                Console.Write("~ ");
+                                string? userInput = Console.ReadLine();
+                                if (int.TryParse(userInput, out int intResult)) return intResult;
+                                else if (double.TryParse(userInput, out double doubleResult)) return doubleResult;
+                                else return userInput ?? "";
                             default:
                                 if(!_environment.ContainsKey(functionCall.Name))
                                     throw new RuntimeException($"Undefined function; {functionCall.Name}");
