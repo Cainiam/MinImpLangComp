@@ -113,10 +113,6 @@ namespace MinImpLangComp.Interpreting
                         return newValue;
                     }
                     else throw new RuntimeException($"Unsupported type for unary operation: {unary.Identifier}");
-                case PrintStatement printStatement:
-                    var valueToPrint = Evaluate(printStatement.Expression);
-                    Console.WriteLine(valueToPrint);
-                    return valueToPrint;
                 case FunctionCall functionCall:
                     {
                         switch(functionCall.Name)

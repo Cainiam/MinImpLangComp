@@ -38,7 +38,6 @@
         OrOr,
         PlusPlus,
         MinusMinus,
-        Print,
         Function,
         Return
     }

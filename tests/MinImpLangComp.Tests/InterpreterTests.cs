@@ -252,22 +252,6 @@ namespace MinImpLangComp.Tests
         }
 
         [Fact]
-        public void Evaluate_PrintStatement_PrintsValue()
-        {
-            var interp = new Interpreter();
-            interp.Evaluate(new Assignment("x", new IntegerLiteral(42)));
-            var printStatement = new PrintStatement(new VariableReference("x"));
-            using (var sw = new StringWriter())
-            {
-                Console.SetOut(sw);
-                var result = interp.Evaluate(printStatement);
-                Assert.Equal(42, result);
-                var outpout = sw.ToString().Trim();
-                Assert.Equal("42", outpout);
-            }
-        }
-
-        [Fact]
         public void Evaluate_FunctionCall_Print_WritesOutput()
         {
             var interp = new Interpreter();

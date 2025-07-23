@@ -25,7 +25,10 @@ namespace MinImpLangComp.Parsing
         public Expression ParseExpression()
         {
             var left = ParseTerm();
-            while (_currentToken.Type == TokenType.Plus || _currentToken.Type == TokenType.Minus || _currentToken.Type == TokenType.Less || _currentToken.Type == TokenType.Greater || _currentToken.Type == TokenType.LessEqual || _currentToken.Type == TokenType.GreaterEqual || _currentToken.Type == TokenType.Equalequal || _currentToken.Type == TokenType.NotEqual || _currentToken.Type == TokenType.AndAnd || _currentToken.Type == TokenType.OrOr)
+            while (_currentToken.Type == TokenType.Plus || _currentToken.Type == TokenType.Minus || _currentToken.Type == TokenType.Less 
+                || _currentToken.Type == TokenType.Greater || _currentToken.Type == TokenType.LessEqual || _currentToken.Type == TokenType.GreaterEqual 
+                || _currentToken.Type == TokenType.Equalequal || _currentToken.Type == TokenType.NotEqual || _currentToken.Type == TokenType.AndAnd 
+                || _currentToken.Type == TokenType.OrOr)
             {
                 OperatorType oper;
                 switch(_currentToken.Type)
@@ -192,15 +195,6 @@ namespace MinImpLangComp.Parsing
                 Eat(TokenType.Identifier);
                 Eat(TokenType.Semicolon);
                 return new ExpressionStatement(new UnaryExpression(oper, identifier));
-            }
-            else if (_currentToken.Type == TokenType.Print)
-            {
-                Eat(TokenType.Print);
-                Eat(TokenType.LeftParen);
-                var expr = ParseExpression();
-                Eat(TokenType.RightParen);
-                Eat(TokenType.Semicolon);
-                return new PrintStatement(expr);
             }
             else if (_currentToken.Type == TokenType.Function) return ParseFunctionDeclaration();
             else if (_currentToken.Type == TokenType.Return) return ParseReturnStatement();

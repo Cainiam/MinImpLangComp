@@ -172,8 +172,6 @@ namespace MinImpLangComp.Lexing
                     return new Token(TokenType.True, value);
                 case "false":
                     return new Token(TokenType.False, value);
-                case "print":
-                    return new Token(TokenType.Print, value);
                 case "function":
                     return new Token(TokenType.Function, value);
                 case "return":

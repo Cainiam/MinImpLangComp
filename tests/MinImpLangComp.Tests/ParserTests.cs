@@ -188,18 +188,6 @@ namespace MinImpLangComp.Tests
         }
 
         [Fact]
-        public void ParseStatement_Print_ReturnsPrintStatement()
-        {
-            var lexer = new Lexer("print(x);");
-            var parser = new Parser(lexer);
-            var statement = parser.ParseStatement();
-
-            var printStatement = Assert.IsType<PrintStatement>(statement);
-            var variable = Assert.IsType<VariableReference>(printStatement.Expression);
-            Assert.Equal("x", variable.Name);
-        }
-
-        [Fact]
         public void ParseFunctionDeclaration_WithNoParameters_ReturnsCorrectAST()
         {
             var lexer = new Lexer("function myFunc() { let x = 5; }");
