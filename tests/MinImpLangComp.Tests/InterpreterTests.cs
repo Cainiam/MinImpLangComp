@@ -266,5 +266,56 @@ namespace MinImpLangComp.Tests
                 Assert.Equal("42", outpout);
             }
         }
+
+        [Fact]
+        public void Evaluate_FunctionCall_Print_WritesOutput()
+        {
+            var interp = new Interpreter();
+            var functionCall = new FunctionCall("print", new List<Expression> { new IntegerLiteral(5) });
+            using (var sw = new StringWriter())
+            {
+                Console.SetOut(sw);
+                interp.Evaluate(functionCall);
+                string result = sw.ToString().Trim();
+                Assert.Equal("5", result);
+            }
+        }
+
+        [Fact]
+        public void Evaluate_FunctionDeclaration_AddsFunctionToEnvironment()
+        {
+            var interp = new Interpreter();
+            var funct = new FunctionDeclaration("myFunc", new List<string>(), new Block(new List<Statement>()));
+            var result = interp.Evaluate(funct);
+
+            Assert.Null(result);
+            Assert.True(interp.GetEnvironment().ContainsKey("myFunc"));
+            Assert.IsType<FunctionDeclaration>(interp.GetEnvironment()["myFunc"]);
+        }
+
+        [Fact]
+        public void Evaluate_FunctionCall_UserFunction_ExecutesFunction()
+        {
+            var interp = new Interpreter();
+            var funct = new FunctionDeclaration(
+                "addOne",
+                new List<string> { "x" },
+                new Block(new List<Statement>
+                {
+                    new ExpressionStatement(new FunctionCall("print", new List<Expression> { new IntegerLiteral(999) })),
+                    new ExpressionStatement(new VariableReference("x"))
+                })
+            );
+            interp.Evaluate(funct);
+            using (var sw = new StringWriter())
+            {
+                Console.SetOut(sw);
+                var result = interp.Evaluate(new FunctionCall("addOne", new List<Expression> { new IntegerLiteral(5) }));
+                string console = sw.ToString().Trim();
+
+                Assert.Equal("999", console);
+                Assert.Equal(5, result);
+            }
+        }
     }
 }

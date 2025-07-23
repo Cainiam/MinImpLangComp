@@ -117,6 +117,39 @@ namespace MinImpLangComp.Interpreting
                     var valueToPrint = Evaluate(printStatement.Expression);
                     Console.WriteLine(valueToPrint);
                     return valueToPrint;
+                case FunctionCall functionCall:
+                    {
+                        switch(functionCall.Name)
+                        {
+                            case "print":
+                                foreach (var argument in functionCall.Arguments)
+                                {
+                                    var valueCall = Evaluate(argument);
+                                    Console.WriteLine(valueCall);
+                                }
+                                return null;
+                            default:
+                                if(!_environment.ContainsKey(functionCall.Name))
+                                    throw new RuntimeException($"Undefined function; {functionCall.Name}");
+                                if (!(_environment[functionCall.Name] is FunctionDeclaration functionDeclaration))
+                                    throw new RuntimeException($"{functionCall.Name} is not a function");
+                                if (functionDeclaration.Parameters.Count != functionCall.Arguments.Count)
+                                    throw new RuntimeException($"Function {functionCall.Name} expects {functionDeclaration.Parameters.Count} arguments but got {functionCall.Arguments.Count}");
+                                var previousEnv = new Dictionary<string, object>(_environment);
+                                for(int i = 0; i < functionDeclaration.Parameters.Count; i++)
+                                {
+                                    var argValue = Evaluate(functionCall.Arguments[i]);
+                                    _environment[functionDeclaration.Parameters[i]] = argValue;
+                                }
+                                var result = Evaluate(functionDeclaration.Body);
+                                _environment.Clear();
+                                foreach (var kvp in previousEnv) _environment[kvp.Key] = kvp.Value;
+                                return result;
+                        }
+                    }
+                case FunctionDeclaration functionDeclaration:
+                    _environment[functionDeclaration.Name] = functionDeclaration;
+                    return null;
                 default:
                     throw new RuntimeException($"Unsupported node type: {node.GetType().Name}");
                 }

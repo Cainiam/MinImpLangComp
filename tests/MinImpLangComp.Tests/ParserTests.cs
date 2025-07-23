@@ -198,5 +198,33 @@ namespace MinImpLangComp.Tests
             var variable = Assert.IsType<VariableReference>(printStatement.Expression);
             Assert.Equal("x", variable.Name);
         }
+
+        [Fact]
+        public void ParseFunctionDeclaration_WithNoParameters_ReturnsCorrectAST()
+        {
+            var lexer = new Lexer("function myFunc() { let x = 5; }");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+            
+            var functDecla = Assert.IsType<FunctionDeclaration>(statement);
+            Assert.Equal("myFunc", functDecla.Name);
+            Assert.Empty(functDecla.Parameters);
+            Assert.Single(functDecla.Body.Statements);
+        }
+
+        [Fact]
+        public void ParseFunctionDeclaration_WithParamaters_ReturnsCorrectAST()
+        {
+            var lexer = new Lexer("function add(a, b) { let result = a + b; }");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            var functDecla = Assert.IsType<FunctionDeclaration>(statement);
+            Assert.Equal("add", functDecla.Name);
+            Assert.Equal(2, functDecla.Parameters.Count);
+            Assert.Contains("a", functDecla.Parameters);
+            Assert.Contains("b", functDecla.Parameters);
+            Assert.Single(functDecla.Body.Statements);
+        }
     }
 }

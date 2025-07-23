@@ -38,7 +38,9 @@
         OrOr,
         PlusPlus,
         MinusMinus,
-        Print
+        Print,
+        Function,
+        Return
     }
 
     public class Token
