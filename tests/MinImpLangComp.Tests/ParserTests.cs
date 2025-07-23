@@ -272,5 +272,18 @@ namespace MinImpLangComp.Tests
             var binExpr = Assert.IsType<BinaryExpression>(exprStmt.Expression);
             Assert.Equal(OperatorType.BitwiseOr, binExpr.Operator);
         }
+
+        [Fact]
+        public void Parser_CanParseFunctionCallWithExpressionArgument()
+        {
+            var lexer = new Lexer("print(a + 5);");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            Assert.IsType<ExpressionStatement>(statement);
+
+            var exprStmt = (ExpressionStatement)statement;
+            Assert.IsType<FunctionCall>(exprStmt.Expression);
+        }
     }
 }

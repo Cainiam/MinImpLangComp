@@ -139,7 +139,9 @@ namespace MinImpLangComp.Interpreting
                                 foreach (var argument in functionCall.Arguments)
                                 {
                                     var valueCall = Evaluate(argument);
+                                    Console.ForegroundColor = ConsoleColor.Blue;
                                     Console.WriteLine(valueCall);
+                                    Console.ResetColor();
                                 }
                                 return null;
                             case "input":

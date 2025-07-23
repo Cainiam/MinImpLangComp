@@ -188,20 +188,9 @@ namespace MinImpLangComp.Parsing
             }
             else if (_currentToken.Type == TokenType.Identifier)
             {
-                string identifier = _currentToken.Value;
-                Eat(TokenType.Identifier);
-                if (_currentToken.Type == TokenType.Assign)
-                {
-                    Eat(TokenType.Assign);
-                    var expr = ParseExpression();
-                    Eat(TokenType.Semicolon);
-                    return new Assignment(identifier, expr);
-                }
-                else
-                {
-                    Eat(TokenType.Semicolon);
-                    return new ExpressionStatement(new VariableReference(identifier));
-                }
+                var expr = ParseExpression();
+                Eat(TokenType.Semicolon);
+                return new ExpressionStatement(expr);
             }
             else if (_currentToken.Type == TokenType.LeftBrace) return ParseBlock();
             else if (_currentToken.Type == TokenType.If) return ParseIfStatement();

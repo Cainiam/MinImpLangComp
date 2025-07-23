@@ -3,6 +3,7 @@ using MinImpLangComp.Lexing;
 using MinImpLangComp.Parsing;
 using MinImpLangComp.Exceptions;
 using MinImpLangComp.Interpreting;
+using MinImpLangComp.AST;
 
 namespace MinImpLangComp.ReplLoop
 {
@@ -54,7 +55,15 @@ namespace MinImpLangComp.ReplLoop
             var lexer = new Lexer(input);
             var parser = new Parser(lexer);
             var statement = parser.ParseStatement();
-            return interpreter.Evaluate(statement);
+
+            if (statement is ExpressionStatement expressionStatement && expressionStatement.Expression is BinaryExpression binaryExpression 
+                && (binaryExpression.Operator == OperatorType.Plus || binaryExpression.Operator == OperatorType.Minus 
+                || binaryExpression.Operator == OperatorType.Multiply || binaryExpression.Operator == OperatorType.Modulo))
+            {
+                var result = interpreter.Evaluate(binaryExpression);
+                return result;
+            }
+            else return interpreter.Evaluate(statement);
         }
     }
 }
