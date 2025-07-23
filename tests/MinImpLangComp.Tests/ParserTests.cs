@@ -214,5 +214,16 @@ namespace MinImpLangComp.Tests
             Assert.Contains("b", functDecla.Parameters);
             Assert.Single(functDecla.Body.Statements);
         }
+
+        [Fact]
+        public void ParseFactor_StringLiteral_ReturnsStringLiteral()
+        {
+            var lexer = new Lexer("\"abc\"");
+            var parser = new Parser(lexer);
+            var expr = parser.ParseExpression();
+
+            var stringLiteral = Assert.IsType<StringLiteral>(expr);
+            Assert.Equal("abc", stringLiteral.Value);
+        }
     }
 }

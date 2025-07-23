@@ -217,5 +217,15 @@ namespace MinImpLangComp.Tests
             Assert.Equal(TokenType.MinusMinus, token2.Type);
             Assert.Equal("--", token2.Value);
         }
+
+        [Fact]
+        public void GetNextToken_ReturnsStringLiteralToken()
+        {
+            var lexer = new Lexer("\"hello world\"");
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(TokenType.StringLiteral, token.Type);
+            Assert.Equal("hello world", token.Value);
+        }
     }
 }

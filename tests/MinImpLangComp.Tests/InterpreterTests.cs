@@ -363,5 +363,51 @@ namespace MinImpLangComp.Tests
                 Assert.Equal("", output);
             }
         }
+
+        [Fact]
+        public void Evaluate_StringLiteral_ReturnsString()
+        {
+            var interp = new Interpreter();
+            var str = new StringLiteral("test123");
+            var result = interp.Evaluate(str);
+
+            Assert.Equal("test123", result);
+        }
+
+        [Fact]
+        public void Evaluate_BinaryExpression_StringConcat_ReturnsConcatenatedString()
+        {
+            var interp = new Interpreter();
+            var left = new StringLiteral("Hello ");
+            var right = new StringLiteral("World");
+            var expr = new BinaryExpression(left, OperatorType.Plus, right);
+            var result = interp.Evaluate(expr);
+
+            Assert.Equal("Hello World", result);
+        }
+
+        [Fact]
+        public void Evaluate_BinaryExpression_StringAndIntConcat_ReturnsConcatenatedString()
+        {
+            var interp = new Interpreter();
+            var left = new StringLiteral("Value: ");
+            var right = new IntegerLiteral(10);
+            var expr = new BinaryExpression(left, OperatorType.Plus, right);
+            var result = interp.Evaluate(expr);
+
+            Assert.Equal("Value: 10", result);
+        }
+
+        [Fact]
+        public void Evaluate_BinaryExpression_IntAndStringCOncat_ReturnsConcatenatedString()
+        {
+            var interp = new Interpreter();
+            var left = new IntegerLiteral(100);
+            var right = new StringLiteral(" dogs");
+            var expr = new BinaryExpression(left, OperatorType.Plus, right);
+            var result = interp.Evaluate(expr);
+
+            Assert.Equal("100 dogs", result);
+        }
     }
 }

@@ -20,48 +20,51 @@ namespace MinImpLangComp.Interpreting
                     return integerLiteral.Value;
                 case FloatLiteral floatLiteral:
                     return floatLiteral.Value;
+                case StringLiteral stringLiteral:
+                    return stringLiteral.Value;
                 case BinaryExpression binary:
                     var left = Evaluate(binary.Left);
                     var right = Evaluate(binary.Right);
-                    if (left is int leftInteger && right is int rightInteger)
+                    switch (binary.Operator)
                     {
-                        return binary.Operator switch
-                        {
-                            OperatorType.Plus => leftInteger + rightInteger,
-                            OperatorType.Minus => leftInteger - rightInteger,
-                            OperatorType.Multiply => leftInteger * rightInteger,
-                            OperatorType.Divide => leftInteger / rightInteger,
-                            OperatorType.Less => leftInteger < rightInteger,
-                            OperatorType.Greater => leftInteger > rightInteger,
-                            OperatorType.LessEqual => leftInteger <= rightInteger,
-                            OperatorType.GreaterEqual => leftInteger >= rightInteger,
-                            OperatorType.Equalequal => leftInteger == rightInteger,
-                            OperatorType.NotEqual => leftInteger != rightInteger,
-                            OperatorType.AndAnd => Convert.ToBoolean(leftInteger) && Convert.ToBoolean(rightInteger),
-                            OperatorType.OrOr => Convert.ToBoolean(leftInteger) || Convert.ToBoolean(rightInteger),
-                            _ => throw new RuntimeException($"Unknown operator {binary.Operator}")
-                        };
-                    }
-                    else
-                    {
-                        double leftValue = Convert.ToDouble(left);
-                        double rightValue = Convert.ToDouble(right);
-                        return binary.Operator switch
-                        {
-                            OperatorType.Plus => leftValue + rightValue,
-                            OperatorType.Minus => leftValue - rightValue,
-                            OperatorType.Multiply => leftValue * rightValue,
-                            OperatorType.Divide => leftValue / rightValue,
-                            OperatorType.Less => leftValue < rightValue,
-                            OperatorType.Greater => leftValue > rightValue,
-                            OperatorType.LessEqual => leftValue <= rightValue,
-                            OperatorType.GreaterEqual => leftValue >= rightValue,
-                            OperatorType.Equalequal => leftValue == rightValue,
-                            OperatorType.NotEqual => leftValue != rightValue,
-                            OperatorType.AndAnd => Convert.ToBoolean(leftValue) && Convert.ToBoolean(rightValue),
-                            OperatorType.OrOr => Convert.ToBoolean(leftValue) || Convert.ToBoolean(rightValue),
-                            _ => throw new RuntimeException($"Unknown operator {binary.Operator}")
-                        };
+                        case OperatorType.Plus:
+                            if (left is string leftStr && right is string rightStr) return leftStr + rightStr;
+                            else if (left is string leftStr2) return leftStr2 + right.ToString();
+                            else if (right is string rightStr2) return left.ToString() + rightStr2;
+                            else if (left is int leftInt && right is int rightInt) return leftInt + rightInt;
+                            else
+                            {
+                                double leftVal = Convert.ToDouble(left);
+                                double rightVal = Convert.ToDouble(right);
+                                return leftVal + rightVal;
+                            }
+                        case OperatorType.Minus:
+                            if (left is int li && right is int ri) return li - ri;
+                            else return Convert.ToDouble(left) - Convert.ToDouble(right);
+                        case OperatorType.Multiply:
+                            if (left is int li2 && right is int ri2) return li2 * ri2;
+                            else return Convert.ToDouble(left) * Convert.ToDouble(right);
+                        case OperatorType.Divide:
+                            if (left is int li3 && right is int ri3) return li3 / ri3;
+                            else return Convert.ToDouble(left) / Convert.ToDouble(right);
+                        case OperatorType.Less:
+                            return Convert.ToDouble(left) < Convert.ToDouble(right);
+                        case OperatorType.Greater:
+                            return Convert.ToDouble(left) > Convert.ToDouble(right);
+                        case OperatorType.LessEqual:
+                            return Convert.ToDouble(left) <= Convert.ToDouble(right);
+                        case OperatorType.GreaterEqual:
+                            return Convert.ToDouble(left) >= Convert.ToDouble(right);
+                        case OperatorType.Equalequal:
+                            return Equals(left, right);
+                        case OperatorType.NotEqual:
+                            return !Equals(left, right);
+                        case OperatorType.AndAnd:
+                            return Convert.ToBoolean(left) && Convert.ToBoolean(right);
+                        case OperatorType.OrOr:
+                            return Convert.ToBoolean(left) || Convert.ToBoolean(right);
+                        default:
+                            throw new RuntimeException($"Unknow operator {binary.Operator}");
                     }
                 case VariableReference variable:
                     if (_environment.TryGetValue(variable.Name, out var value)) return value;

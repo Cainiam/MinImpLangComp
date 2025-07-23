@@ -111,6 +111,12 @@ namespace MinImpLangComp.Parsing
                 Eat(TokenType.Float);
                 return new FloatLiteral(value);
             }
+            else if (_currentToken.Type == TokenType.StringLiteral)
+            {
+                string value = _currentToken.Value;
+                Eat(TokenType.StringLiteral);
+                return new StringLiteral(value);
+            }
             else if (_currentToken.Type == TokenType.LeftParen)
             {
                 Eat(TokenType.LeftParen);
