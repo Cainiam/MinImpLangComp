@@ -39,7 +39,11 @@
         PlusPlus,
         MinusMinus,
         Function,
-        Return
+        Return,
+        Modulo,
+        Not,
+        BitwiseAnd,
+        BitwiseOr
     }
 
     public class Token

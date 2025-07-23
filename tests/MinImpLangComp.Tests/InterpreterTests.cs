@@ -434,5 +434,41 @@ namespace MinImpLangComp.Tests
                 Assert.Equal("hello world", result);
             }
         }
+
+        [Fact]
+        public void Evaluate_Modulo_ReturnsCorrectResult()
+        {
+            var interp = new Interpreter();
+            var expr = new BinaryExpression(new IntegerLiteral(10), OperatorType.Modulo, new IntegerLiteral(3));
+
+            Assert.Equal(1, interp.Evaluate(expr));
+        }
+
+        [Fact]
+        public void Evaluate_UnaryNot_ReturnsCorrectResult()
+        {
+            var interp = new Interpreter();
+            var expr = new UnaryNotExpression(new BooleanLiteral(true));
+
+            Assert.False((bool)interp.Evaluate(expr));
+        }
+
+        [Fact]
+        public void Evaluate_BitwiseAnd_ReturnsCorrectResult()
+        {
+            var interp = new Interpreter();
+            var expr = new BinaryExpression(new IntegerLiteral(6), OperatorType.BitwiseAnd, new IntegerLiteral(3));
+
+            Assert.Equal(2, interp.Evaluate(expr));
+        }
+
+        [Fact]
+        public void Evaluate_BitwiseOr_ReturnsCorrectResult()
+        {
+            var interp = new Interpreter();
+            var expr = new BinaryExpression(new IntegerLiteral(6), OperatorType.BitwiseOr, new IntegerLiteral(3));
+
+            Assert.Equal(7, interp.Evaluate(expr));
+        }
     }
 }

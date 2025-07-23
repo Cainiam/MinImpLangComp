@@ -28,7 +28,7 @@ namespace MinImpLangComp.Parsing
             while (_currentToken.Type == TokenType.Plus || _currentToken.Type == TokenType.Minus || _currentToken.Type == TokenType.Less 
                 || _currentToken.Type == TokenType.Greater || _currentToken.Type == TokenType.LessEqual || _currentToken.Type == TokenType.GreaterEqual 
                 || _currentToken.Type == TokenType.Equalequal || _currentToken.Type == TokenType.NotEqual || _currentToken.Type == TokenType.AndAnd 
-                || _currentToken.Type == TokenType.OrOr)
+                || _currentToken.Type == TokenType.OrOr || _currentToken.Type == TokenType.BitwiseAnd || _currentToken.Type == TokenType.BitwiseOr)
             {
                 OperatorType oper;
                 switch(_currentToken.Type)
@@ -63,6 +63,12 @@ namespace MinImpLangComp.Parsing
                     case TokenType.OrOr:
                         oper = OperatorType.OrOr;
                         break;
+                    case TokenType.BitwiseAnd:
+                        oper = OperatorType.BitwiseAnd;
+                        break;
+                    case TokenType.BitwiseOr:
+                        oper = OperatorType.BitwiseOr;
+                        break;
                     default:
                         throw new ParsingException($"Unexpected operator token: {_currentToken.Type}");
                 }
@@ -76,7 +82,7 @@ namespace MinImpLangComp.Parsing
         private Expression ParseTerm()
         {
             var left = ParseFactor();
-            while(_currentToken.Type == TokenType.Multiply || _currentToken.Type == TokenType.Divide)
+            while(_currentToken.Type == TokenType.Multiply || _currentToken.Type == TokenType.Divide || _currentToken.Type == TokenType.Modulo)
             {
                 OperatorType oper;
                 switch(_currentToken.Type)
@@ -86,6 +92,9 @@ namespace MinImpLangComp.Parsing
                         break;
                     case TokenType.Divide:
                         oper = OperatorType.Divide;
+                        break;
+                    case TokenType.Modulo:
+                        oper = OperatorType.Modulo;
                         break;
                     default:
                         throw new ParsingException($"Unexpected operator token: {_currentToken.Type}");
@@ -155,6 +164,12 @@ namespace MinImpLangComp.Parsing
             {
                 Eat(TokenType.False);
                 return new BooleanLiteral(false);
+            }
+            else if (_currentToken.Type == TokenType.Not)
+            {
+                Eat(TokenType.Not);
+                var operand = ParseFactor();
+                return new UnaryNotExpression(operand);
             }
             else throw new ParsingException($"Unexpected token; {_currentToken.Type}");
         }

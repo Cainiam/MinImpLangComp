@@ -99,7 +99,7 @@ namespace MinImpLangComp.Lexing
                         _position++;
                         return new Token(TokenType.NotEqual, "!=");
                     }
-                    return new Token(TokenType.Unknow, "!");
+                    return new Token(TokenType.Not, "!");
                 case '&':
                     _position++;
                     if(_position < _input.Length && _input[_position] == '&')
@@ -107,7 +107,7 @@ namespace MinImpLangComp.Lexing
                         _position++;
                         return new Token(TokenType.AndAnd, "&&");
                     }
-                    return new Token(TokenType.Unknow, "&");
+                    return new Token(TokenType.BitwiseAnd, "&");
                 case '|':
                     _position++;
                     if(_position < _input.Length && _input[_position] == '|')
@@ -115,7 +115,10 @@ namespace MinImpLangComp.Lexing
                         _position++;
                         return new Token(TokenType.OrOr, "||");
                     }
-                    return new Token(TokenType.Unknow, "|");
+                    return new Token(TokenType.BitwiseOr, "|");
+                case '%':
+                    _position++;
+                    return new Token(TokenType.Modulo, "%");
                 default:
                     _position++;
                     return new Token(TokenType.Unknow, current.ToString());

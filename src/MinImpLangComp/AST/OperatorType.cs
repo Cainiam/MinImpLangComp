@@ -15,6 +15,9 @@
         AndAnd,
         OrOr,
         PlusPlus,
-        MinusMinus
+        MinusMinus,
+        Modulo,
+        BitwiseAnd,
+        BitwiseOr
     }
 }

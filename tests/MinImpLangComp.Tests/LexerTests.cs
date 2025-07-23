@@ -227,5 +227,34 @@ namespace MinImpLangComp.Tests
             Assert.Equal(TokenType.StringLiteral, token.Type);
             Assert.Equal("hello world", token.Value);
         }
+
+        [Fact]
+        public void GetNextToken_RetunsNotToken()
+        {
+            var lexer = new Lexer("!");
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(TokenType.Not, token.Type);
+            Assert.Equal("!", token.Value);
+        }
+
+        [Fact]
+        public void GetNextToken_ReturnsBitwiseAndToken()
+        {
+            var lexer = new Lexer("&");
+            var token = lexer.GetNextToken();
+            Assert.Equal(TokenType.BitwiseAnd, token.Type);
+            Assert.Equal("&", token.Value);
+        }
+
+        [Fact]
+        public void GetNextToken_ReturnsBitwiseOrToken()
+        {
+            var lexer = new Lexer("|");
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(TokenType.BitwiseOr, token.Type);
+            Assert.Equal("|", token.Value);
+        }
     }
 }

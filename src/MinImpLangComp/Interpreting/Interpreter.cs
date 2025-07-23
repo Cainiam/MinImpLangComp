@@ -47,6 +47,9 @@ namespace MinImpLangComp.Interpreting
                         case OperatorType.Divide:
                             if (left is int li3 && right is int ri3) return li3 / ri3;
                             else return Convert.ToDouble(left) / Convert.ToDouble(right);
+                        case OperatorType.Modulo:
+                            if (left is int li4 && right is int ri4) return li4 % ri4;
+                            else return Convert.ToDouble(left) % Convert.ToDouble(right);
                         case OperatorType.Less:
                             return Convert.ToDouble(left) < Convert.ToDouble(right);
                         case OperatorType.Greater:
@@ -63,6 +66,12 @@ namespace MinImpLangComp.Interpreting
                             return Convert.ToBoolean(left) && Convert.ToBoolean(right);
                         case OperatorType.OrOr:
                             return Convert.ToBoolean(left) || Convert.ToBoolean(right);
+                        case OperatorType.BitwiseAnd:
+                            if (left is int li5 && right is int ri5) return li5 & ri5;
+                            else throw new RuntimeException($"Operator {binary.Operator} only accept integer value");
+                        case OperatorType.BitwiseOr:
+                            if (left is int li6 && right is int ri6) return li6 | ri6;
+                            else throw new RuntimeException($"Operator {binary.Operator} only accept integer value");
                         default:
                             throw new RuntimeException($"Unknow operator {binary.Operator}");
                     }
@@ -116,6 +125,9 @@ namespace MinImpLangComp.Interpreting
                         return newValue;
                     }
                     else throw new RuntimeException($"Unsupported type for unary operation: {unary.Identifier}");
+                case UnaryNotExpression unaryNot:
+                    var valueNotExpr = Evaluate(unaryNot.Operand);
+                    return !Convert.ToBoolean(valueNotExpr);
                 case ReturnStatement returnStatement:
                     var returnValue = Evaluate(returnStatement.Expression);
                     throw new ReturnException(returnValue);

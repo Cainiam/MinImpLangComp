@@ -225,5 +225,52 @@ namespace MinImpLangComp.Tests
             var stringLiteral = Assert.IsType<StringLiteral>(expr);
             Assert.Equal("abc", stringLiteral.Value);
         }
+
+        [Fact]
+        public void ParseExpression_Modulo_ReturnsBinaryExpression()
+        {
+            var lexer = new Lexer("5 % 2;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            var exprStmt = Assert.IsType<ExpressionStatement>(statement);
+            var binExpr = Assert.IsType<BinaryExpression>(exprStmt.Expression);
+            Assert.Equal(OperatorType.Modulo, binExpr.Operator);
+        }
+
+        [Fact]
+        public void ParseExpression_UnaryNot_ReturnsUnaryNotExpression()
+        {
+            var lexer = new Lexer("!true;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+            
+            var exprStmt = Assert.IsType<ExpressionStatement>(statement);
+            var notExpr = Assert.IsType<UnaryNotExpression>(exprStmt.Expression);
+        }
+
+        [Fact]
+        public void ParseExpression_BitwiseAnd_ReturnsBinaryExpression()
+        {
+            var lexer = new Lexer("5 & 3;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            var exprStmt = Assert.IsType<ExpressionStatement>(statement);
+            var binExpr = Assert.IsType<BinaryExpression>(exprStmt.Expression);
+            Assert.Equal(OperatorType.BitwiseAnd, binExpr.Operator);
+        }
+
+        [Fact]
+        public void ParseExpresion_BitwiseOr_ReturnsBinaryExpression()
+        {
+            var lexer = new Lexer("5 | 3;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            var exprStmt = Assert.IsType<ExpressionStatement>(statement);
+            var binExpr = Assert.IsType<BinaryExpression>(exprStmt.Expression);
+            Assert.Equal(OperatorType.BitwiseOr, binExpr.Operator);
+        }
     }
 }
