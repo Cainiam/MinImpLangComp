@@ -1,4 +1,4 @@
-﻿using MinImpLangComp.LexerSpace;
+﻿using MinImpLangComp.Lexing;
 using Xunit;
 
 namespace MinImpLangComp.Tests
@@ -118,8 +118,8 @@ namespace MinImpLangComp.Tests
         [InlineData("for", TokenType.For, "for")]
         public void GetNextToken_ReturnsKeywordTokens(string input, TokenType expectedType, string expectedValue)
         {
-            var lexer= new Lexer(input);
-            var token= lexer.GetNextToken();
+            var lexer = new Lexer(input);
+            var token = lexer.GetNextToken();
 
             Assert.Equal(expectedType, token.Type);
             Assert.Equal(expectedValue, token.Value);
@@ -129,7 +129,7 @@ namespace MinImpLangComp.Tests
         public void GetNextToken_ReturnsStringLiteralWithEscapedQuote()
         {
             var lexer = new Lexer("\"hello \\\"world\\\"\"");
-            var token= lexer.GetNextToken();
+            var token = lexer.GetNextToken();
 
             Assert.Equal(TokenType.StringLiteral, token.Type);
             Assert.Equal("hello \"world\"", token.Value);
@@ -164,6 +164,97 @@ namespace MinImpLangComp.Tests
             Assert.Equal(TokenType.LexicalError, token.Type);
             Assert.Contains("unclosed string", token.Value);
             Assert.StartsWith("\"", token.Value);
+        }
+
+        [Theory]
+        [InlineData("<=", TokenType.LessEqual, "<=")]
+        [InlineData(">=", TokenType.GreaterEqual, ">=")]
+        [InlineData("==", TokenType.Equalequal, "==")]
+        [InlineData("!=", TokenType.NotEqual, "!=")]
+        public void GetNextToken_ReturnsComparisonAndEqualityOperators(string input, TokenType expectedType, string expectedValue)
+        {
+            var lexer = new Lexer(input);
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(expectedType, token.Type);
+            Assert.Equal(expectedValue, token.Value);
+        }
+
+        [Theory]
+        [InlineData("true", TokenType.True, "true")]
+        [InlineData("false", TokenType.False, "false")]
+        public void GetNextToken_ReturnsTrueAndFalseTokens(string input, TokenType expectedType, string excpectedValue)
+        {
+            var lexer = new Lexer(input);
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(expectedType, token.Type);
+            Assert.Equal(excpectedValue, token.Value);
+        }
+
+        [Fact]
+        public void GetNextToken_ReturnsAndAndOrOrTokens()
+        {
+            var lexer = new Lexer("&& ||");
+
+            var token1 = lexer.GetNextToken();
+            Assert.Equal(TokenType.AndAnd, token1.Type);
+            Assert.Equal("&&", token1.Value);
+            var token2 = lexer.GetNextToken();
+            Assert.Equal(TokenType.OrOr, token2.Type);
+            Assert.Equal("||", token2.Value);
+        }
+        
+        [Fact]
+        public void GetNextToken_ReturnsPlusPlusAndMinusMinusTokens()
+        {
+            var lexer = new Lexer("++ --");
+
+            var token1 = lexer.GetNextToken();
+            Assert.Equal(TokenType.PlusPlus, token1.Type);
+            Assert.Equal("++", token1.Value);
+            var token2 = lexer.GetNextToken();
+            Assert.Equal(TokenType.MinusMinus, token2.Type);
+            Assert.Equal("--", token2.Value);
+        }
+
+        [Fact]
+        public void GetNextToken_ReturnsStringLiteralToken()
+        {
+            var lexer = new Lexer("\"hello world\"");
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(TokenType.StringLiteral, token.Type);
+            Assert.Equal("hello world", token.Value);
+        }
+
+        [Fact]
+        public void GetNextToken_RetunsNotToken()
+        {
+            var lexer = new Lexer("!");
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(TokenType.Not, token.Type);
+            Assert.Equal("!", token.Value);
+        }
+
+        [Fact]
+        public void GetNextToken_ReturnsBitwiseAndToken()
+        {
+            var lexer = new Lexer("&");
+            var token = lexer.GetNextToken();
+            Assert.Equal(TokenType.BitwiseAnd, token.Type);
+            Assert.Equal("&", token.Value);
+        }
+
+        [Fact]
+        public void GetNextToken_ReturnsBitwiseOrToken()
+        {
+            var lexer = new Lexer("|");
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(TokenType.BitwiseOr, token.Type);
+            Assert.Equal("|", token.Value);
         }
     }
 }

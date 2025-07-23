@@ -1,16 +1,12 @@
 ﻿using MinImpLangComp.AST;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using MinImpLangComp.Interpreting;
 
 namespace MinImpLangComp.Tests
 {
     public class InterpreterControlFlowTests
     {
         [Fact]
-        public void Evaluate_IfStattement_ExecutesThenBranch_WhenConditionIsTrue()
+        public void Evaluate_IfStatement_ExecutesThenBranch_WhenConditionIsTrue()
         {
             var interp = new Interpreter();
             var ifStatement = new IfStatement(
@@ -47,14 +43,14 @@ namespace MinImpLangComp.Tests
             var whileStatement = new WhileStatement(
                 new BinaryExpression(
                     new VariableReference("x"),
-                    "<",
+                    OperatorType.Less,
                     new IntegerLiteral(3)
                 ),
                 new Assignment(
                     "x",
                     new BinaryExpression(
                         new VariableReference("x"),
-                        "+",
+                        OperatorType.Plus,
                         new IntegerLiteral(1)
                     )
                 )
@@ -71,14 +67,14 @@ namespace MinImpLangComp.Tests
             var initializer = new Assignment("i", new IntegerLiteral(1));
             var condition = new BinaryExpression(
                 new VariableReference("i"), 
-                "<", 
+                OperatorType.Less, 
                 new IntegerLiteral(3)
             );
             var increment = new Assignment(
                 "i",
                 new BinaryExpression(
                     new VariableReference("i"),
-                    "+",
+                    OperatorType.Plus,
                     new IntegerLiteral(1)
                 )
             );

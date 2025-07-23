@@ -1,4 +1,4 @@
-﻿namespace MinImpLangComp
+﻿namespace MinImpLangComp.Lexing
 { 
     public enum TokenType
     {
@@ -27,7 +27,25 @@
         For,
         StringLiteral,
         Less,
-        Greater
+        Greater,
+        LessEqual,
+        GreaterEqual,
+        Equalequal,
+        NotEqual,
+        True,
+        False,
+        AndAnd,
+        OrOr,
+        PlusPlus,
+        MinusMinus,
+        Function,
+        Return,
+        Modulo,
+        Not,
+        BitwiseAnd,
+        BitwiseOr,
+        LeftBracket,
+        RightBracket
     }
 
     public class Token

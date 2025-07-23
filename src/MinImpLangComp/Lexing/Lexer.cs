@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace MinImpLangComp.LexerSpace
+namespace MinImpLangComp.Lexing
 {
     public class Lexer
     {
@@ -27,9 +27,19 @@ namespace MinImpLangComp.LexerSpace
             {
                 case '+':
                     _position++;
+                    if( _position < _input.Length && _input[_position] == '+')
+                    {
+                        _position++;
+                        return new Token(TokenType.PlusPlus, "++");
+                    }
                     return new Token(TokenType.Plus, "+");
                 case '-':
                     _position++;
+                    if (_position < _input.Length && _input[_position] == '-')
+                    {
+                        _position++;
+                        return new Token(TokenType.MinusMinus, "--");
+                    }
                     return new Token(TokenType.Minus, "-");
                 case '*':
                     _position++;
@@ -39,6 +49,11 @@ namespace MinImpLangComp.LexerSpace
                     return new Token(TokenType.Divide, "/");
                 case '=':
                     _position++;
+                    if (_position < _input.Length && _input[_position] == '=')
+                    {
+                        _position++;
+                        return new Token(TokenType.Equalequal, "==");
+                    }
                     return new Token(TokenType.Assign, "=");
                 case ';':
                     _position++;
@@ -63,10 +78,53 @@ namespace MinImpLangComp.LexerSpace
                     return new Token(TokenType.RightBrace, "}");
                 case '<':
                     _position++;
+                    if(_position < _input.Length && _input[_position] == '=')
+                    {
+                        _position++;
+                        return new Token(TokenType.LessEqual, "<=");
+                    }
                     return new Token(TokenType.Less, "<");
                 case '>':
                     _position++;
+                    if(_position < _input.Length && _input[_position] == '=')
+                    {
+                        _position++;
+                        return new Token(TokenType.GreaterEqual, ">=");
+                    }
                     return new Token(TokenType.Greater, ">");
+                case '!':
+                    _position++;
+                    if (_position < _input.Length && _input[_position] == '=')
+                    {
+                        _position++;
+                        return new Token(TokenType.NotEqual, "!=");
+                    }
+                    return new Token(TokenType.Not, "!");
+                case '&':
+                    _position++;
+                    if(_position < _input.Length && _input[_position] == '&')
+                    {
+                        _position++;
+                        return new Token(TokenType.AndAnd, "&&");
+                    }
+                    return new Token(TokenType.BitwiseAnd, "&");
+                case '|':
+                    _position++;
+                    if(_position < _input.Length && _input[_position] == '|')
+                    {
+                        _position++;
+                        return new Token(TokenType.OrOr, "||");
+                    }
+                    return new Token(TokenType.BitwiseOr, "|");
+                case '%':
+                    _position++;
+                    return new Token(TokenType.Modulo, "%");
+                case '[':
+                    _position++;
+                    return new Token(TokenType.LeftBracket, "[");
+                case ']':
+                    _position++;
+                    return new Token(TokenType.RightBracket, "]");
                 default:
                     _position++;
                     return new Token(TokenType.Unknow, current.ToString());
@@ -119,6 +177,14 @@ namespace MinImpLangComp.LexerSpace
                     return new Token(TokenType.While, value);
                 case "for":
                     return new Token(TokenType.For, value);
+                case "true":
+                    return new Token(TokenType.True, value);
+                case "false":
+                    return new Token(TokenType.False, value);
+                case "function":
+                    return new Token(TokenType.Function, value);
+                case "return":
+                    return new Token(TokenType.Return, value);
                 default:
                     return new Token(TokenType.Identifier, value);
             }

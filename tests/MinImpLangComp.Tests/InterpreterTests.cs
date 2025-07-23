@@ -1,4 +1,5 @@
 ﻿using MinImpLangComp.AST;
+using MinImpLangComp.Interpreting;
 using Xunit;
 
 namespace MinImpLangComp.Tests
@@ -33,7 +34,7 @@ namespace MinImpLangComp.Tests
             var interp = new Interpreter();
             var node = new BinaryExpression(
                 new IntegerLiteral(1),
-                "+",
+                OperatorType.Plus,
                 new IntegerLiteral(2)
             );
             var result = interp.Evaluate(node);
@@ -48,7 +49,7 @@ namespace MinImpLangComp.Tests
             var interp = new Interpreter();
             var node = new BinaryExpression(
                 new IntegerLiteral(5),
-                "*",
+                OperatorType.Multiply,
                 new IntegerLiteral(6)
             );
             var result = interp.Evaluate(node);
@@ -63,7 +64,7 @@ namespace MinImpLangComp.Tests
             var interp = new Interpreter();
             var node = new BinaryExpression(
                 new FloatLiteral(5.5),
-                "+",
+                OperatorType.Plus,
                 new IntegerLiteral(4)
             );
             var result = interp.Evaluate(node);
@@ -79,7 +80,7 @@ namespace MinImpLangComp.Tests
             var node = new Assignment("x",
                 new BinaryExpression(
                     new IntegerLiteral(2),
-                    "+",
+                    OperatorType.Plus,
                     new IntegerLiteral(3)
                 )
             );
@@ -109,8 +110,8 @@ namespace MinImpLangComp.Tests
             var block = new Block(new List<Statement>
             {
                 new Assignment("x", new IntegerLiteral(2)),
-                new Assignment("y", new BinaryExpression(new VariableReference("x"), "+", new IntegerLiteral(3))),
-                new ExpressionStatement(new BinaryExpression(new VariableReference("y"), "*", new IntegerLiteral(2)))
+                new Assignment("y", new BinaryExpression(new VariableReference("x"), OperatorType.Plus, new IntegerLiteral(3))),
+                new ExpressionStatement(new BinaryExpression(new VariableReference("y"), OperatorType.Multiply, new IntegerLiteral(2)))
             });
             var result = interp.Evaluate(block);
 
@@ -122,5 +123,389 @@ namespace MinImpLangComp.Tests
             Assert.Equal(5, interp.GetEnvironment()["y"]);
         }
 
+        [Fact]
+        public void Evaluate_BinaryExpression_EqualEqual_ReturnsTrue()
+        {
+            var interp = new Interpreter();
+            var node = new BinaryExpression(
+                new IntegerLiteral(5),
+                OperatorType.Equalequal,
+                new IntegerLiteral(5)
+            );
+            var result = interp.Evaluate(node);
+
+            Assert.IsType<bool>(result);
+            Assert.True((bool)result);
+        }
+
+        [Fact]
+        public void Evaluate_BinaryExpression_NotEqual_ReturnsTrue()
+        {
+            var interp = new Interpreter();
+            var node = new BinaryExpression(
+                new IntegerLiteral(3),
+                OperatorType.NotEqual,
+                new IntegerLiteral(4)
+            );
+            var result = interp.Evaluate(node);
+
+            Assert.IsType<bool>(result);
+            Assert.True((bool)result);
+        }
+
+        [Fact]
+        public void Evaluate_BooleanLiteral_ReturnsBooleanValue()
+        {
+            var interp = new Interpreter();
+            var trueNode = new BooleanLiteral(true);
+            var falseNode = new BooleanLiteral(false);
+            var trueResult = interp.Evaluate(trueNode);
+            var falseResult = interp.Evaluate(falseNode);
+
+            Assert.IsType<bool>(trueResult);
+            Assert.True((bool)trueResult);
+            Assert.IsType<bool>(falseResult);
+            Assert.False((bool)falseResult);
+        }
+
+        [Fact]
+        public void Evaluate_IfStatement_WithBooleanLiteralCondition_WorksCorreclty()
+        {
+            var interp = new Interpreter();
+            var ifStatement = new IfStatement(
+                new BooleanLiteral(true),
+                new Assignment("x", new IntegerLiteral(11)),
+                new Assignment("x", new IntegerLiteral(22))
+            );
+            interp.Evaluate(ifStatement);
+
+            Assert.Equal(11, interp.GetEnvironment()["x"]);
+        }
+
+        [Fact]
+        public void Evaluate_BinaryExpression_BooleanComparison_ReturnsCorrectResult()
+        {
+            var interp = new Interpreter();
+            var node = new BinaryExpression(
+                new IntegerLiteral(5),
+                OperatorType.Less,
+                new IntegerLiteral(10)
+            );
+            var result = interp.Evaluate(node);
+
+            Assert.IsType<bool>(result);
+            Assert.True((bool)result);
+        }
+
+        [Fact]
+        public void Evaluate_LogicalAnd_ReturnsExpected()
+        {
+            var interp = new Interpreter();
+            var node = new BinaryExpression(
+                new BooleanLiteral(true),
+                OperatorType.AndAnd,
+                new BooleanLiteral(false)
+            );
+            var result = interp.Evaluate(node);
+
+            Assert.IsType<bool>(result);
+            Assert.False((bool)result);
+        }
+
+        [Fact]
+        public void Evaluate_LogicalOr_ReturnsExpected()
+        {
+            var interp = new Interpreter();
+            var node = new BinaryExpression(
+                new BooleanLiteral(false),
+                OperatorType.OrOr,
+                new BooleanLiteral(true)
+            );
+            var result = interp.Evaluate(node);
+
+            Assert.IsType<bool>(result);
+            Assert.True((bool)result);
+        }
+
+        [Fact]
+        public void Evaluate_UnaryIncrement_IncrementsVariable()
+        {
+            var interp = new Interpreter();
+            interp.Evaluate(new Assignment("x", new IntegerLiteral(5)));
+            var unary = new UnaryExpression(OperatorType.PlusPlus, "x");
+            var result = interp.Evaluate(unary);
+
+            Assert.Equal(6, result);
+            Assert.Equal(6, interp.GetEnvironment()["x"]);
+        }
+
+        [Fact]
+        public void Evaluate_UnaryDecrement_DecrementsVariable()
+        {
+            var interp = new Interpreter();
+            interp.Evaluate(new Assignment("y", new IntegerLiteral(3)));
+            var unary = new UnaryExpression(OperatorType.MinusMinus, "y");
+            var result = interp.Evaluate(unary);
+
+            Assert.Equal(2, result);
+            Assert.Equal(2, interp.GetEnvironment()["y"]);
+        }
+
+        [Fact]
+        public void Evaluate_FunctionCall_Print_WritesOutput()
+        {
+            var interp = new Interpreter();
+            var functionCall = new FunctionCall("print", new List<Expression> { new IntegerLiteral(5) });
+            using (var sw = new StringWriter())
+            {
+                Console.SetOut(sw);
+                interp.Evaluate(functionCall);
+                string result = sw.ToString().Trim();
+                Assert.Equal("5", result);
+            }
+        }
+
+        [Fact]
+        public void Evaluate_FunctionDeclaration_AddsFunctionToEnvironment()
+        {
+            var interp = new Interpreter();
+            var funct = new FunctionDeclaration("myFunc", new List<string>(), new Block(new List<Statement>()));
+            var result = interp.Evaluate(funct);
+
+            Assert.Null(result);
+            Assert.True(interp.GetEnvironment().ContainsKey("myFunc"));
+            Assert.IsType<FunctionDeclaration>(interp.GetEnvironment()["myFunc"]);
+        }
+
+        [Fact]
+        public void Evaluate_FunctionCall_UserFunction_ExecutesFunction()
+        {
+            var interp = new Interpreter();
+            var funct = new FunctionDeclaration(
+                "addOne",
+                new List<string> { "x" },
+                new Block(new List<Statement>
+                {
+                    new ExpressionStatement(new FunctionCall("print", new List<Expression> { new IntegerLiteral(999) })),
+                    new ExpressionStatement(new VariableReference("x"))
+                })
+            );
+            interp.Evaluate(funct);
+            using (var sw = new StringWriter())
+            {
+                Console.SetOut(sw);
+                var result = interp.Evaluate(new FunctionCall("addOne", new List<Expression> { new IntegerLiteral(5) }));
+                string console = sw.ToString().Trim();
+
+                Assert.Equal("999", console);
+                Assert.Null(result);
+            }
+        }
+
+        [Fact]
+        public void Evaluate_Function_ReturnStatement_ReturnsValue()
+        {
+            var interp = new Interpreter();
+            var function = new FunctionDeclaration("testFunc", new List<string>(), new Block(new List<Statement>
+            {
+                new ReturnStatement(new IntegerLiteral(99))
+            }));
+            interp.Evaluate(function);
+            var call = new FunctionCall("testFunc", new List<Expression>());
+            var result = interp.Evaluate(call);
+
+            Assert.Equal(99, result);
+        }
+
+        [Fact]
+        public void Evaluate_FunctionCall_WithReturn_ReturnsCorrectValue()
+        {
+            var interp = new Interpreter();
+            var funct = new FunctionDeclaration(
+                "double",
+                new List<string> { "x" },
+                new Block(new List<Statement>
+                {
+                    new ReturnStatement(new BinaryExpression(
+                        new VariableReference("x"),
+                        OperatorType.Multiply,
+                        new FloatLiteral(2.5)
+                    ))
+                })
+            );
+            interp.Evaluate(funct);
+            var result = interp.Evaluate(new FunctionCall("double", new List<Expression> { new IntegerLiteral(4) }));
+
+            Assert.Equal(10.0, result);
+        }
+
+        [Fact]
+        public void Evaluate_FunctionCall_Returns_StopsExecutionAfterReturn()
+        {
+            var interp = new Interpreter();
+            var funct = new FunctionDeclaration(
+                "earlyReturn",
+                new List<string> { },
+                new Block(new List<Statement>
+                {
+                    new ReturnStatement(new IntegerLiteral(10)),
+                    new ExpressionStatement(new FunctionCall("print", new List<Expression> { new IntegerLiteral(999) }))
+                })
+            );
+            interp.Evaluate(funct);
+            using(var sw = new StringWriter())
+            {
+                Console.SetOut(sw);
+                var result = interp.Evaluate(new FunctionCall("earlyReturn", new List<Expression> { }));
+                string output = sw.ToString().Trim();
+
+                Assert.Equal(10, result);
+                Assert.Equal("", output);
+            }
+        }
+
+        [Fact]
+        public void Evaluate_StringLiteral_ReturnsString()
+        {
+            var interp = new Interpreter();
+            var str = new StringLiteral("test123");
+            var result = interp.Evaluate(str);
+
+            Assert.Equal("test123", result);
+        }
+
+        [Fact]
+        public void Evaluate_BinaryExpression_StringConcat_ReturnsConcatenatedString()
+        {
+            var interp = new Interpreter();
+            var left = new StringLiteral("Hello ");
+            var right = new StringLiteral("World");
+            var expr = new BinaryExpression(left, OperatorType.Plus, right);
+            var result = interp.Evaluate(expr);
+
+            Assert.Equal("Hello World", result);
+        }
+
+        [Fact]
+        public void Evaluate_BinaryExpression_StringAndIntConcat_ReturnsConcatenatedString()
+        {
+            var interp = new Interpreter();
+            var left = new StringLiteral("Value: ");
+            var right = new IntegerLiteral(10);
+            var expr = new BinaryExpression(left, OperatorType.Plus, right);
+            var result = interp.Evaluate(expr);
+
+            Assert.Equal("Value: 10", result);
+        }
+
+        [Fact]
+        public void Evaluate_BinaryExpression_IntAndStringCOncat_ReturnsConcatenatedString()
+        {
+            var interp = new Interpreter();
+            var left = new IntegerLiteral(100);
+            var right = new StringLiteral(" dogs");
+            var expr = new BinaryExpression(left, OperatorType.Plus, right);
+            var result = interp.Evaluate(expr);
+
+            Assert.Equal("100 dogs", result);
+        }
+
+        [Fact]
+        public void Evaluate_FunctionCall_Input_ReadsUserInput()
+        {
+            var interp = new Interpreter();
+            using (var sr = new StringReader("123\n"))
+            using (var sw = new StringWriter())
+            {
+                Console.SetIn(sr);
+                Console.SetOut(sw);
+                var result = interp.Evaluate(new FunctionCall("input", new List<Expression>()));
+
+                Assert.Equal(123, result);
+            }
+
+            using (var sr = new StringReader("hello world\n"))
+            using (var sw = new StringWriter())
+            {
+                Console.SetIn(sr);
+                Console.SetOut(sw);
+                var result = interp.Evaluate(new FunctionCall("input", new List<Expression>()));
+
+                Assert.Equal("hello world", result);
+            }
+        }
+
+        [Fact]
+        public void Evaluate_Modulo_ReturnsCorrectResult()
+        {
+            var interp = new Interpreter();
+            var expr = new BinaryExpression(new IntegerLiteral(10), OperatorType.Modulo, new IntegerLiteral(3));
+
+            Assert.Equal(1, interp.Evaluate(expr));
+        }
+
+        [Fact]
+        public void Evaluate_UnaryNot_ReturnsCorrectResult()
+        {
+            var interp = new Interpreter();
+            var expr = new UnaryNotExpression(new BooleanLiteral(true));
+
+            Assert.False((bool)interp.Evaluate(expr));
+        }
+
+        [Fact]
+        public void Evaluate_BitwiseAnd_ReturnsCorrectResult()
+        {
+            var interp = new Interpreter();
+            var expr = new BinaryExpression(new IntegerLiteral(6), OperatorType.BitwiseAnd, new IntegerLiteral(3));
+
+            Assert.Equal(2, interp.Evaluate(expr));
+        }
+
+        [Fact]
+        public void Evaluate_BitwiseOr_ReturnsCorrectResult()
+        {
+            var interp = new Interpreter();
+            var expr = new BinaryExpression(new IntegerLiteral(6), OperatorType.BitwiseOr, new IntegerLiteral(3));
+
+            Assert.Equal(7, interp.Evaluate(expr));
+        }
+
+        [Fact]
+        public void Evaluate_ArrayLiteral_ReturnsList()
+        {
+            var interp = new Interpreter();
+            var array = new ArrayLiteral(new List<Expression> { new IntegerLiteral(1), new IntegerLiteral(2), new IntegerLiteral(3) });
+            var result = interp.Evaluate(array);
+
+            Assert.IsType<List<object>>(result);
+            Assert.Equal(3, ((List<object>)result).Count);
+        }
+
+        [Fact]
+        public void Evaluate_ArrayAccess_ReturnsCorrectElement()
+        {
+            var interp = new Interpreter();
+            var assign = new Assignment("a", new ArrayLiteral(new List<Expression> { new IntegerLiteral(10), new IntegerLiteral(20) }));
+            interp.Evaluate(assign);
+            var access = new ArrayAccess("a", new IntegerLiteral(1));
+            var result = interp.Evaluate(access);
+
+            Assert.Equal(20, result);
+        }
+
+        [Fact]
+        public void Evaluate_ArrayAssignment_UpdatesArrayElement()
+        {
+            var interp = new Interpreter();
+            var assign = new Assignment("a", new ArrayLiteral(new List<Expression> { new IntegerLiteral(10), new IntegerLiteral(20) }));
+            interp.Evaluate(assign);
+            var arrayAssign = new ArrayAssignment("a", new IntegerLiteral(0), new IntegerLiteral(99));
+            interp.Evaluate(arrayAssign);
+            var access = new ArrayAccess("a", new IntegerLiteral(0));
+            var result = interp.Evaluate(access);
+
+            Assert.Equal(99, result);
+        }
     }
 }
