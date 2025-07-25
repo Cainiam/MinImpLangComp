@@ -50,5 +50,29 @@ namespace MinImpLangComp.Tests
 
             Assert.Contains("var x = 10;", result);
         }
+
+        [Fact]
+        public void Transpile_ArtihmeticExpressionGeneratesCorrectCSharp()
+        {
+            var expression = new BinaryExpression(
+                new IntegerLiteral(5),
+                OperatorType.Plus,
+                new BinaryExpression(
+                    new IntegerLiteral(3),
+                    OperatorType.Multiply,
+                    new IntegerLiteral(2)
+                )
+            );
+            var program = new Block(new List<Statement>
+            {
+                new Assignment("x", expression)
+            });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile(program);
+
+            Console.WriteLine(result);
+
+            Assert.Contains("var x = (5 + (3 * 2));", result);
+        }
     }
 }

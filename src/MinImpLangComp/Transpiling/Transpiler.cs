@@ -57,7 +57,7 @@ namespace MinImpLangComp.Transpiling
                 case VariableReference v:
                     return v.Name;
                 case BinaryExpression binaryExpression:
-                    return $"{TranspileExpression(binaryExpression.Left)} {GetOperatorSymbol(binaryExpression.Operator)} {TranspileExpression(binaryExpression.Right)}";
+                    return $"({TranspileExpression(binaryExpression.Left)} {GetOperatorSymbol(binaryExpression.Operator)} {TranspileExpression(binaryExpression.Right)})";
                 case FunctionCall call when call.Name == "print":
                     return $"Console.WriteLine({string.Join(", ", call.Arguments.Select(TranspileExpression))})";
                 default:
