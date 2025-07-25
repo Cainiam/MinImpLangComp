@@ -1,0 +1,91 @@
+﻿using MinImpLangComp.AST;
+using System.Globalization;
+using System.Text;
+
+namespace MinImpLangComp.Transpiling
+{
+    public class Transpiler
+    {
+        public string Transpile(Block program)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine("using System;");
+            sb.AppendLine();
+            sb.AppendLine("namespace MinImpLangComp");
+            sb.AppendLine("{");
+            sb.AppendLine("    class Program");
+            sb.AppendLine("    {");
+            sb.AppendLine("        static void Main(string[] args)");
+            sb.AppendLine("        {");
+
+            foreach(var statement in program.Statements) sb.AppendLine("            " + TranspileStatement(statement));
+
+
+            sb.AppendLine("        }");
+            sb.AppendLine("    }");
+            sb.AppendLine("}");
+
+            return sb.ToString();
+        }
+
+        private string TranspileStatement(Statement statement)
+        {
+            switch (statement)
+            {
+                case ExpressionStatement expressionStatement:
+                    return TranspileExpression(expressionStatement.Expression) + ";";
+                case Assignment assignment:
+                    return $"var {assignment.Identifier} = {TranspileExpression(assignment.Expression)}";
+                default:
+                    throw new NotImplementedException($"Transpilation not yet implemented for {statement.GetType()}");
+            }
+        }
+
+        private string TranspileExpression(Expression expression)
+        {
+            switch (expression)
+            {
+                case IntegerLiteral i:
+                    return i.Value.ToString();
+                case FloatLiteral f:
+                    return f.Value.ToString(CultureInfo.InvariantCulture);
+                case StringLiteral s:
+                    return $"\"{s.Value}\"";
+                case BooleanLiteral b:
+                    return b.Value ? "true" : "false";
+                case VariableReference v:
+                    return v.Name;
+                case BinaryExpression binaryExpression:
+                    return $"{TranspileExpression(binaryExpression.Left)} {GetOperatorSymbol(binaryExpression.Operator)} {TranspileExpression(binaryExpression.Right)}";
+                case FunctionCall call when call.Name == "print":
+                    return $"Console.WriteLine({string.Join(", ", call.Arguments.Select(TranspileExpression))})";
+                default:
+                    throw new NotImplementedException($"Transpilation not yet implemented for {expression.GetType()}");
+            }
+        }
+
+        private string GetOperatorSymbol(OperatorType operatorType)
+        {
+            return operatorType switch
+            {
+                OperatorType.Plus => "+",
+                OperatorType.Minus => "-",
+                OperatorType.Multiply => "*",
+                OperatorType.Divide => "/",
+                OperatorType.Modulo => "%",
+                OperatorType.Less => "<",
+                OperatorType.Greater => ">",
+                OperatorType.LessEqual => "<=",
+                OperatorType.GreaterEqual => ">=",
+                OperatorType.Equalequal => "==",
+                OperatorType.NotEqual => "!=",
+                OperatorType.AndAnd => "&&",
+                OperatorType.OrOr => "||",
+                OperatorType.BitwiseAnd => "&",
+                OperatorType.BitwiseOr => "|",
+                _ => throw new NotImplementedException($"Operator {operatorType} is not supported yet")
+            };
+        }
+    }
+}
