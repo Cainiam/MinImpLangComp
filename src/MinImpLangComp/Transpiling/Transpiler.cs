@@ -37,6 +37,20 @@ namespace MinImpLangComp.Transpiling
                     return TranspileExpression(expressionStatement.Expression) + ";";
                 case Assignment assignment:
                     return $"var {assignment.Identifier} = {TranspileExpression(assignment.Expression)};";
+                case IfStatement ifStatement:
+                    var sbIF = new StringBuilder();
+                    sbIF.AppendLine($"if ({TranspileExpression(ifStatement.Condition)})");
+                    sbIF.AppendLine("{");
+                    sbIF.AppendLine("    " + TranspileStatement(ifStatement.ThenBranch));
+                    sbIF.AppendLine("}");
+                    if (ifStatement.ElseBranch != null)
+                    {
+                        sbIF.AppendLine("else");
+                        sbIF.AppendLine("{");
+                        sbIF.AppendLine("    " + TranspileStatement(ifStatement.ElseBranch));
+                        sbIF.AppendLine("}");
+                    }
+                    return sbIF.ToString();
                 default:
                     throw new NotImplementedException($"Transpilation not yet implemented for {statement.GetType()}");
             }

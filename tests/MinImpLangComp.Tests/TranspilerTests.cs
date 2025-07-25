@@ -30,7 +30,7 @@ namespace MinImpLangComp.Tests
             var transpiler = new Transpiler();
             var result = transpiler.Transpile(program);
 
-            Console.WriteLine(result);
+            //Console.WriteLine(result);
 
             Assert.Contains("Console.WriteLine(5);", result);
             Assert.Matches(@"Console\.WriteLine\s*\(\s*5\s*\);", result);
@@ -46,7 +46,7 @@ namespace MinImpLangComp.Tests
             var transpiler = new Transpiler();
             var result = transpiler.Transpile(program);
 
-            Console.WriteLine(result);
+            //Console.WriteLine(result);
 
             Assert.Contains("var x = 10;", result);
         }
@@ -70,9 +70,30 @@ namespace MinImpLangComp.Tests
             var transpiler = new Transpiler();
             var result = transpiler.Transpile(program);
 
-            Console.WriteLine(result);
+            //Console.WriteLine(result);
 
             Assert.Contains("var x = (5 + (3 * 2));", result);
+        }
+
+        [Fact]
+        public void Transpile_IfStatementGeneratesCorrectCSharp()
+        {
+            var ifStmt = new IfStatement(
+                new BinaryExpression(
+                    new VariableReference("x"),
+                    OperatorType.Greater,
+                    new IntegerLiteral(5)
+                ),
+                new ExpressionStatement(new FunctionCall("print", new List<Expression> { new VariableReference("x") }))
+            );
+            var program = new Block(new List<Statement> { ifStmt });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile(program);
+
+            //Console.WriteLine(result);
+
+            Assert.Contains("if ((x > 5))", result);
+            Assert.Contains("Console.WriteLine(x);", result);
         }
     }
 }
