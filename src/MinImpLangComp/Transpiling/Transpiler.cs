@@ -36,7 +36,7 @@ namespace MinImpLangComp.Transpiling
                 case ExpressionStatement expressionStatement:
                     return TranspileExpression(expressionStatement.Expression) + ";";
                 case Assignment assignment:
-                    return $"var {assignment.Identifier} = {TranspileExpression(assignment.Expression)}";
+                    return $"var {assignment.Identifier} = {TranspileExpression(assignment.Expression)};";
                 default:
                     throw new NotImplementedException($"Transpilation not yet implemented for {statement.GetType()}");
             }

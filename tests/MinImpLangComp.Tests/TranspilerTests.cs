@@ -35,5 +35,20 @@ namespace MinImpLangComp.Tests
             Assert.Contains("Console.WriteLine(5);", result);
             Assert.Matches(@"Console\.WriteLine\s*\(\s*5\s*\);", result);
         }
+
+        [Fact]
+        public void Transpile_AssignmentGeneratesVariableDeclaration()
+        {
+            var program = new Block(new List<Statement>
+            {
+                new Assignment("x", new IntegerLiteral(10))
+            });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile(program);
+
+            Console.WriteLine(result);
+
+            Assert.Contains("var x = 10;", result);
+        }
     }
 }
