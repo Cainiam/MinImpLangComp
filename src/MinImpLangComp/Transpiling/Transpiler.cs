@@ -76,6 +76,18 @@ namespace MinImpLangComp.Transpiling
                     foreach (var stmt in block.Statements) sbBlock.AppendLine("    " + TranspileStatement(stmt));
                     sbBlock.AppendLine("}");
                     return sbBlock.ToString();
+                case FunctionDeclaration functionDeclaration:
+                    var sbFunc = new StringBuilder();
+                    var parameters = string.Join(", ", functionDeclaration.Parameters);
+                    sbFunc.AppendLine($"static void {functionDeclaration.Name}({parameters})");
+                    sbFunc.AppendLine("{");
+                    if (functionDeclaration.Body is Block blockFunc)
+                    {
+                        foreach (var stmt in blockFunc.Statements) sbFunc.Append("    " + TranspileStatement(stmt));
+                    }
+                    else sbFunc.AppendLine("    " + TranspileStatement(functionDeclaration.Body));
+                    sbFunc.AppendLine("}");
+                    return sbFunc.ToString();
                 default:
                     throw new NotImplementedException($"Transpilation not yet implemented for {statement.GetType()}");
             }

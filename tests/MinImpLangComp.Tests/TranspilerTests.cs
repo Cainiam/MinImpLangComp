@@ -163,5 +163,26 @@ namespace MinImpLangComp.Tests
             Assert.Contains("Console.WriteLine(2);", result);
             Assert.Contains("}", result);
         }
+
+         [Fact]
+         public void Transpile_FunctionDeclarationGeneratesStaticVoidMethod()
+         {
+            var function = new FunctionDeclaration(
+                "greet",
+                new List<string>(),
+                new Block(new List<Statement>
+                {
+                    new ExpressionStatement(new FunctionCall("print", new List<Expression> { new StringLiteral("Hello") }))
+                })
+            );
+            var program = new Block(new List<Statement> { function });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile(program);
+
+            //Console.WriteLine(result);
+
+            Assert.Contains("static void greet()", result);
+            Assert.Contains("Console.WriteLine(\"Hello\")", result);
+         }
     }
 }
