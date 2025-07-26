@@ -2,6 +2,7 @@
 using MinImpLangComp.AST;
 using Xunit;
 using Xunit.Abstractions;
+using Newtonsoft.Json.Bson;
 
 namespace MinImpLangComp.Tests
 {
@@ -123,7 +124,7 @@ namespace MinImpLangComp.Tests
         }
 
         [Fact]
-        public void TranspileForStatementGeneratesCorrectCSharp()
+        public void Transpile_ForStatementGeneratesCorrectCSharp()
         {
             var forStatement = new ForStatement(
                 new Assignment("i", new IntegerLiteral(0)),
@@ -139,6 +140,28 @@ namespace MinImpLangComp.Tests
 
             Assert.Contains("for (var i = 0; (i < 10); i = (i + 1))", result);
             Assert.Contains("Console.WriteLine(i);", result);
+        }
+
+        [Fact]
+        public void Transpile_BlockStatementGeneratesCurlyBracesAndIndentedStatements()
+        {
+            var block = new Block(new List<Statement>
+            {
+                new ExpressionStatement(new FunctionCall("print", new List<Expression> { new IntegerLiteral(1) })),
+                new ExpressionStatement(new FunctionCall("print", new List<Expression> { new IntegerLiteral(2) }))
+            });
+            var ifStatement = new IfStatement(new BooleanLiteral(true), block);
+            var program = new Block(new List<Statement> { ifStatement });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile(program);
+
+            //Console.WriteLine(result);
+
+            Assert.Contains("if (true)", result);
+            Assert.Contains("{", result);
+            Assert.Contains("Console.WriteLine(1);", result);
+            Assert.Contains("Console.WriteLine(2);", result);
+            Assert.Contains("}", result);
         }
     }
 }

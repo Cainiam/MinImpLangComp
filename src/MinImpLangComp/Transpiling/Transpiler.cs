@@ -70,6 +70,12 @@ namespace MinImpLangComp.Transpiling
                     sbFor.AppendLine("    " + TranspileStatement(forStatement.Body));
                     sbFor.AppendLine("}");
                     return sbFor.ToString();
+                case Block block:
+                    var sbBlock = new StringBuilder();
+                    sbBlock.AppendLine("{");
+                    foreach (var stmt in block.Statements) sbBlock.AppendLine("    " + TranspileStatement(stmt));
+                    sbBlock.AppendLine("}");
+                    return sbBlock.ToString();
                 default:
                     throw new NotImplementedException($"Transpilation not yet implemented for {statement.GetType()}");
             }
