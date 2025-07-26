@@ -58,6 +58,18 @@ namespace MinImpLangComp.Transpiling
                     sbWhile.AppendLine("    " + TranspileStatement(whileStatement.Body));
                     sbWhile.AppendLine("}");
                     return sbWhile.ToString();
+                case ForStatement forStatement:
+                    var init = TranspileStatement(forStatement.Initializer).TrimEnd(';');
+                    var condition = TranspileExpression(forStatement.Condition);
+                    string increment;
+                    if (forStatement.Increment is Assignment assign) increment = $"{assign.Identifier} = {TranspileExpression(assign.Expression)}";
+                    else increment = TranspileStatement(forStatement.Increment).TrimEnd(';');
+                    var sbFor = new StringBuilder();
+                    sbFor.AppendLine($"for ({init}; {condition}; {increment})");
+                    sbFor.AppendLine("{");
+                    sbFor.AppendLine("    " + TranspileStatement(forStatement.Body));
+                    sbFor.AppendLine("}");
+                    return sbFor.ToString();
                 default:
                     throw new NotImplementedException($"Transpilation not yet implemented for {statement.GetType()}");
             }

@@ -1,11 +1,20 @@
 ﻿using MinImpLangComp.Transpiling;
 using MinImpLangComp.AST;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace MinImpLangComp.Tests
 {
     public class TranspilerTests
     {
+
+        private readonly ITestOutputHelper _output;
+
+        public TranspilerTests(ITestOutputHelper output)
+        {
+            _output = output;
+        }
+
         [Fact]
         public void Transpile_ReturnsValideCSharpSkeleton()
         {
@@ -111,6 +120,25 @@ namespace MinImpLangComp.Tests
 
             Assert.Contains("while (true)", result);
             Assert.Contains("Console.WriteLine(\"Loop\");", result);
+        }
+
+        [Fact]
+        public void TranspileForStatementGeneratesCorrectCSharp()
+        {
+            var forStatement = new ForStatement(
+                new Assignment("i", new IntegerLiteral(0)),
+                new BinaryExpression(new VariableReference("i"), OperatorType.Less, new IntegerLiteral(10)),
+                new Assignment("i", new BinaryExpression(new VariableReference("i"), OperatorType.Plus, new IntegerLiteral(1))),
+                new ExpressionStatement(new FunctionCall("print", new List<Expression> { new VariableReference("i") }))
+            );
+            var program = new Block(new List<Statement> { forStatement });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile(program);
+
+            //Console.WriteLine(result);
+
+            Assert.Contains("for (var i = 0; (i < 10); i = (i + 1))", result);
+            Assert.Contains("Console.WriteLine(i);", result);
         }
     }
 }
