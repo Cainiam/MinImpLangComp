@@ -51,6 +51,13 @@ namespace MinImpLangComp.Transpiling
                         sbIF.AppendLine("}");
                     }
                     return sbIF.ToString();
+                case WhileStatement whileStatement:
+                    var sbWhile = new StringBuilder();
+                    sbWhile.AppendLine($"while ({TranspileExpression(whileStatement.Condition)})");
+                    sbWhile.AppendLine("{");
+                    sbWhile.AppendLine("    " + TranspileStatement(whileStatement.Body));
+                    sbWhile.AppendLine("}");
+                    return sbWhile.ToString();
                 default:
                     throw new NotImplementedException($"Transpilation not yet implemented for {statement.GetType()}");
             }

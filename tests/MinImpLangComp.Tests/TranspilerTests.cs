@@ -95,5 +95,22 @@ namespace MinImpLangComp.Tests
             Assert.Contains("if ((x > 5))", result);
             Assert.Contains("Console.WriteLine(x);", result);
         }
+
+        [Fact]
+        public void Transpile_WhileStatementGeneratesCorrectCsharp()
+        {
+            var whileStament = new WhileStatement(
+                new BooleanLiteral(true),
+                new ExpressionStatement(new FunctionCall("print", new List<Expression> { new StringLiteral("Loop") }))
+            );
+            var program = new Block(new List<Statement> { whileStament });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile(program);
+
+            Console.WriteLine(result);
+
+            Assert.Contains("while (true)", result);
+            Assert.Contains("Console.WriteLine(\"Loop\");", result);
+        }
     }
 }
