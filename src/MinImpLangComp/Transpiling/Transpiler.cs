@@ -78,7 +78,7 @@ namespace MinImpLangComp.Transpiling
                     return sbBlock.ToString();
                 case FunctionDeclaration functionDeclaration:
                     var sbFunc = new StringBuilder();
-                    var parameters = string.Join(", ", functionDeclaration.Parameters);
+                    var parameters = string.Join(", ", functionDeclaration.Parameters.Select(p => $"dynamic {p}"));
                     sbFunc.AppendLine($"static void {functionDeclaration.Name}({parameters})");
                     sbFunc.AppendLine("{");
                     if (functionDeclaration.Body is Block blockFunc)

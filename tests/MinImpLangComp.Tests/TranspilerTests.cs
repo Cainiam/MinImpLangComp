@@ -2,6 +2,7 @@
 using MinImpLangComp.AST;
 using Xunit;
 using Xunit.Abstractions;
+using System.ComponentModel.DataAnnotations;
 
 namespace MinImpLangComp.Tests
 {
@@ -27,7 +28,7 @@ namespace MinImpLangComp.Tests
         }
 
         [Fact]
-        public void Transpile_PrintGeneratesConsoleWriteLine()
+        public void Transpile_Print_GeneratesConsoleWriteLine()
         {
             var program = new Block(new List<Statement>
             {
@@ -46,7 +47,7 @@ namespace MinImpLangComp.Tests
         }
 
         [Fact]
-        public void Transpile_AssignmentGeneratesVariableDeclaration()
+        public void Transpile_Assignment_GeneratesVariableDeclaration()
         {
             var program = new Block(new List<Statement>
             {
@@ -61,7 +62,7 @@ namespace MinImpLangComp.Tests
         }
 
         [Fact]
-        public void Transpile_ArtihmeticExpressionGeneratesCorrectCSharp()
+        public void Transpile_ArtihmeticExpression_GeneratesCorrectCSharp()
         {
             var expression = new BinaryExpression(
                 new IntegerLiteral(5),
@@ -85,7 +86,7 @@ namespace MinImpLangComp.Tests
         }
 
         [Fact]
-        public void Transpile_IfStatementGeneratesCorrectCSharp()
+        public void Transpile_IfStatement_GeneratesCorrectCSharp()
         {
             var ifStmt = new IfStatement(
                 new BinaryExpression(
@@ -106,7 +107,7 @@ namespace MinImpLangComp.Tests
         }
 
         [Fact]
-        public void Transpile_WhileStatementGeneratesCorrectCsharp()
+        public void Transpile_WhileStatement_GeneratesCorrectCsharp()
         {
             var whileStament = new WhileStatement(
                 new BooleanLiteral(true),
@@ -123,7 +124,7 @@ namespace MinImpLangComp.Tests
         }
 
         [Fact]
-        public void Transpile_ForStatementGeneratesCorrectCSharp()
+        public void Transpile_ForStatement_GeneratesCorrectCSharp()
         {
             var forStatement = new ForStatement(
                 new Assignment("i", new IntegerLiteral(0)),
@@ -142,7 +143,7 @@ namespace MinImpLangComp.Tests
         }
 
         [Fact]
-        public void Transpile_BlockStatementGeneratesCurlyBracesAndIndentedStatements()
+        public void Transpile_BlockStatement_GeneratesCurlyBracesAndIndentedStatements()
         {
             var block = new Block(new List<Statement>
             {
@@ -164,7 +165,7 @@ namespace MinImpLangComp.Tests
         }
 
          [Fact]
-         public void Transpile_FunctionDeclarationGeneratesStaticVoidMethod()
+         public void Transpile_FunctionDeclaration_GeneratesStaticVoidMethod()
          {
             var function = new FunctionDeclaration(
                 "greet",
@@ -185,7 +186,7 @@ namespace MinImpLangComp.Tests
          }
 
         [Fact]
-        public void Transpile_FunctionCallGeneratesCorrectInvocation()
+        public void Transpile_FunctionCall_GeneratesCorrectInvocation()
         {
             var functionDeclaration = new FunctionDeclaration(
                 "greet",
@@ -211,6 +212,30 @@ namespace MinImpLangComp.Tests
             Assert.Contains("static void greet()", result);
             Assert.Contains("Console.WriteLine(\"Hello\")", result);
             Assert.Contains("greet();", result);
+        }
+
+        [Fact]
+        public void Transpile_FunctionDeclarationWithParamAndCall_GeneratesCorrectCsharp()
+        {
+            var greetFunction = new FunctionDeclaration(
+                "greet",
+                new List<string> { "name" },
+                new Block(new List<Statement> { 
+                    new ExpressionStatement(
+                        new FunctionCall("print", new List<Expression> { new VariableReference("name") })
+                    )
+                })
+            );
+            var call = new ExpressionStatement(new FunctionCall("greet", new List<Expression> { new StringLiteral("Alice") }));
+            var program = new Block(new List<Statement> { greetFunction, call });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile(program);
+
+            //Console.WriteLine(result);
+
+            Assert.Contains("static void greet(dynamic name)", result);
+            Assert.Contains("Console.WriteLine(name);", result);
+            Assert.Contains("greet(\"Alice\");", result);
         }
     }
 }
