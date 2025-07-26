@@ -111,6 +111,8 @@ namespace MinImpLangComp.Transpiling
                     return $"({TranspileExpression(binaryExpression.Left)} {GetOperatorSymbol(binaryExpression.Operator)} {TranspileExpression(binaryExpression.Right)})";
                 case FunctionCall call when call.Name == "print":
                     return $"Console.WriteLine({string.Join(", ", call.Arguments.Select(TranspileExpression))})";
+                case FunctionCall call:
+                    return $"{call.Name}({string.Join(", ", call.Arguments.Select(TranspileExpression))})";
                 default:
                     throw new NotImplementedException($"Transpilation not yet implemented for {expression.GetType()}");
             }

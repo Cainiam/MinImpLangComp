@@ -2,7 +2,6 @@
 using MinImpLangComp.AST;
 using Xunit;
 using Xunit.Abstractions;
-using Newtonsoft.Json.Bson;
 
 namespace MinImpLangComp.Tests
 {
@@ -117,7 +116,7 @@ namespace MinImpLangComp.Tests
             var transpiler = new Transpiler();
             var result = transpiler.Transpile(program);
 
-            Console.WriteLine(result);
+            //Console.WriteLine(result);
 
             Assert.Contains("while (true)", result);
             Assert.Contains("Console.WriteLine(\"Loop\");", result);
@@ -184,5 +183,34 @@ namespace MinImpLangComp.Tests
             Assert.Contains("static void greet()", result);
             Assert.Contains("Console.WriteLine(\"Hello\")", result);
          }
+
+        [Fact]
+        public void Transpile_FunctionCallGeneratesCorrectInvocation()
+        {
+            var functionDeclaration = new FunctionDeclaration(
+                "greet",
+                new List<string>(),
+                new Block(new List<Statement>
+                {
+                    new ExpressionStatement(new FunctionCall("print", new List<Expression> { new StringLiteral("Hello") }))
+                })
+            );
+            var functionCall = new ExpressionStatement(
+                new FunctionCall("greet", new List<Expression>())
+            );
+            var program = new Block(new List<Statement> 
+            { 
+                functionDeclaration, 
+                functionCall 
+            });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile(program);
+
+            //Console.WriteLine(result);
+
+            Assert.Contains("static void greet()", result);
+            Assert.Contains("Console.WriteLine(\"Hello\")", result);
+            Assert.Contains("greet();", result);
+        }
     }
 }
