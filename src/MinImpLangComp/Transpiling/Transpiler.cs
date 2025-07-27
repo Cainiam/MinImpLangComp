@@ -89,6 +89,8 @@ namespace MinImpLangComp.Transpiling
                     else sbFunc.AppendLine("    " + TranspileStatement(functionDeclaration.Body));
                     sbFunc.AppendLine("}");
                     return sbFunc.ToString();
+                case ReturnStatement returnStatement:
+                    return $"return {TranspileExpression(returnStatement.Expression)};";
                 default:
                     throw new NotImplementedException($"Transpilation not yet implemented for {statement.GetType()}");
             }

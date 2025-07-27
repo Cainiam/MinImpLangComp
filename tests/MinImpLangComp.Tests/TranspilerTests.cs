@@ -269,5 +269,34 @@ namespace MinImpLangComp.Tests
             Assert.Contains("x++;", result);
             Assert.Contains("y--;", result);
         }
+
+        [Fact]
+        public void Transpile_FunctionWithReturnStatement_ShouldGenerateReturn()
+        {
+            var func = new FunctionDeclaration
+            (
+                "add",
+                new List<string> { "x", "y" },
+                new Block(new List<Statement>
+                {
+                    new ReturnStatement
+                    (
+                        new BinaryExpression
+                        (
+                            new VariableReference("x"),
+                            OperatorType.Plus,
+                            new VariableReference("y")
+                        )
+                    )
+                })
+            );
+            var program = new Block(new List<Statement> { func });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile(program);
+
+            //Console.WriteLine(result);
+
+            Assert.Contains("return (x + y);", result);
+        }
     }
 }
