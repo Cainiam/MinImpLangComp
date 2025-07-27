@@ -34,6 +34,7 @@ namespace MinImpLangComp.Transpiling
             switch (statement)
             {
                 case ExpressionStatement expressionStatement:
+                    if (expressionStatement.Expression is UnaryExpression unary) return $"{unary.Identifier}{(unary.Operator == OperatorType.PlusPlus ? "++" : "--")};";
                     return TranspileExpression(expressionStatement.Expression) + ";";
                 case Assignment assignment:
                     return $"var {assignment.Identifier} = {TranspileExpression(assignment.Expression)};";

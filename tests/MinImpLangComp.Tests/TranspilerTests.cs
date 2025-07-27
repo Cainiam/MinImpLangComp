@@ -252,5 +252,22 @@ namespace MinImpLangComp.Tests
 
             Assert.Contains("var x = Console.ReadLine();", result);
         }
+
+        [Fact]
+        public void Transpile_UnaryINcrementDecrement_GeneratesCorrectCSharp()
+        {
+            var program = new Block(new List<Statement>
+            {
+                new ExpressionStatement(new UnaryExpression(OperatorType.PlusPlus, "x")),
+                new ExpressionStatement(new UnaryExpression(OperatorType.MinusMinus, "y"))
+            });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile(program);
+
+            //Console.WriteLine(result);
+
+            Assert.Contains("x++;", result);
+            Assert.Contains("y--;", result);
+        }
     }
 }
