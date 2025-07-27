@@ -204,7 +204,7 @@ namespace MinImpLangComp.Tests
             Assert.Equal(TokenType.OrOr, token2.Type);
             Assert.Equal("||", token2.Value);
         }
-        
+
         [Fact]
         public void GetNextToken_ReturnsPlusPlusAndMinusMinusTokens()
         {
@@ -255,6 +255,16 @@ namespace MinImpLangComp.Tests
 
             Assert.Equal(TokenType.BitwiseOr, token.Type);
             Assert.Equal("|", token.Value);
+        }
+
+        [Fact]
+        public void GetNextTokenèReturnsNullKeywordToken()
+        {
+            var lexer = new Lexer("null");
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(TokenType.Null, token.Type);
+            Assert.Equal("null", token.Value);
         }
     }
 }

@@ -188,6 +188,11 @@ namespace MinImpLangComp.Parsing
                 Eat(TokenType.False);
                 return new BooleanLiteral(false);
             }
+            else if(_currentToken.Type == TokenType.Null)
+            {
+                Eat(TokenType.Null);
+                return new NullLiteral();
+            }
             else if (_currentToken.Type == TokenType.Not)
             {
                 Eat(TokenType.Not);

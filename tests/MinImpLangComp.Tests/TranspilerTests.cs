@@ -298,5 +298,18 @@ namespace MinImpLangComp.Tests
 
             Assert.Contains("return (x + y);", result);
         }
+
+        [Fact]
+        public void Transpile_NullLiteral_ShouldGenerateNullKeyword()
+        {
+            var program = new Block(new List<Statement>
+            {
+                new ExpressionStatement(new NullLiteral())
+            });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile (program);
+
+            Assert.Contains("null;", result);
+        }
     }
 }

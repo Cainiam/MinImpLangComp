@@ -108,6 +108,8 @@ namespace MinImpLangComp.Transpiling
                     return $"\"{s.Value}\"";
                 case BooleanLiteral b:
                     return b.Value ? "true" : "false";
+                case NullLiteral:
+                    return "null";
                 case VariableReference v:
                     return v.Name;
                 case BinaryExpression binaryExpression:

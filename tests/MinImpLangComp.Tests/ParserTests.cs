@@ -285,5 +285,16 @@ namespace MinImpLangComp.Tests
             var exprStmt = (ExpressionStatement)statement;
             Assert.IsType<FunctionCall>(exprStmt.Expression);
         }
+
+        [Fact]
+        public void Parser_CanParseNullLiteral()
+        {
+            var lexer = new Lexer("null;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            var exprStmt = Assert.IsType<ExpressionStatement>(statement);
+            Assert.IsType<NullLiteral>(exprStmt.Expression);
+        }
     }
 }

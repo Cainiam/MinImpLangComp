@@ -507,5 +507,14 @@ namespace MinImpLangComp.Tests
 
             Assert.Equal(99, result);
         }
+
+        [Fact]
+        public void Evaluate_NullLiteral_ReturnsNull()
+        {
+            var interp = new Interpreter();
+            var result = interp.Evaluate(new NullLiteral());
+
+            Assert.Null(result);
+        }
     }
 }

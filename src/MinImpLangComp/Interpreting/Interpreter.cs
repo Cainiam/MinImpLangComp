@@ -111,6 +111,8 @@ namespace MinImpLangComp.Interpreting
                     return lastFor;
                 case BooleanLiteral booleanLiteral:
                     return booleanLiteral.Value;
+                case NullLiteral:
+                    return null;
                 case UnaryExpression unary:
                     if (!_environment.ContainsKey(unary.Identifier)) throw new RuntimeException($"Undefined variable {unary.Identifier}");
                     if (_environment[unary.Identifier] is int currentInt)

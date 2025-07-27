@@ -185,6 +185,8 @@ namespace MinImpLangComp.Lexing
                     return new Token(TokenType.Function, value);
                 case "return":
                     return new Token(TokenType.Return, value);
+                case "null":
+                    return new Token(TokenType.Null, value);
                 default:
                     return new Token(TokenType.Identifier, value);
             }
