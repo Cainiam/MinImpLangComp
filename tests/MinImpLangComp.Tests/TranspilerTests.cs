@@ -237,5 +237,20 @@ namespace MinImpLangComp.Tests
             Assert.Contains("Console.WriteLine(name);", result);
             Assert.Contains("greet(\"Alice\");", result);
         }
+
+        [Fact]
+        public void Transpile_InputCall_GeneratesConsoleReadLine()
+        {
+            var program = new Block(new List<Statement>
+            {
+                new Assignment("x", new FunctionCall("input", new List<Expression>()))
+            });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile(program);
+
+            //Console.WriteLine(result);
+
+            Assert.Contains("var x = Console.ReadLine();", result);
+        }
     }
 }
