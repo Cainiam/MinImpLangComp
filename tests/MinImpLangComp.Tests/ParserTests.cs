@@ -296,5 +296,25 @@ namespace MinImpLangComp.Tests
             var exprStmt = Assert.IsType<ExpressionStatement>(statement);
             Assert.IsType<NullLiteral>(exprStmt.Expression);
         }
+
+        [Fact]
+        public void Parser_CanParseBreakStatetement()
+        {
+            var lexer = new Lexer("break;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            Assert.IsType<BreakStatement>(statement);
+        }
+
+        [Fact]
+        public void Parse_CanParseContinueStatement()
+        {
+            var lexer = new Lexer("continue;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            Assert.IsType<ContinueStatement>(statement);
+        }
     }
 }

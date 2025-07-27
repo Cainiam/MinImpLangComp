@@ -516,5 +516,55 @@ namespace MinImpLangComp.Tests
 
             Assert.Null(result);
         }
+
+        [Fact]
+        public void Interpreter_Break_ExitsLoopEarly()
+        {
+            var interp = new Interpreter();
+            var node = new Block(new List<Statement>
+            {
+                new Assignment("i", new IntegerLiteral(0)),
+                new WhileStatement(
+                    new BinaryExpression(new VariableReference("i"), OperatorType.Less, new IntegerLiteral(5)),
+                    new Block(new List<Statement>
+                    {
+                        new IfStatement(
+                            new BinaryExpression(new VariableReference("i"), OperatorType.Equalequal, new IntegerLiteral(2)),
+                            new BreakStatement()
+                        ),
+                        new Assignment("i", new BinaryExpression(new VariableReference("i"), OperatorType.Plus, new IntegerLiteral(1)))
+                    })
+                )
+            });
+            interp.Evaluate(node);
+
+            Assert.Equal(2, interp.GetEnvironment()["i"]);
+        }
+
+        [Fact]
+        public void Interpreter_Continue_SkipsCurrentIteration()
+        {
+            var interp = new Interpreter();
+            var node = new Block(new List<Statement>
+            {
+                new Assignment("i", new IntegerLiteral(0)),
+                new Assignment("sum", new IntegerLiteral(0)),
+                new WhileStatement(
+                    new BinaryExpression(new VariableReference("i"), OperatorType.Less, new IntegerLiteral(5)),
+                    new Block(new List<Statement>
+                    {
+                        new Assignment("i", new BinaryExpression(new VariableReference("i"), OperatorType.Plus, new IntegerLiteral(1))),
+                        new IfStatement(
+                            new BinaryExpression(new VariableReference("i"), OperatorType.Equalequal, new IntegerLiteral(3)),
+                            new ContinueStatement()
+                        ),
+                        new Assignment("sum", new BinaryExpression(new VariableReference("sum"), OperatorType.Plus, new VariableReference("i")))
+                    })
+                )
+            });
+            interp.Evaluate(node);
+
+            Assert.Equal(1 + 2 + 4 + 5, interp.GetEnvironment()["sum"]);
+        }
     }
 }

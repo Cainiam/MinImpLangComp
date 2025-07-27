@@ -46,7 +46,9 @@
         BitwiseOr,
         LeftBracket,
         RightBracket,
-        Null
+        Null,
+        Break,
+        Continue
     }
 
     public class Token

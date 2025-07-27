@@ -177,6 +177,10 @@ namespace MinImpLangComp.Lexing
                     return new Token(TokenType.While, value);
                 case "for":
                     return new Token(TokenType.For, value);
+                case "break":
+                    return new Token(TokenType.Break, value);
+                case "continue":
+                    return new Token(TokenType.Continue, value);
                 case "true":
                     return new Token(TokenType.True, value);
                 case "false":

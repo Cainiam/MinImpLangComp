@@ -258,13 +258,33 @@ namespace MinImpLangComp.Tests
         }
 
         [Fact]
-        public void GetNextTokenèReturnsNullKeywordToken()
+        public void GetNextToken_ReturnsNullKeywordToken()
         {
             var lexer = new Lexer("null");
             var token = lexer.GetNextToken();
 
             Assert.Equal(TokenType.Null, token.Type);
             Assert.Equal("null", token.Value);
+        }
+
+        [Fact]
+        public void GetNextToken_ReturnsBreakToken()
+        {
+            var lexer = new Lexer("break");
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(TokenType.Break, token.Type);
+            Assert.Equal("break", token.Value);
+        }
+
+        [Fact]
+        public void GetNextToken_ReturnsContinueToken()
+        {
+            var lexer = new Lexer("continue");
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(TokenType.Continue, token.Type);
+            Assert.Equal("continue", token.Value);
         }
     }
 }

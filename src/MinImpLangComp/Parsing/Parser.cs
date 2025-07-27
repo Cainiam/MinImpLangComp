@@ -214,6 +214,18 @@ namespace MinImpLangComp.Parsing
                 Eat(TokenType.Semicolon);
                 return new Assignment(identifier, expr);
             }
+            else if (_currentToken.Type == TokenType.Break)
+            {
+                Eat(TokenType.Break);
+                Eat(TokenType.Semicolon);
+                return new BreakStatement();
+            }
+            else if (_currentToken.Type == TokenType.Continue)
+            {
+                Eat(TokenType.Continue);
+                Eat(TokenType.Semicolon);
+                return new ContinueStatement();
+            }
             else if (_currentToken.Type == TokenType.Identifier)
             {
                 string identifier = _currentToken.Value;

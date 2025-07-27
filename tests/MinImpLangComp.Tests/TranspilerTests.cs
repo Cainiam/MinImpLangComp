@@ -311,5 +311,26 @@ namespace MinImpLangComp.Tests
 
             Assert.Contains("null;", result);
         }
+
+        [Fact]
+        public void Transpile_BreakAndContinue_ShouldGenerateValidCSharp()
+        {
+            var program = new Block(new List<Statement>
+            {
+                new WhileStatement(
+                    new BooleanLiteral(true),
+                    new Block(new List<Statement>
+                    {
+                        new BreakStatement(),
+                        new ContinueStatement()
+                    })
+                )
+            });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile(program);
+
+            Assert.Contains("break;", result);
+            Assert.Contains("continue;", result);
+        }
     }
 }

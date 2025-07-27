@@ -98,21 +98,51 @@ namespace MinImpLangComp.Interpreting
                     return null;
                 case WhileStatement whileStatement:
                     object? lastWhile = null;
-                    while (Convert.ToBoolean(Evaluate(whileStatement.Condition))) lastWhile = Evaluate(whileStatement.Body);
+                    while (Convert.ToBoolean(Evaluate(whileStatement.Condition)))
+                    {
+                        try
+                        {
+                            lastWhile = Evaluate(whileStatement.Body);
+                        }
+                        catch (ContinueException)
+                        {
+                            continue;
+                        }
+                        catch (BreakException)
+                        {
+                            break;
+                        }
+                    }
                     return lastWhile;
                 case ForStatement forStatement:
                     object? lastFor = null;
                     if (forStatement.Initializer != null) Evaluate(forStatement.Initializer);
                     while (Convert.ToBoolean(Evaluate(forStatement.Condition)))
                     {
-                        lastFor = Evaluate(forStatement.Body);
-                        if(forStatement.Increment != null) Evaluate(forStatement.Increment);
+                        try
+                        {
+                            lastFor = Evaluate(forStatement.Body);
+                        }
+                        catch (ContinueException)
+                        {
+                            if (forStatement.Increment != null) Evaluate(forStatement.Increment);
+                            continue;
+                        }
+                        catch (BreakException)
+                        {
+                            break;
+                        }
+                        if (forStatement.Increment != null) Evaluate(forStatement.Increment);
                     }
                     return lastFor;
                 case BooleanLiteral booleanLiteral:
                     return booleanLiteral.Value;
                 case NullLiteral:
                     return null;
+                case BreakStatement:
+                    throw new BreakException();
+                case ContinueStatement:
+                    throw new ContinueException();
                 case UnaryExpression unary:
                     if (!_environment.ContainsKey(unary.Identifier)) throw new RuntimeException($"Undefined variable {unary.Identifier}");
                     if (_environment[unary.Identifier] is int currentInt)

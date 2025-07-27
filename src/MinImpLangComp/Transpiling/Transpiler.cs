@@ -91,6 +91,10 @@ namespace MinImpLangComp.Transpiling
                     return sbFunc.ToString();
                 case ReturnStatement returnStatement:
                     return $"return {TranspileExpression(returnStatement.Expression)};";
+                case BreakStatement:
+                    return "break;\n";
+                case ContinueStatement:
+                    return "continue;\n";
                 default:
                     throw new NotImplementedException($"Transpilation not yet implemented for {statement.GetType()}");
             }
