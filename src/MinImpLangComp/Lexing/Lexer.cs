@@ -169,6 +169,8 @@ namespace MinImpLangComp.Lexing
             {
                 case "set":
                     return new Token(TokenType.Set, value);
+                case "bind":
+                    return new Token(TokenType.Bind, value);
                 case "if":
                     return new Token(TokenType.If, value);
                 case "else":

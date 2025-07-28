@@ -6,6 +6,7 @@ namespace MinImpLangComp.Interpreting
     public class Interpreter
     {
         private readonly Dictionary<string, object> _environment = new Dictionary<string, object>();
+        private readonly HashSet<string> _constant = new HashSet<string>();
 
         public Dictionary<string, object> GetEnvironment()
         {
@@ -84,9 +85,16 @@ namespace MinImpLangComp.Interpreting
                     _environment[variableDeclaration.Identifier] = declaredValue;
                     return declaredValue;
                 case Assignment assign:
+                    if (_constant.Contains(assign.Identifier)) throw new RuntimeException($"Cannot reassign to constant '{assign.Identifier}'");
                     var assignedValue = Evaluate(assign.Expression);
                     _environment[assign.Identifier] = assignedValue;
                     return assignedValue;
+                case ConstantDeclaration constantDeclaration:
+                    if (_environment.ContainsKey(constantDeclaration.Identifier)) throw new RuntimeException($"Constant '{constantDeclaration.Identifier}' already defined");
+                    var constValue = Evaluate(constantDeclaration.Expression);
+                    _environment[constantDeclaration.Identifier] = constValue;
+                    _constant.Add(constantDeclaration.Identifier);
+                    return null;
                 case Block block:
                     object? lastBlock = null;
                     foreach(var statement in block.Statements)

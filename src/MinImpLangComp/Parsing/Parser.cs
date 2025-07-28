@@ -205,6 +205,7 @@ namespace MinImpLangComp.Parsing
         public Statement ParseStatement()
         {
             if (_currentToken.Type == TokenType.Set) return ParseVariableDeclaration();
+            else if (_currentToken.Type == TokenType.Bind) return ParseConstantDeclaration();
             else if (_currentToken.Type == TokenType.Break)
             {
                 Eat(TokenType.Break);
@@ -398,13 +399,25 @@ namespace MinImpLangComp.Parsing
         private Statement ParseVariableDeclaration()
         {
             Eat(TokenType.Set);
-            if (_currentToken.Type != TokenType.Identifier) throw new ParsingException("Exepected identifier after 'set'");
+            if (_currentToken.Type != TokenType.Identifier) throw new ParsingException("Expected identifier after 'set'");
             string variableName = _currentToken.Value;
             Eat(TokenType.Identifier);
             Eat(TokenType.Assign);
             Expression value = ParseExpression();
             Eat(TokenType.Semicolon);
             return new VariableDeclaration(variableName, value);
+        }
+
+        private Statement ParseConstantDeclaration()
+        {
+            Eat(TokenType.Bind);
+            if (_currentToken.Type != TokenType.Identifier) throw new ParsingException("Expected identifier after 'bind'");
+            string constantName = _currentToken.Value;
+            Eat(TokenType.Identifier);
+            Eat(TokenType.Assign);
+            Expression value = ParseExpression();
+            Eat(TokenType.Semicolon);
+            return new ConstantDeclaration(constantName, value);
         }
     }
 }

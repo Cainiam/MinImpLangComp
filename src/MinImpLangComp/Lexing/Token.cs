@@ -21,6 +21,7 @@
         LexicalError,
         Unknow,
         Set,
+        Bind,
         If,
         Else,
         While,

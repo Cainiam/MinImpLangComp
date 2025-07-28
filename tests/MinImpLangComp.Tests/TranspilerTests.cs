@@ -343,5 +343,16 @@ namespace MinImpLangComp.Tests
 
             Assert.Contains("var x = 42;", result);
         }
+
+        [Fact]
+        public void Transpiler_TranspilesConstantDeclarationToVar()
+        {
+            var declaration = new ConstantDeclaration("y", new IntegerLiteral(90));
+            var block = new Block(new List<Statement> { declaration });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile(block);
+
+            Assert.Contains("var y = 90;", result);
+        }
     }
 }

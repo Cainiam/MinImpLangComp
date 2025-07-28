@@ -330,5 +330,19 @@ namespace MinImpLangComp.Tests
             var literal = Assert.IsType<IntegerLiteral>(assign.Expression);
             Assert.Equal(42, literal.Value);
         }
+
+        [Fact]
+        public void Parser_ShouldReturnConstantDeclaration_WhenParsingBindStatement()
+        {
+            var lexer = new Lexer("bind pi = 3.14;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            var assign = Assert.IsType<ConstantDeclaration>(statement);
+            Assert.Equal("pi", assign.Identifier);
+
+            var literal = Assert.IsType<FloatLiteral>(assign.Expression);
+            Assert.Equal(3.14, literal.Value, 3);
+        }
     }
 }

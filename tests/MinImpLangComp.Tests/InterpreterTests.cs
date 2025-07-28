@@ -595,5 +595,45 @@ namespace MinImpLangComp.Tests
             
             Assert.Throws<RuntimeException>(() => interp.Evaluate(new Block(statements)));
         }
+
+        [Fact]
+        public void Interpreter_CanDeclareAndUseConstant()
+        {
+            var interp = new Interpreter();
+            var statements = new List<Statement>
+            {
+                new ConstantDeclaration("y", new IntegerLiteral(10)),
+                new ExpressionStatement(new VariableReference("y"))
+            };
+            var result = interp.Evaluate(new Block(statements));
+
+            Assert.Equal(10, result);
+        }
+
+        [Fact]
+        public void Interpreter_Throws_OnRedeclarationOfConstant()
+        {
+            var interp = new Interpreter();
+            var statement = new List<Statement>
+            {
+                new ConstantDeclaration("y", new IntegerLiteral(1)),
+                new ConstantDeclaration("y", new IntegerLiteral(2))
+            };
+
+            Assert.Throws<RuntimeException>(() => interp.Evaluate(new Block(statement)));
+        }
+
+        [Fact]
+        public void Interpreter_Throws_OnAssignmentToConstant()
+        {
+            var interp = new Interpreter();
+            var statements = new List<Statement>
+            {
+                new ConstantDeclaration("y", new IntegerLiteral(5)),
+                new Assignment("y", new IntegerLiteral(10))
+            };
+
+            Assert.Throws<RuntimeException>(() => interp.Evaluate(new Block(statements)));
+        }
     }
 }

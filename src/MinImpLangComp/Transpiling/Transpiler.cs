@@ -40,6 +40,8 @@ namespace MinImpLangComp.Transpiling
                     return $"var {variableDeclaration.Identifier} = {TranspileExpression(variableDeclaration.Expression)};";
                 case Assignment assignment:
                     return $"var {assignment.Identifier} = {TranspileExpression(assignment.Expression)};";
+                case ConstantDeclaration constantDeclaration:
+                    return $"var {constantDeclaration.Identifier} = {TranspileExpression(constantDeclaration.Expression)};";
                 case IfStatement ifStatement:
                     var sbIF = new StringBuilder();
                     sbIF.AppendLine($"if ({TranspileExpression(ifStatement.Condition)})");

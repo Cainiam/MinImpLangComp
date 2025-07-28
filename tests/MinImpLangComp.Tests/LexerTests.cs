@@ -297,5 +297,15 @@ namespace MinImpLangComp.Tests
 
             Assert.Contains(tokens, t => t.Type == TokenType.Set);
         }
+
+        [Fact]
+        public void Lexer_CanRecognizeBindKeyword()
+        {
+            var lexer = new Lexer("bind");
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(TokenType.Bind, token.Type);
+            Assert.Equal("bind", token.Value);
+        }
     }
 }
