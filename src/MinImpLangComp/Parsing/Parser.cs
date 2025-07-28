@@ -204,16 +204,7 @@ namespace MinImpLangComp.Parsing
 
         public Statement ParseStatement()
         {
-            if (_currentToken.Type == TokenType.Let)
-            {
-                Eat(TokenType.Let);
-                string identifier = _currentToken.Value;
-                Eat(TokenType.Identifier);
-                Eat(TokenType.Assign);
-                var expr = ParseExpression();
-                Eat(TokenType.Semicolon);
-                return new Assignment(identifier, expr);
-            }
+            if (_currentToken.Type == TokenType.Set) return ParseVariableDeclaration();
             else if (_currentToken.Type == TokenType.Break)
             {
                 Eat(TokenType.Break);
@@ -230,12 +221,12 @@ namespace MinImpLangComp.Parsing
             {
                 string identifier = _currentToken.Value;
                 Eat(TokenType.Identifier);
-                if(_currentToken.Type == TokenType.LeftBracket)
+                if (_currentToken.Type == TokenType.LeftBracket)
                 {
                     Eat(TokenType.LeftBracket);
                     var indexEpr = ParseExpression();
                     Eat(TokenType.RightBracket);
-                    if(_currentToken.Type == TokenType.Assign)
+                    if (_currentToken.Type == TokenType.Assign)
                     {
                         Eat(TokenType.Assign);
                         var valueExpr = ParseExpression();
@@ -255,7 +246,7 @@ namespace MinImpLangComp.Parsing
                     if (_currentToken.Type != TokenType.RightParen)
                     {
                         arguments.Add(ParseExpression());
-                        while(_currentToken.Type == TokenType.Comma)
+                        while (_currentToken.Type == TokenType.Comma)
                         {
                             Eat(TokenType.Comma);
                             arguments.Add(ParseExpression());
@@ -402,6 +393,18 @@ namespace MinImpLangComp.Parsing
             var expr = ParseExpression();
             Eat(TokenType.Semicolon);
             return new ReturnStatement(expr);
+        }
+
+        private Statement ParseVariableDeclaration()
+        {
+            Eat(TokenType.Set);
+            if (_currentToken.Type != TokenType.Identifier) throw new ParsingException("Exepected identifier after 'set'");
+            string variableName = _currentToken.Value;
+            Eat(TokenType.Identifier);
+            Eat(TokenType.Assign);
+            Expression value = ParseExpression();
+            Eat(TokenType.Semicolon);
+            return new VariableDeclaration(variableName, value);
         }
     }
 }

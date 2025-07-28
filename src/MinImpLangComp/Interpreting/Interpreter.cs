@@ -78,6 +78,11 @@ namespace MinImpLangComp.Interpreting
                 case VariableReference variable:
                     if (_environment.TryGetValue(variable.Name, out var value)) return value;
                     else throw new RuntimeException($"Undefined variable {variable.Name}");
+                case VariableDeclaration variableDeclaration:
+                    if (_environment.ContainsKey(variableDeclaration.Identifier)) throw new RuntimeException($"Variable {variableDeclaration.Identifier} is already declared");
+                    var declaredValue = Evaluate(variableDeclaration.Expression);
+                    _environment[variableDeclaration.Identifier] = declaredValue;
+                    return declaredValue;
                 case Assignment assign:
                     var assignedValue = Evaluate(assign.Expression);
                     _environment[assign.Identifier] = assignedValue;

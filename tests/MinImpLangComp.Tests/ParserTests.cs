@@ -190,7 +190,7 @@ namespace MinImpLangComp.Tests
         [Fact]
         public void ParseFunctionDeclaration_WithNoParameters_ReturnsCorrectAST()
         {
-            var lexer = new Lexer("function myFunc() { let x = 5; }");
+            var lexer = new Lexer("function myFunc() { set x = 5; }");
             var parser = new Parser(lexer);
             var statement = parser.ParseStatement();
             
@@ -203,7 +203,7 @@ namespace MinImpLangComp.Tests
         [Fact]
         public void ParseFunctionDeclaration_WithParamaters_ReturnsCorrectAST()
         {
-            var lexer = new Lexer("function add(a, b) { let result = a + b; }");
+            var lexer = new Lexer("function add(a, b) { set result = a + b; }");
             var parser = new Parser(lexer);
             var statement = parser.ParseStatement();
 
@@ -308,13 +308,27 @@ namespace MinImpLangComp.Tests
         }
 
         [Fact]
-        public void Parse_CanParseContinueStatement()
+        public void Parser_CanParseContinueStatement()
         {
             var lexer = new Lexer("continue;");
             var parser = new Parser(lexer);
             var statement = parser.ParseStatement();
 
             Assert.IsType<ContinueStatement>(statement);
+        }
+
+        [Fact]
+        public void Parser_CanParseSetStatementAsVariableDeclaration()
+        {
+            var lexer = new Lexer("set x = 42;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            var assign = Assert.IsType<VariableDeclaration>(statement);
+            Assert.Equal("x", assign.Identifier);
+
+            var literal = Assert.IsType<IntegerLiteral>(assign.Expression);
+            Assert.Equal(42, literal.Value);
         }
     }
 }

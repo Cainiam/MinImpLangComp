@@ -1,4 +1,5 @@
 ﻿using MinImpLangComp.AST;
+using MinImpLangComp.Exceptions;
 using MinImpLangComp.Interpreting;
 using Xunit;
 
@@ -565,6 +566,34 @@ namespace MinImpLangComp.Tests
             interp.Evaluate(node);
 
             Assert.Equal(1 + 2 + 4 + 5, interp.GetEnvironment()["sum"]);
+        }
+
+        [Fact]
+        public void Interpreter_Can_DeclareAndAssignVariale()
+        {
+            var interp = new Interpreter();
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("x", new IntegerLiteral(5)),
+                new Assignment("x", new IntegerLiteral(10)),
+                new ExpressionStatement(new VariableReference("x"))
+            };
+            var result = interp.Evaluate(new Block(statements));
+
+            Assert.Equal(10, result);
+        }
+
+        [Fact]
+        public void Interpreter_Throws_OnRedeclarationOfVariable()
+        {
+            var interp = new Interpreter();
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("x", new IntegerLiteral(5)),
+                new VariableDeclaration("x", new IntegerLiteral(10))
+            };
+            
+            Assert.Throws<RuntimeException>(() => interp.Evaluate(new Block(statements)));
         }
     }
 }

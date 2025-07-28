@@ -111,7 +111,7 @@ namespace MinImpLangComp.Tests
         }
 
         [Theory]
-        [InlineData("let", TokenType.Let, "let")]
+        [InlineData("set", TokenType.Set, "set")]
         [InlineData("if", TokenType.If, "if")]
         [InlineData("else", TokenType.Else, "else")]
         [InlineData("while", TokenType.While, "while")]
@@ -285,6 +285,17 @@ namespace MinImpLangComp.Tests
 
             Assert.Equal(TokenType.Continue, token.Type);
             Assert.Equal("continue", token.Value);
+        }
+
+        [Fact]
+        public void Lexer_CanRecognizeSetKeyword()
+        {
+            var lexer = new Lexer("set x = 10;");
+            var tokens = new List<Token>();
+            Token token;
+            while ((token = lexer.GetNextToken()).Type != TokenType.EOF) tokens.Add(token);
+
+            Assert.Contains(tokens, t => t.Type == TokenType.Set);
         }
     }
 }

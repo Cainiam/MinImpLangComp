@@ -332,5 +332,16 @@ namespace MinImpLangComp.Tests
             Assert.Contains("break;", result);
             Assert.Contains("continue;", result);
         }
+
+        [Fact]
+        public void Transpiler_TranspilesVariableDeclarationToVar()
+        {
+            var declaration = new VariableDeclaration("x", new IntegerLiteral(42));
+            var block = new Block(new List<Statement> { declaration });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile(block);
+
+            Assert.Contains("var x = 42;", result);
+        }
     }
 }

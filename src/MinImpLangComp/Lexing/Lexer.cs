@@ -167,8 +167,8 @@ namespace MinImpLangComp.Lexing
             
             switch (value)
             {
-                case "let":
-                    return new Token(TokenType.Let, value);
+                case "set":
+                    return new Token(TokenType.Set, value);
                 case "if":
                     return new Token(TokenType.If, value);
                 case "else":

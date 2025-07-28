@@ -20,7 +20,7 @@
         EOF,
         LexicalError,
         Unknow,
-        Let,
+        Set,
         If,
         Else,
         While,
