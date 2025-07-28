@@ -190,7 +190,7 @@ namespace MinImpLangComp.Tests
         [Fact]
         public void ParseFunctionDeclaration_WithNoParameters_ReturnsCorrectAST()
         {
-            var lexer = new Lexer("function myFunc() { let x = 5; }");
+            var lexer = new Lexer("function myFunc() { set x = 5; }");
             var parser = new Parser(lexer);
             var statement = parser.ParseStatement();
             
@@ -203,7 +203,7 @@ namespace MinImpLangComp.Tests
         [Fact]
         public void ParseFunctionDeclaration_WithParamaters_ReturnsCorrectAST()
         {
-            var lexer = new Lexer("function add(a, b) { let result = a + b; }");
+            var lexer = new Lexer("function add(a, b) { set result = a + b; }");
             var parser = new Parser(lexer);
             var statement = parser.ParseStatement();
 
@@ -284,6 +284,65 @@ namespace MinImpLangComp.Tests
 
             var exprStmt = (ExpressionStatement)statement;
             Assert.IsType<FunctionCall>(exprStmt.Expression);
+        }
+
+        [Fact]
+        public void Parser_CanParseNullLiteral()
+        {
+            var lexer = new Lexer("null;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            var exprStmt = Assert.IsType<ExpressionStatement>(statement);
+            Assert.IsType<NullLiteral>(exprStmt.Expression);
+        }
+
+        [Fact]
+        public void Parser_CanParseBreakStatetement()
+        {
+            var lexer = new Lexer("break;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            Assert.IsType<BreakStatement>(statement);
+        }
+
+        [Fact]
+        public void Parser_CanParseContinueStatement()
+        {
+            var lexer = new Lexer("continue;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            Assert.IsType<ContinueStatement>(statement);
+        }
+
+        [Fact]
+        public void Parser_CanParseSetStatementAsVariableDeclaration()
+        {
+            var lexer = new Lexer("set x = 42;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            var assign = Assert.IsType<VariableDeclaration>(statement);
+            Assert.Equal("x", assign.Identifier);
+
+            var literal = Assert.IsType<IntegerLiteral>(assign.Expression);
+            Assert.Equal(42, literal.Value);
+        }
+
+        [Fact]
+        public void Parser_ShouldReturnConstantDeclaration_WhenParsingBindStatement()
+        {
+            var lexer = new Lexer("bind pi = 3.14;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            var assign = Assert.IsType<ConstantDeclaration>(statement);
+            Assert.Equal("pi", assign.Identifier);
+
+            var literal = Assert.IsType<FloatLiteral>(assign.Expression);
+            Assert.Equal(3.14, literal.Value, 3);
         }
     }
 }

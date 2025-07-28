@@ -167,8 +167,10 @@ namespace MinImpLangComp.Lexing
             
             switch (value)
             {
-                case "let":
-                    return new Token(TokenType.Let, value);
+                case "set":
+                    return new Token(TokenType.Set, value);
+                case "bind":
+                    return new Token(TokenType.Bind, value);
                 case "if":
                     return new Token(TokenType.If, value);
                 case "else":
@@ -177,6 +179,10 @@ namespace MinImpLangComp.Lexing
                     return new Token(TokenType.While, value);
                 case "for":
                     return new Token(TokenType.For, value);
+                case "break":
+                    return new Token(TokenType.Break, value);
+                case "continue":
+                    return new Token(TokenType.Continue, value);
                 case "true":
                     return new Token(TokenType.True, value);
                 case "false":
@@ -185,6 +191,8 @@ namespace MinImpLangComp.Lexing
                     return new Token(TokenType.Function, value);
                 case "return":
                     return new Token(TokenType.Return, value);
+                case "null":
+                    return new Token(TokenType.Null, value);
                 default:
                     return new Token(TokenType.Identifier, value);
             }

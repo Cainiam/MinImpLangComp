@@ -111,7 +111,7 @@ namespace MinImpLangComp.Tests
         }
 
         [Theory]
-        [InlineData("let", TokenType.Let, "let")]
+        [InlineData("set", TokenType.Set, "set")]
         [InlineData("if", TokenType.If, "if")]
         [InlineData("else", TokenType.Else, "else")]
         [InlineData("while", TokenType.While, "while")]
@@ -204,7 +204,7 @@ namespace MinImpLangComp.Tests
             Assert.Equal(TokenType.OrOr, token2.Type);
             Assert.Equal("||", token2.Value);
         }
-        
+
         [Fact]
         public void GetNextToken_ReturnsPlusPlusAndMinusMinusTokens()
         {
@@ -255,6 +255,57 @@ namespace MinImpLangComp.Tests
 
             Assert.Equal(TokenType.BitwiseOr, token.Type);
             Assert.Equal("|", token.Value);
+        }
+
+        [Fact]
+        public void GetNextToken_ReturnsNullKeywordToken()
+        {
+            var lexer = new Lexer("null");
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(TokenType.Null, token.Type);
+            Assert.Equal("null", token.Value);
+        }
+
+        [Fact]
+        public void GetNextToken_ReturnsBreakToken()
+        {
+            var lexer = new Lexer("break");
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(TokenType.Break, token.Type);
+            Assert.Equal("break", token.Value);
+        }
+
+        [Fact]
+        public void GetNextToken_ReturnsContinueToken()
+        {
+            var lexer = new Lexer("continue");
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(TokenType.Continue, token.Type);
+            Assert.Equal("continue", token.Value);
+        }
+
+        [Fact]
+        public void Lexer_CanRecognizeSetKeyword()
+        {
+            var lexer = new Lexer("set x = 10;");
+            var tokens = new List<Token>();
+            Token token;
+            while ((token = lexer.GetNextToken()).Type != TokenType.EOF) tokens.Add(token);
+
+            Assert.Contains(tokens, t => t.Type == TokenType.Set);
+        }
+
+        [Fact]
+        public void Lexer_CanRecognizeBindKeyword()
+        {
+            var lexer = new Lexer("bind");
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(TokenType.Bind, token.Type);
+            Assert.Equal("bind", token.Value);
         }
     }
 }

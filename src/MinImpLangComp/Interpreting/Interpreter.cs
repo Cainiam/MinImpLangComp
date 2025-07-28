@@ -6,6 +6,7 @@ namespace MinImpLangComp.Interpreting
     public class Interpreter
     {
         private readonly Dictionary<string, object> _environment = new Dictionary<string, object>();
+        private readonly HashSet<string> _constant = new HashSet<string>();
 
         public Dictionary<string, object> GetEnvironment()
         {
@@ -78,10 +79,22 @@ namespace MinImpLangComp.Interpreting
                 case VariableReference variable:
                     if (_environment.TryGetValue(variable.Name, out var value)) return value;
                     else throw new RuntimeException($"Undefined variable {variable.Name}");
+                case VariableDeclaration variableDeclaration:
+                    if (_environment.ContainsKey(variableDeclaration.Identifier)) throw new RuntimeException($"Variable {variableDeclaration.Identifier} is already declared");
+                    var declaredValue = Evaluate(variableDeclaration.Expression);
+                    _environment[variableDeclaration.Identifier] = declaredValue;
+                    return declaredValue;
                 case Assignment assign:
+                    if (_constant.Contains(assign.Identifier)) throw new RuntimeException($"Cannot reassign to constant '{assign.Identifier}'");
                     var assignedValue = Evaluate(assign.Expression);
                     _environment[assign.Identifier] = assignedValue;
                     return assignedValue;
+                case ConstantDeclaration constantDeclaration:
+                    if (_environment.ContainsKey(constantDeclaration.Identifier)) throw new RuntimeException($"Constant '{constantDeclaration.Identifier}' already defined");
+                    var constValue = Evaluate(constantDeclaration.Expression);
+                    _environment[constantDeclaration.Identifier] = constValue;
+                    _constant.Add(constantDeclaration.Identifier);
+                    return null;
                 case Block block:
                     object? lastBlock = null;
                     foreach(var statement in block.Statements)
@@ -98,19 +111,51 @@ namespace MinImpLangComp.Interpreting
                     return null;
                 case WhileStatement whileStatement:
                     object? lastWhile = null;
-                    while (Convert.ToBoolean(Evaluate(whileStatement.Condition))) lastWhile = Evaluate(whileStatement.Body);
+                    while (Convert.ToBoolean(Evaluate(whileStatement.Condition)))
+                    {
+                        try
+                        {
+                            lastWhile = Evaluate(whileStatement.Body);
+                        }
+                        catch (ContinueException)
+                        {
+                            continue;
+                        }
+                        catch (BreakException)
+                        {
+                            break;
+                        }
+                    }
                     return lastWhile;
                 case ForStatement forStatement:
                     object? lastFor = null;
                     if (forStatement.Initializer != null) Evaluate(forStatement.Initializer);
                     while (Convert.ToBoolean(Evaluate(forStatement.Condition)))
                     {
-                        lastFor = Evaluate(forStatement.Body);
-                        if(forStatement.Increment != null) Evaluate(forStatement.Increment);
+                        try
+                        {
+                            lastFor = Evaluate(forStatement.Body);
+                        }
+                        catch (ContinueException)
+                        {
+                            if (forStatement.Increment != null) Evaluate(forStatement.Increment);
+                            continue;
+                        }
+                        catch (BreakException)
+                        {
+                            break;
+                        }
+                        if (forStatement.Increment != null) Evaluate(forStatement.Increment);
                     }
                     return lastFor;
                 case BooleanLiteral booleanLiteral:
                     return booleanLiteral.Value;
+                case NullLiteral:
+                    return null;
+                case BreakStatement:
+                    throw new BreakException();
+                case ContinueStatement:
+                    throw new ContinueException();
                 case UnaryExpression unary:
                     if (!_environment.ContainsKey(unary.Identifier)) throw new RuntimeException($"Undefined variable {unary.Identifier}");
                     if (_environment[unary.Identifier] is int currentInt)

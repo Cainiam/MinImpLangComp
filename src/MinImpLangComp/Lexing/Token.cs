@@ -20,7 +20,8 @@
         EOF,
         LexicalError,
         Unknow,
-        Let,
+        Set,
+        Bind,
         If,
         Else,
         While,
@@ -45,7 +46,10 @@
         BitwiseAnd,
         BitwiseOr,
         LeftBracket,
-        RightBracket
+        RightBracket,
+        Null,
+        Break,
+        Continue
     }
 
     public class Token

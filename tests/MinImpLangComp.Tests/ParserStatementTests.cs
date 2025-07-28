@@ -10,11 +10,11 @@ namespace MinImpLangComp.Tests
         [Fact]
         public void ParseStatement_Assignment_ReturnsAssignmentNode()
         {
-            var lexer = new Lexer("let x = 1 + 2;");
+            var lexer = new Lexer("set x = 1 + 2;");
             var parser = new Parser(lexer);
             var statement = parser.ParseStatement();
 
-            var assignment = Assert.IsType<Assignment>(statement);
+            var assignment = Assert.IsType<VariableDeclaration>(statement);
             Assert.Equal("x", assignment.Identifier);
             var binary = Assert.IsType<BinaryExpression>(assignment.Expression);
             Assert.Equal(OperatorType.Plus, binary.Operator);
@@ -39,8 +39,8 @@ namespace MinImpLangComp.Tests
         {
             var input = @"
                     {
-                        let a = 1;
-                        let b = a + 2; 
+                        set a = 1;
+                        set b = a + 2; 
                     }                
                 ";
             var lexer = new Lexer(input);
@@ -49,11 +49,11 @@ namespace MinImpLangComp.Tests
 
             Assert.Equal(2, block.Statements.Count);
 
-            var statement1 = Assert.IsType<Assignment>(block.Statements[0]);
+            var statement1 = Assert.IsType<VariableDeclaration>(block.Statements[0]);
             Assert.Equal("a", statement1.Identifier);
             var express1 = Assert.IsType<IntegerLiteral>(statement1.Expression);
             Assert.Equal(1, express1.Value);
-            var statement2 = Assert.IsType<Assignment>(block.Statements[1]);
+            var statement2 = Assert.IsType<VariableDeclaration>(block.Statements[1]);
             Assert.Equal("b", statement2.Identifier);
             var express2 = Assert.IsType<BinaryExpression>(statement2.Expression);
             Assert.Equal(OperatorType.Plus, express2.Operator);

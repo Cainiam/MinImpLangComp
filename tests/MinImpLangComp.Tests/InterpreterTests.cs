@@ -1,4 +1,5 @@
 ﻿using MinImpLangComp.AST;
+using MinImpLangComp.Exceptions;
 using MinImpLangComp.Interpreting;
 using Xunit;
 
@@ -506,6 +507,133 @@ namespace MinImpLangComp.Tests
             var result = interp.Evaluate(access);
 
             Assert.Equal(99, result);
+        }
+
+        [Fact]
+        public void Evaluate_NullLiteral_ReturnsNull()
+        {
+            var interp = new Interpreter();
+            var result = interp.Evaluate(new NullLiteral());
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void Interpreter_Break_ExitsLoopEarly()
+        {
+            var interp = new Interpreter();
+            var node = new Block(new List<Statement>
+            {
+                new Assignment("i", new IntegerLiteral(0)),
+                new WhileStatement(
+                    new BinaryExpression(new VariableReference("i"), OperatorType.Less, new IntegerLiteral(5)),
+                    new Block(new List<Statement>
+                    {
+                        new IfStatement(
+                            new BinaryExpression(new VariableReference("i"), OperatorType.Equalequal, new IntegerLiteral(2)),
+                            new BreakStatement()
+                        ),
+                        new Assignment("i", new BinaryExpression(new VariableReference("i"), OperatorType.Plus, new IntegerLiteral(1)))
+                    })
+                )
+            });
+            interp.Evaluate(node);
+
+            Assert.Equal(2, interp.GetEnvironment()["i"]);
+        }
+
+        [Fact]
+        public void Interpreter_Continue_SkipsCurrentIteration()
+        {
+            var interp = new Interpreter();
+            var node = new Block(new List<Statement>
+            {
+                new Assignment("i", new IntegerLiteral(0)),
+                new Assignment("sum", new IntegerLiteral(0)),
+                new WhileStatement(
+                    new BinaryExpression(new VariableReference("i"), OperatorType.Less, new IntegerLiteral(5)),
+                    new Block(new List<Statement>
+                    {
+                        new Assignment("i", new BinaryExpression(new VariableReference("i"), OperatorType.Plus, new IntegerLiteral(1))),
+                        new IfStatement(
+                            new BinaryExpression(new VariableReference("i"), OperatorType.Equalequal, new IntegerLiteral(3)),
+                            new ContinueStatement()
+                        ),
+                        new Assignment("sum", new BinaryExpression(new VariableReference("sum"), OperatorType.Plus, new VariableReference("i")))
+                    })
+                )
+            });
+            interp.Evaluate(node);
+
+            Assert.Equal(1 + 2 + 4 + 5, interp.GetEnvironment()["sum"]);
+        }
+
+        [Fact]
+        public void Interpreter_Can_DeclareAndAssignVariale()
+        {
+            var interp = new Interpreter();
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("x", new IntegerLiteral(5)),
+                new Assignment("x", new IntegerLiteral(10)),
+                new ExpressionStatement(new VariableReference("x"))
+            };
+            var result = interp.Evaluate(new Block(statements));
+
+            Assert.Equal(10, result);
+        }
+
+        [Fact]
+        public void Interpreter_Throws_OnRedeclarationOfVariable()
+        {
+            var interp = new Interpreter();
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("x", new IntegerLiteral(5)),
+                new VariableDeclaration("x", new IntegerLiteral(10))
+            };
+            
+            Assert.Throws<RuntimeException>(() => interp.Evaluate(new Block(statements)));
+        }
+
+        [Fact]
+        public void Interpreter_CanDeclareAndUseConstant()
+        {
+            var interp = new Interpreter();
+            var statements = new List<Statement>
+            {
+                new ConstantDeclaration("y", new IntegerLiteral(10)),
+                new ExpressionStatement(new VariableReference("y"))
+            };
+            var result = interp.Evaluate(new Block(statements));
+
+            Assert.Equal(10, result);
+        }
+
+        [Fact]
+        public void Interpreter_Throws_OnRedeclarationOfConstant()
+        {
+            var interp = new Interpreter();
+            var statement = new List<Statement>
+            {
+                new ConstantDeclaration("y", new IntegerLiteral(1)),
+                new ConstantDeclaration("y", new IntegerLiteral(2))
+            };
+
+            Assert.Throws<RuntimeException>(() => interp.Evaluate(new Block(statement)));
+        }
+
+        [Fact]
+        public void Interpreter_Throws_OnAssignmentToConstant()
+        {
+            var interp = new Interpreter();
+            var statements = new List<Statement>
+            {
+                new ConstantDeclaration("y", new IntegerLiteral(5)),
+                new Assignment("y", new IntegerLiteral(10))
+            };
+
+            Assert.Throws<RuntimeException>(() => interp.Evaluate(new Block(statements)));
         }
     }
 }
