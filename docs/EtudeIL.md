@@ -36,23 +36,23 @@ Autres classes non abordées ici : ConstructorBuilder, CustomAttributeBuilder, D
 
 ## Génération d'une méthode IL via un exemple étudié :
 Nous allons procédés à la génération d'une fonction "Add(int a, int b)"  
-(Ajouté la photo du code complet ici)  
+<img width="702" height="474" alt="image" src="https://github.com/user-attachments/assets/6a87ade5-5429-4366-9639-1671b88d0c95" />  
   
 1. Préparation du contexte dynamique :
-(img ICI des 3 premiers var)  
-  
+<img width="707" height="75" alt="image" src="https://github.com/user-attachments/assets/33cf3b30-c16a-48a2-a18c-6e63d95ec860" />  
+
 Création d'un assembly dynamique  
-(img ici de var assemblyName)  
+<img width="395" height="23" alt="image" src="https://github.com/user-attachments/assets/4286e9c0-583a-4fbc-9ce6-6708c49a0a39" />  
 * On nomme notre assembly dynamique.
 * Pas de génération de dll, ici on identifie juste l'assembly dans l'environnement éxécutif.
   
 Déclaration de l'assembly en mémoire  
-(img ici de var assemblybuilder)  
+<img width="714" height="33" alt="image" src="https://github.com/user-attachments/assets/6b3fa11a-241f-47a4-85f5-12c5c3ac8d83" />  
 * On crée un assembly dynamique (un conteneur de code) qui existe qu'en mémoire.
 * Le ".Run" signifie que l'assembly est éxécutable mais pas sauvegardé.
 
 Création d'un module dans l'assembly  
-(img ici de modulebuilder)  
+<img width="484" height="18" alt="image" src="https://github.com/user-attachments/assets/e2e7e20a-dc4b-45dc-a396-97a536ce8ab6" />  
 * Module = fichier logique à l'intérieur d'un assembly.
 * On créé un seul module, ici, qui contiendra la classe et la méthode dynamique.
 
@@ -65,12 +65,14 @@ Assembly (DynamicILAssembly)
 ```  
 
 2. Déclaration d'un type (classe dynamique) :  
-(img de var typebuilder)  
+<img width="609" height="34" alt="image" src="https://github.com/user-attachments/assets/1d2ee836-bba5-4c64-866d-ca7a9a0f551f" />  
+
 * On créé une classe dynamique nommée Mathperation marquée comme public pour pouvoir être utilisée librement.
 * Cette classe contiendra la méthode Add que l'on va créé .
 
 3. Déclaration de la méthode Add :  
-(img de var methodbuilder)  
+<img width="636" height="130" alt="image" src="https://github.com/user-attachments/assets/21f60560-a6ce-47b9-9d7c-f9f1fa97abc2" />  
+
 * On créé un méthode "Add" avec les caractéristique suivante:
   * public = accessible depuis l'extérieur.
   * static = appelable sans instance de classe.
@@ -79,7 +81,8 @@ Assembly (DynamicILAssembly)
 * Cela revient à public static int Add(int a, int b)
 
 4. Génération du corps IL de la méthode Add :  
-(img de var ilGenerator + les emit)
+<img width="459" height="98" alt="image" src="https://github.com/user-attachments/assets/c9a54d9d-65f3-474d-95a6-c2333ba63953" />  
+
 * GetILGenerator() permet d'écrire des instructions IL.
 * En IL, la pile est utilisée pour passer des arguments, exécuter les opérations puis retourner une valeur.
 * On écrit les instructions suivante dans notre code :
@@ -89,11 +92,13 @@ Assembly (DynamicILAssembly)
   * Ret -> retourne la valeur au sommet de la pile. Cela revient à "dépilé" la pile, qui est [a + b]. Cela retourne donc a + b.
 
 5. Création finale du type (compilation en mémoire) :  
-(ici, img de var dynamicType)
+<img width="391" height="37" alt="image" src="https://github.com/user-attachments/assets/1c6d0585-1008-4a19-bcbc-71c05b95cf0d" />  
+
 * On appelle CreateType() une fois le type et ses méthodes définies pour le compiler et le rendre utilisable.
 
 6. Invocation de la méthode dynamique via Reflection :  
-(img de var methode, var result + print)
+<img width="650" height="81" alt="image" src="https://github.com/user-attachments/assets/82826742-63b9-490c-b516-2d24fe556b22" />  
+
 * GetMethod permet de récupérer une méthode via son nom.
 * Invoke :
   * Premier argument : null, car méthode static donc pas besoin d'instance.
@@ -109,7 +114,7 @@ public static int Add(int a, int b)
 ```
 
 Voici le retour de notre code en console :  
-(Ajouté photo du retour)  
+<img width="323" height="80" alt="image" src="https://github.com/user-attachments/assets/c44cf378-5782-42d9-ba84-4374159dad69" />  
 
 ## Leçons retenues :
 * L'IL est un langage de bas niveau exigeant mais "puissant" : il offre un contrôle total sur le comportement du langage mais impose une rigueur dans la gestion de la pile et des types.
