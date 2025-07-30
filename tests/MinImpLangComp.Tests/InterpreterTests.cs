@@ -1,6 +1,7 @@
 ﻿using MinImpLangComp.AST;
 using MinImpLangComp.Exceptions;
 using MinImpLangComp.Interpreting;
+using MinImpLangComp.Lexing;
 using Xunit;
 
 namespace MinImpLangComp.Tests
@@ -574,7 +575,7 @@ namespace MinImpLangComp.Tests
             var interp = new Interpreter();
             var statements = new List<Statement>
             {
-                new VariableDeclaration("x", new IntegerLiteral(5)),
+                new VariableDeclaration("x", new IntegerLiteral(5), null),
                 new Assignment("x", new IntegerLiteral(10)),
                 new ExpressionStatement(new VariableReference("x"))
             };
@@ -589,8 +590,8 @@ namespace MinImpLangComp.Tests
             var interp = new Interpreter();
             var statements = new List<Statement>
             {
-                new VariableDeclaration("x", new IntegerLiteral(5)),
-                new VariableDeclaration("x", new IntegerLiteral(10))
+                new VariableDeclaration("x", new IntegerLiteral(5), null),
+                new VariableDeclaration("x", new IntegerLiteral(10), null)
             };
             
             Assert.Throws<RuntimeException>(() => interp.Evaluate(new Block(statements)));
@@ -602,7 +603,7 @@ namespace MinImpLangComp.Tests
             var interp = new Interpreter();
             var statements = new List<Statement>
             {
-                new ConstantDeclaration("y", new IntegerLiteral(10)),
+                new ConstantDeclaration("y", new IntegerLiteral(10), null),
                 new ExpressionStatement(new VariableReference("y"))
             };
             var result = interp.Evaluate(new Block(statements));
@@ -616,8 +617,8 @@ namespace MinImpLangComp.Tests
             var interp = new Interpreter();
             var statement = new List<Statement>
             {
-                new ConstantDeclaration("y", new IntegerLiteral(1)),
-                new ConstantDeclaration("y", new IntegerLiteral(2))
+                new ConstantDeclaration("y", new IntegerLiteral(1), null),
+                new ConstantDeclaration("y", new IntegerLiteral(2), null)
             };
 
             Assert.Throws<RuntimeException>(() => interp.Evaluate(new Block(statement)));
@@ -629,11 +630,68 @@ namespace MinImpLangComp.Tests
             var interp = new Interpreter();
             var statements = new List<Statement>
             {
-                new ConstantDeclaration("y", new IntegerLiteral(5)),
+                new ConstantDeclaration("y", new IntegerLiteral(5), null),
                 new Assignment("y", new IntegerLiteral(10))
             };
 
             Assert.Throws<RuntimeException>(() => interp.Evaluate(new Block(statements)));
+        }
+
+        [Fact]
+        public void Interpreter_RespectsTypeAnnotation_CorrectType_DoesNotThrow()
+        {
+            var interp = new Interpreter();
+            var block = new Block(new List<Statement>
+            {
+                new VariableDeclaration("a", new IntegerLiteral(10), new TypeAnnotation("int", TokenType.TypeInt)),
+                new VariableDeclaration("b", new FloatLiteral(1.5), new TypeAnnotation("float", TokenType.TypeFloat)),
+                new VariableDeclaration("c", new StringLiteral("hello"), new TypeAnnotation("string", TokenType.TypeString)),
+                new VariableDeclaration("d", new BooleanLiteral(true), new TypeAnnotation("bool", TokenType.TypeBool))
+            });
+            interp.Evaluate(block);
+
+            Assert.Equal(10, interp.GetEnvironment()["a"]);
+            Assert.Equal(1.5, interp.GetEnvironment()["b"]);
+            Assert.Equal("hello", interp.GetEnvironment()["c"]);
+            Assert.Equal(true, interp.GetEnvironment()["d"]);
+        }
+
+        [Fact]
+        public void Interpreter_RespectsTypeAnnotation_WrongType_ThrowsException()
+        {
+            var interp = new Interpreter();
+            var block = new Block(new List<Statement>
+            {
+                new VariableDeclaration("a", new StringLiteral("notAnInt"), new TypeAnnotation("int", TokenType.TypeInt))
+            });
+
+            Assert.Throws<RuntimeException>(() => interp.Evaluate(block));
+        }
+
+        [Fact]
+        public void Interpreter_ConstantDeclaration_WithCorrectType_Works()
+        {
+            var interp = new Interpreter();
+            var block = new Block(new List<Statement>
+            {
+                new ConstantDeclaration("pi", new FloatLiteral(3.14), new TypeAnnotation("float", TokenType.TypeFloat))
+            });
+            interp.Evaluate(block);
+
+            Assert.Equal(3.14, interp.GetEnvironment()["pi"]);
+        }
+
+        [Fact]
+        public void Interpreter_Assignment_AfterTypeDeclaration_WithWrongType_Throws()
+        {
+            var interp = new Interpreter();
+            var block = new Block(new List<Statement>
+            {
+                new VariableDeclaration("x", new IntegerLiteral(1), new TypeAnnotation("int", TokenType.TypeInt)),
+                new Assignment("x", new StringLiteral("hello"))
+            });
+
+            Assert.Throws<RuntimeException>(() => interp.Evaluate(block));
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using MinImpLangComp.Exceptions;
 using MinImpLangComp.AST;
+using MinImpLangComp.Lexing;
 
 namespace MinImpLangComp.Interpreting
 {
@@ -82,16 +83,35 @@ namespace MinImpLangComp.Interpreting
                 case VariableDeclaration variableDeclaration:
                     if (_environment.ContainsKey(variableDeclaration.Identifier)) throw new RuntimeException($"Variable {variableDeclaration.Identifier} is already declared");
                     var declaredValue = Evaluate(variableDeclaration.Expression);
+                    if (!IsCompatibleType(variableDeclaration.TypeAnnotation, declaredValue)) throw new RuntimeException($"Type mismatch in variable declaration '{variableDeclaration.Identifier}': expected '{variableDeclaration.TypeAnnotation}', got '{declaredValue?.GetType().Name ?? "null"}'");
                     _environment[variableDeclaration.Identifier] = declaredValue;
                     return declaredValue;
                 case Assignment assign:
                     if (_constant.Contains(assign.Identifier)) throw new RuntimeException($"Cannot reassign to constant '{assign.Identifier}'");
                     var assignedValue = Evaluate(assign.Expression);
+                    if(_environment.ContainsKey(assign.Identifier))
+                    {
+                        var declaredNode = _environment[assign.Identifier];
+                        var declaredType = declaredNode switch
+                        {
+                            int => "int",
+                            double => "float",
+                            bool => "bool",
+                            string => "string",
+                            _ => null
+                        };
+                        if(declaredType != null)
+                        {
+                            var fakeAnnotation = new TypeAnnotation(declaredType, TokenType.Identifier);
+                            if (!IsCompatibleType(fakeAnnotation, assignedValue)) throw new RuntimeException($"Type mismatch in assignment to '{assign.Identifier}': expected '{declaredType}', got '{assignedValue?.GetType().Name ?? "null"}'");
+                        }
+                    }
                     _environment[assign.Identifier] = assignedValue;
                     return assignedValue;
                 case ConstantDeclaration constantDeclaration:
                     if (_environment.ContainsKey(constantDeclaration.Identifier)) throw new RuntimeException($"Constant '{constantDeclaration.Identifier}' already defined");
                     var constValue = Evaluate(constantDeclaration.Expression);
+                    if (!IsCompatibleType(constantDeclaration.TypeAnnotation, constValue)) throw new RuntimeException($"Type mismatch in variable declaration '{constantDeclaration.Identifier}': expected '{constantDeclaration.TypeAnnotation}', got '{constValue?.GetType().Name ?? "null"}'");
                     _environment[constantDeclaration.Identifier] = constValue;
                     _constant.Add(constantDeclaration.Identifier);
                     return null;
@@ -255,6 +275,19 @@ namespace MinImpLangComp.Interpreting
                 default:
                     throw new RuntimeException($"Unsupported node type: {node.GetType().Name}");
                 }
+        }
+
+        private bool IsCompatibleType(TypeAnnotation annotation, object? value)
+        {
+            if (annotation == null) return true;
+            return annotation.TypeName switch
+            {
+                "int" => value is int,
+                "float" => value is double || value is int,
+                "bool" => value is bool,
+                "string" => value is string,
+                _ => throw new RuntimeException($"Unknow type '{annotation.TypeName}'")
+            };
         }
     }
 }

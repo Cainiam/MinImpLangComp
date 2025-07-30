@@ -3,6 +3,7 @@ using MinImpLangComp.AST;
 using Xunit;
 using Xunit.Abstractions;
 using System.ComponentModel.DataAnnotations;
+using MinImpLangComp.Lexing;
 
 namespace MinImpLangComp.Tests
 {
@@ -336,7 +337,7 @@ namespace MinImpLangComp.Tests
         [Fact]
         public void Transpiler_TranspilesVariableDeclarationToVar()
         {
-            var declaration = new VariableDeclaration("x", new IntegerLiteral(42));
+            var declaration = new VariableDeclaration("x", new IntegerLiteral(42), null);
             var block = new Block(new List<Statement> { declaration });
             var transpiler = new Transpiler();
             var result = transpiler.Transpile(block);
@@ -347,12 +348,45 @@ namespace MinImpLangComp.Tests
         [Fact]
         public void Transpiler_TranspilesConstantDeclarationToVar()
         {
-            var declaration = new ConstantDeclaration("y", new IntegerLiteral(90));
+            var declaration = new ConstantDeclaration("y", new IntegerLiteral(90), null);
             var block = new Block(new List<Statement> { declaration });
             var transpiler = new Transpiler();
             var result = transpiler.Transpile(block);
 
             Assert.Contains("var y = 90;", result);
+        }
+
+        [Fact]
+        public void Transpiler_TranspilesVariableDeclarationWithTypeAnnotation_Int()
+        {
+            var declaration = new VariableDeclaration("x", new IntegerLiteral(42), new TypeAnnotation("int", TokenType.TypeInt));
+            var block = new Block(new List<Statement> { declaration });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile(block);
+
+            Assert.Contains("int x = 42;", result);
+        }
+
+        [Fact] 
+        public void Transpiler_TranspilesVariableDeclarationWithTypeAnnotation_Bool()
+        {
+            var declaration = new VariableDeclaration("flag", new BooleanLiteral(true), new TypeAnnotation("bool", TokenType.TypeBool));
+            var block = new Block(new List<Statement> { declaration });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile(block);
+
+            Assert.Contains("bool flag = true;", result);
+        }
+
+        [Fact] 
+        public void Transpiler_TranspilesConstantDeclarationWithTypeAnnotation_String()
+        {
+            var declaration = new ConstantDeclaration("msg", new StringLiteral("Hello"), new TypeAnnotation("string", TokenType.TypeString));
+            var block = new Block(new List<Statement> { declaration });
+            var transpiler = new Transpiler();
+            var result = transpiler.Transpile(block);
+
+            Assert.Contains("string msg = \"Hello\";", result);
         }
     }
 }

@@ -307,5 +307,60 @@ namespace MinImpLangComp.Tests
             Assert.Equal(TokenType.Bind, token.Type);
             Assert.Equal("bind", token.Value);
         }
+
+        [Theory]
+        [InlineData("int", TokenType.TypeInt, "int")]
+        [InlineData("float", TokenType.TypeFloat, "float")]
+        [InlineData("bool", TokenType.TypeBool, "bool")]
+        [InlineData("string", TokenType.TypeString, "string")]
+        public void GetNextToken_ReturnsTypeKeywords(string input, TokenType expectedType, string expectedValue)
+        {
+            var lexer = new Lexer(input);
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(expectedType, token.Type);
+            Assert.Equal(expectedValue, token.Value);
+        }
+
+        [Fact]
+        public void GetNextToken_ReturnsTokensForTypedDeclaration()
+        {
+            var lexer = new Lexer("set x: int = 5;");
+            var tokens = new List<Token>();
+            Token token;
+            while ((token = lexer.GetNextToken()).Type != TokenType.EOF) tokens.Add(token);
+
+            Assert.Collection(tokens,
+                t => Assert.Equal(TokenType.Set, t.Type),
+                t =>
+                {
+                    Assert.Equal(TokenType.Identifier, t.Type);
+                    Assert.Equal("x", t.Value);
+                },
+                t => Assert.Equal(TokenType.Colon, t.Type),
+                t =>
+                {
+                    Assert.Equal(TokenType.TypeInt, t.Type);
+                    Assert.Equal("int", t.Value);
+                },
+                t => Assert.Equal(TokenType.Assign, t.Type),
+                t =>
+                {
+                    Assert.Equal(TokenType.Integer, t.Type);
+                    Assert.Equal("5", t.Value);
+                },
+                t => Assert.Equal(TokenType.Semicolon, t.Type)
+            );
+        }
+
+        [Fact]
+        public void GetNextToken_ReturnsColonToken()
+        {
+            var lexer = new Lexer(":");
+            var token = lexer.GetNextToken();
+
+            Assert.Equal(TokenType.Colon, token.Type);
+            Assert.Equal(":", token.Value);
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using MinImpLangComp.AST;
+using MinImpLangComp.Lexing;
 using System.Globalization;
 using System.Text;
 
@@ -37,11 +38,11 @@ namespace MinImpLangComp.Transpiling
                     if (expressionStatement.Expression is UnaryExpression unary) return $"{unary.Identifier}{(unary.Operator == OperatorType.PlusPlus ? "++" : "--")};";
                     return TranspileExpression(expressionStatement.Expression) + ";";
                 case VariableDeclaration variableDeclaration:
-                    return $"var {variableDeclaration.Identifier} = {TranspileExpression(variableDeclaration.Expression)};";
+                    return $"{ResolveCSharpType(variableDeclaration.TypeAnnotation)} {variableDeclaration.Identifier} = {TranspileExpression(variableDeclaration.Expression)};";
                 case Assignment assignment:
                     return $"var {assignment.Identifier} = {TranspileExpression(assignment.Expression)};";
                 case ConstantDeclaration constantDeclaration:
-                    return $"var {constantDeclaration.Identifier} = {TranspileExpression(constantDeclaration.Expression)};";
+                    return $"{ResolveCSharpType(constantDeclaration.TypeAnnotation)} {constantDeclaration.Identifier} = {TranspileExpression(constantDeclaration.Expression)};";
                 case IfStatement ifStatement:
                     var sbIF = new StringBuilder();
                     sbIF.AppendLine($"if ({TranspileExpression(ifStatement.Condition)})");
@@ -153,6 +154,19 @@ namespace MinImpLangComp.Transpiling
                 OperatorType.BitwiseAnd => "&",
                 OperatorType.BitwiseOr => "|",
                 _ => throw new NotImplementedException($"Operator {operatorType} is not supported yet")
+            };
+        }
+
+        private string ResolveCSharpType(TypeAnnotation? annotation)
+        {
+            if (annotation == null) return "var";
+            return annotation.TypeToken switch
+            {
+                TokenType.TypeInt => "int",
+                TokenType.TypeFloat => "double",
+                TokenType.TypeBool => "bool",
+                TokenType.TypeString => "string",
+                _ => throw new NotImplementedException($"Unsupported type annotation: {annotation.TypeToken}")
             };
         }
     }

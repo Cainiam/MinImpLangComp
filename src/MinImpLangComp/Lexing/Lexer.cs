@@ -125,6 +125,9 @@ namespace MinImpLangComp.Lexing
                 case ']':
                     _position++;
                     return new Token(TokenType.RightBracket, "]");
+                case ':':
+                    _position++;
+                    return new Token(TokenType.Colon, ":");
                 default:
                     _position++;
                     return new Token(TokenType.Unknow, current.ToString());
@@ -193,6 +196,14 @@ namespace MinImpLangComp.Lexing
                     return new Token(TokenType.Return, value);
                 case "null":
                     return new Token(TokenType.Null, value);
+                case "int":
+                    return new Token(TokenType.TypeInt, value);
+                case "float":
+                    return new Token(TokenType.TypeFloat, value);
+                case "bool":
+                    return new Token(TokenType.TypeBool, value);
+                case "string":
+                    return new Token(TokenType.TypeString, value);
                 default:
                     return new Token(TokenType.Identifier, value);
             }

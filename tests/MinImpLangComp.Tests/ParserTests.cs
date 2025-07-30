@@ -344,5 +344,51 @@ namespace MinImpLangComp.Tests
             var literal = Assert.IsType<FloatLiteral>(assign.Expression);
             Assert.Equal(3.14, literal.Value, 3);
         }
+
+        [Fact]
+        public void Parser_CanParseSetStatementWithTypeAnnotation()
+        {
+            var lexer = new Lexer("set x: int = 10;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            var decl = Assert.IsType<VariableDeclaration>(statement);
+            Assert.Equal("x", decl.Identifier);
+            var literal = Assert.IsType<IntegerLiteral>(decl.Expression);
+            Assert.Equal(10, literal.Value);
+            Assert.NotNull(decl.TypeAnnotation);
+            Assert.Equal("int", decl.TypeAnnotation.TypeName);
+            Assert.Equal(TokenType.TypeInt, decl.TypeAnnotation.TypeToken);
+        }
+
+        [Fact]
+        public void Parser_CanParseBindStatementWithTypeAnnotation()
+        {
+            var lexer = new Lexer("bind flag: bool = true;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            var decl = Assert.IsType<ConstantDeclaration>(statement);
+            Assert.Equal("flag", decl.Identifier);
+            var literal = Assert.IsType<BooleanLiteral>(decl.Expression);
+            Assert.True(literal.Value);
+            Assert.NotNull(decl.TypeAnnotation);
+            Assert.Equal("bool", decl.TypeAnnotation.TypeName);
+            Assert.Equal(TokenType.TypeBool, decl.TypeAnnotation.TypeToken);
+        }
+
+        [Fact]
+        public void Parser_SetStatementWithoutTypeAnnotation_HasNullType()
+        {
+            var lexer = new Lexer("set y = 20;");
+            var parser = new Parser(lexer);
+            var statement = parser.ParseStatement();
+
+            var decl = Assert.IsType<VariableDeclaration>(statement);
+            Assert.Equal("y", decl.Identifier);
+            var literal = Assert.IsType<IntegerLiteral>(decl.Expression);
+            Assert.Equal(20, literal.Value);
+            Assert.Null(decl.TypeAnnotation);
+        }
     }
 }

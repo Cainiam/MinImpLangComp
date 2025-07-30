@@ -4,11 +4,13 @@
     {
         public string Identifier { get; }
         public Expression Expression { get; }
+        public TypeAnnotation? TypeAnnotation { get; }
 
-        public ConstantDeclaration(string identifier, Expression expression)
+        public ConstantDeclaration(string identifier, Expression expression, TypeAnnotation? typeAnnotation)
         {
             Identifier = identifier;
             Expression = expression;
+            TypeAnnotation = typeAnnotation;
         }
     }
 }
