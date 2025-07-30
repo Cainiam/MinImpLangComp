@@ -49,7 +49,12 @@
         RightBracket,
         Null,
         Break,
-        Continue
+        Continue,
+        TypeInt,
+        TypeFloat,
+        TypeBool,
+        TypeString,
+        Colon
     }
 
     public class Token

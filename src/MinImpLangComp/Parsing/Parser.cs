@@ -402,10 +402,11 @@ namespace MinImpLangComp.Parsing
             if (_currentToken.Type != TokenType.Identifier) throw new ParsingException("Expected identifier after 'set'");
             string variableName = _currentToken.Value;
             Eat(TokenType.Identifier);
+            var typeAnnotation = ParseOptionalTypeAnnotation();
             Eat(TokenType.Assign);
             Expression value = ParseExpression();
             Eat(TokenType.Semicolon);
-            return new VariableDeclaration(variableName, value);
+            return new VariableDeclaration(variableName, value, typeAnnotation);
         }
 
         private Statement ParseConstantDeclaration()
@@ -414,10 +415,37 @@ namespace MinImpLangComp.Parsing
             if (_currentToken.Type != TokenType.Identifier) throw new ParsingException("Expected identifier after 'bind'");
             string constantName = _currentToken.Value;
             Eat(TokenType.Identifier);
+            var typeAnnotation = ParseOptionalTypeAnnotation();
             Eat(TokenType.Assign);
             Expression value = ParseExpression();
             Eat(TokenType.Semicolon);
-            return new ConstantDeclaration(constantName, value);
+            return new ConstantDeclaration(constantName, value, typeAnnotation);
+        }
+
+        private TypeAnnotation? ParseOptionalTypeAnnotation()
+        {
+            if (_currentToken.Type == TokenType.Colon)
+            {
+                Eat(TokenType.Colon);
+                switch(_currentToken.Type)
+                {
+                    case TokenType.TypeInt:
+                        Eat(TokenType.TypeInt);
+                        return new TypeAnnotation("int", TokenType.TypeInt);
+                    case TokenType.TypeFloat:
+                        Eat(TokenType.TypeFloat);
+                        return new TypeAnnotation("float", TokenType.TypeFloat);
+                    case TokenType.TypeBool:
+                        Eat(TokenType.TypeBool);
+                        return new TypeAnnotation("bool", TokenType.TypeBool);
+                    case TokenType.TypeString:
+                        Eat(TokenType.TypeString);
+                        return new TypeAnnotation("string", TokenType.TypeString);
+                    default:
+                        throw new ParsingException($"Unexpected token {_currentToken.Value} after ':'. Expected an already know type");
+                }
+            }
+            return null;
         }
     }
 }
