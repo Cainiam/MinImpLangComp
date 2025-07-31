@@ -244,5 +244,100 @@ namespace MinImpLangComp.Tests
 
             Assert.Equal(1, result);
         }
+
+        [Fact]
+        public void Should_Respect_OperatorPrecedence()
+        {
+            var expr = new BinaryExpression(
+                new IntegerLiteral(1),
+                OperatorType.Plus,
+                new BinaryExpression(
+                    new IntegerLiteral(2),
+                    OperatorType.Multiply,
+                    new IntegerLiteral(3)
+                )
+            );
+            var result = ILGeneratorRunner.GenerateAndRunIL(expr);
+
+            Assert.Equal(7, result);
+        }
+
+        [Fact]
+        public void Should_Respect_ParenthesizedGrouping()
+        {
+            var expr = new BinaryExpression(
+                new BinaryExpression(
+                    new IntegerLiteral(1),
+                    OperatorType.Plus,
+                    new IntegerLiteral(2)
+                ),
+                OperatorType.Multiply,
+                new IntegerLiteral(3)
+            );
+            var result = ILGeneratorRunner.GenerateAndRunIL(expr);
+
+            Assert.Equal(9, result);
+        }
+
+        [Fact]
+        public void Should_Respect_LeftAssociativity()
+        {
+            var expr = new BinaryExpression(
+                new BinaryExpression(
+                    new IntegerLiteral(10),
+                    OperatorType.Minus,
+                    new IntegerLiteral(3)
+                ),
+                OperatorType.Minus,
+                new IntegerLiteral(2)
+            );
+            var result = ILGeneratorRunner.GenerateAndRunIL(expr);
+
+            Assert.Equal(5, result);
+        }
+
+        [Fact]
+        public void Should_Evaluate_LogicalAnd_Complex()
+        {
+            var expr = new BinaryExpression(
+                new BinaryExpression(
+                    new IntegerLiteral(5),
+                    OperatorType.Greater,
+                    new IntegerLiteral(3)
+                ),
+                OperatorType.AndAnd,
+                new BinaryExpression(
+                    new IntegerLiteral(2),
+                    OperatorType.Less,
+                    new IntegerLiteral(4)
+                )
+            );
+            var result = ILGeneratorRunner.GenerateAndRunIL(expr);
+
+            // (5 > 3) && (2 < 4) -> 1 && 1 -> 1
+            Assert.Equal(1, result);
+        }
+
+        [Fact]
+        public void Should_Evaluate_LogicalOr_Complex()
+        {
+            var expr = new BinaryExpression(
+                new BinaryExpression(
+                    new IntegerLiteral(5),
+                    OperatorType.Greater,
+                    new IntegerLiteral(10)
+                ),
+                OperatorType.OrOr,
+                new BinaryExpression(
+                    new IntegerLiteral(2),
+                    OperatorType.Less,
+                    new IntegerLiteral(4)
+                )
+            );
+            var result = ILGeneratorRunner.GenerateAndRunIL(expr);
+
+            // (5 > 10) || (2 < 4) -> 0 || 1 -> 1
+            Assert.Equal(1, result);
+        }
     }
 }
