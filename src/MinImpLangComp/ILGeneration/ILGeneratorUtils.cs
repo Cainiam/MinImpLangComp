@@ -1,4 +1,5 @@
 ﻿using MinImpLangComp.AST;
+using System.Reflection;
 using System.Reflection.Emit;
 
 namespace MinImpLangComp.ILGeneration
@@ -46,10 +47,32 @@ namespace MinImpLangComp.ILGeneration
                     }
                     else
                     {
-                        GenerateIL(binaryExpression.Left, il);
-                        GenerateIL(binaryExpression.Right, il);
-                        EmitBinaryOperator(binaryExpression.Operator, il); // Autre cas d'opérateur
+                        var targetType = GetExpressionType(binaryExpression);
+                        GenerateILWithConversion(binaryExpression.Left, il, targetType);
+                        GenerateILWithConversion(binaryExpression.Right, il, targetType);
+                        EmitBinaryOperator(binaryExpression.Operator, il); // Autre cas 
                     }
+                    break;
+                case FunctionCall functionCall when functionCall.Name == "print":
+                    foreach(var arg in functionCall.Arguments)
+                    {
+                        GenerateIL(arg, il);
+                        var argType = GetExpressionType(arg);
+                        var writeLineMethod = typeof(Console).GetMethod(
+                            "WriteLine",
+                            BindingFlags.Public | BindingFlags.Static,
+                            null,
+                            new Type[] { argType },
+                            null
+                        );
+                        if(writeLineMethod == null)
+                        {
+                            il.Emit(OpCodes.Box, argType);
+                            writeLineMethod = typeof(Console).GetMethod("WriteLine", new[] { typeof(object) });
+                        }
+                        il.EmitCall(OpCodes.Call, writeLineMethod!, null);
+                    }
+                    il.Emit(OpCodes.Ldnull);
                     break;
                 default:
                     throw new NotSupportedException($"Unsupported expression type: {expr.GetType().Name}");
@@ -107,6 +130,28 @@ namespace MinImpLangComp.ILGeneration
                     break;
                 default:
                     throw new NotSupportedException($"Unsupported binary operator {oper}");
+            }
+        }
+
+        private static Type GetExpressionType(Expression expression)
+        {
+            return expression switch
+            {
+                IntegerLiteral => typeof(int),
+                FloatLiteral => typeof(double),
+                StringLiteral => typeof(string),
+                BinaryExpression binary => GetExpressionType(binary.Left) == typeof(double) || GetExpressionType(binary.Right) == typeof(double) ? typeof(double) : typeof(int),
+                _ => throw new NotSupportedException($"Cannot determine type of expression: {expression.GetType().Name}")
+            };
+        }
+
+        private static void GenerateILWithConversion(Expression expression, ILGenerator il, Type targetType)
+        {
+            GenerateIL(expression, il);
+            var actualType = GetExpressionType(expression);
+            if (actualType == typeof(int) && targetType == typeof(double))
+            {
+                il.Emit(OpCodes.Conv_R8);
             }
         }
     }

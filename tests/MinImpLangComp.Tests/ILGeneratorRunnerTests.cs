@@ -1,5 +1,6 @@
 ﻿using MinImpLangComp.AST;
 using MinImpLangComp.ILGeneration;
+using System.Globalization;
 
 namespace MinImpLangComp.Tests
 {
@@ -338,6 +339,117 @@ namespace MinImpLangComp.Tests
 
             // (5 > 10) || (2 < 4) -> 0 || 1 -> 1
             Assert.Equal(1, result);
+        }
+
+        [Fact]
+        public void Should_Print_IntegerLiteral()
+        {
+            var expr = new FunctionCall("print", new List<Expression>
+            {
+                new IntegerLiteral(123)
+            });
+            using var consoleOutput = new StringWriter();
+            Console.SetOut(consoleOutput);
+            ILGeneratorRunner.GenerateAndRunIL(expr);
+            var outpout = consoleOutput.ToString().Trim();
+
+            Assert.Equal("123", outpout);
+        }
+
+        [Fact]
+        public void Should_Print_MultipleValues()
+        {
+            var expr = new FunctionCall("print", new List<Expression>
+            {
+                new IntegerLiteral(42),
+                new FloatLiteral(3.14)
+            });
+            var originalculture = CultureInfo.CurrentCulture;
+            try
+            {
+                CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+                using var consoleOutput = new StringWriter();
+                Console.SetOut(consoleOutput);
+                ILGeneratorRunner.GenerateAndRunIL(expr);
+                var output = consoleOutput.ToString().Trim().Split(Environment.NewLine);
+
+                Assert.Equal("42", output[0]);
+                Assert.Equal("3.14", output[1]);
+            }
+            finally
+            {
+                CultureInfo.CurrentCulture = originalculture;
+            }
+        }
+
+        [Fact]
+        public void Should_Print_SimpleAddition()
+        {
+            var expr = new FunctionCall("print", new List<Expression>
+            {
+                new BinaryExpression(
+                    new IntegerLiteral(1),
+                    OperatorType.Plus,
+                    new IntegerLiteral(2)
+                )
+            });
+            using var consoleOutput = new StringWriter();
+            Console.SetOut(consoleOutput);
+            ILGeneratorRunner.GenerateAndRunIL(expr);
+            var output = consoleOutput.ToString().Trim();
+
+            Assert.Equal("3", output);
+        }
+
+        [Fact]
+        public void Should_Print_FloatDivision()
+        {
+            var expr = new FunctionCall("print", new List<Expression>
+            {
+                new BinaryExpression(
+                    new IntegerLiteral(10),
+                    OperatorType.Divide,
+                    new FloatLiteral(4.0)
+                )
+            });
+            var originalculture = CultureInfo.CurrentCulture;
+            try
+            {
+                CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+                using var consoleOutput = new StringWriter();
+                Console.SetOut(consoleOutput);
+                ILGeneratorRunner.GenerateAndRunIL(expr);
+                var output = consoleOutput.ToString().Trim();
+
+                Assert.Equal("2.5", output);
+            }
+            finally
+            {
+                CultureInfo.CurrentCulture = originalculture;
+            }
+        }
+
+        [Fact]
+        public void Should_Print_ParenthesizedExpression()
+        {
+            var expr = new FunctionCall("print", new List<Expression>
+            {
+                new BinaryExpression(
+                    new BinaryExpression(
+                        new IntegerLiteral(2),
+                        OperatorType.Plus,
+                        new IntegerLiteral(3)
+                    ),
+                    OperatorType.Multiply,
+                    new IntegerLiteral(4)
+                )
+            });
+            using var consoleOutput = new StringWriter();
+            Console.SetOut(consoleOutput);
+            ILGeneratorRunner.GenerateAndRunIL(expr);
+            var output = consoleOutput.ToString().Trim();
+
+            Assert.Equal("20", output);
         }
     }
 }
