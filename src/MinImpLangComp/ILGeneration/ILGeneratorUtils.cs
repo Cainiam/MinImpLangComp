@@ -1,4 +1,5 @@
 ﻿using MinImpLangComp.AST;
+using MinImpLangComp.Lexing;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -79,6 +80,37 @@ namespace MinImpLangComp.ILGeneration
             }
         }
 
+        public static void GenerateIL(Statement stmt, ILGenerator il, Dictionary<string, LocalBuilder> locals)
+        {
+            switch (stmt)
+            {
+                case VariableDeclaration variableDeclaration:
+                    if(!locals.TryGetValue(variableDeclaration.Identifier, out var local))
+                    {
+                        var typeVariable = GetSystemTypeFromAnnotation(variableDeclaration.TypeAnnotation);
+                        local = il.DeclareLocal(typeVariable);
+                        locals[variableDeclaration.Identifier] = local;
+                    }
+                    GenerateILWithConversion(variableDeclaration.Expression, il, locals[variableDeclaration.Identifier].LocalType);
+                    il.Emit(OpCodes.Stloc, locals[variableDeclaration.Identifier]);
+                    break;
+                case ConstantDeclaration constantDeclaration:
+                    if (locals.ContainsKey(constantDeclaration.Identifier)) throw new InvalidOperationException($"Constant '{constantDeclaration.Identifier}' already declared");
+                    var typeConstant = GetSystemTypeFromAnnotation(constantDeclaration.TypeAnnotation);
+                    var localBind = il.DeclareLocal(typeConstant, pinned: false);
+                    locals[constantDeclaration.Identifier] = localBind;
+                    GenerateILWithConversion(constantDeclaration.Expression, il, typeConstant);
+                    il.Emit(OpCodes.Stloc, localBind);
+                    break;
+                case ExpressionStatement expressionStatement:
+                    GenerateIL(expressionStatement.Expression, il);
+                    il.Emit(OpCodes.Pop);
+                    break;
+                default:
+                    throw new NotSupportedException($"Unsupported statement type: {stmt.GetType().Name}");
+            }
+        }
+
         private static void EmitBinaryOperator(OperatorType oper, ILGenerator il)
         {
             switch (oper)
@@ -153,6 +185,19 @@ namespace MinImpLangComp.ILGeneration
             {
                 il.Emit(OpCodes.Conv_R8);
             }
+        }
+
+        private static Type GetSystemTypeFromAnnotation(TypeAnnotation? annotation)
+        {
+            if (annotation == null) throw new InvalidOperationException("Missing type annotation");
+            return annotation.TypeToken switch
+            {
+                TokenType.TypeInt => typeof(int),
+                TokenType.TypeFloat => typeof(double),
+                TokenType.TypeBool => typeof(bool),
+                TokenType.TypeString => typeof(string),
+                _ => throw new NotSupportedException($"Unknown type annotation: {annotation.TypeName}")
+            };
         }
     }
 }

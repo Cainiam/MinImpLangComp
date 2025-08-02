@@ -1,4 +1,5 @@
 ﻿using MinImpLangComp.AST;
+using MinImpLangComp.Lexing;
 using MinImpLangComp.ILGeneration;
 using System.Globalization;
 
@@ -233,7 +234,7 @@ namespace MinImpLangComp.Tests
                 new IntegerLiteral(0)
             );
             var result = ILGeneratorRunner.GenerateAndRunIL(expr);
-            
+
             Assert.Equal(0, result);
 
             expr = new BinaryExpression(
@@ -450,6 +451,160 @@ namespace MinImpLangComp.Tests
             var output = consoleOutput.ToString().Trim();
 
             Assert.Equal("20", output);
+        }
+
+
+        /////// ILGeneratorRunner.cs with statements here : //////
+        
+        private string CaptureConsole(Action action) // Utilitaire
+        {
+            var originalOut = Console.Out;
+            using var writer = new StringWriter();
+            Console.SetOut(writer);
+            try
+            {
+                action();
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+            }
+            return writer.ToString().Trim();
+        }
+
+
+        [Fact]
+        public void Bind_IntegerLiteral_DoesNotThrow()
+        {
+            var statements = new List<Statement>
+            {
+                new ConstantDeclaration("x", new IntegerLiteral(123), new TypeAnnotation("int", TokenType.TypeInt))
+            };
+            var result = ILGeneratorRunner.GenerateAndRunIL(statements);
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void Set_SimpleBinaryAddition_DoesNotThrow()
+        {
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("y", new BinaryExpression(
+                        new IntegerLiteral(10),
+                        OperatorType.Plus,
+                        new IntegerLiteral(5)
+                    ),
+                    new TypeAnnotation("int", TokenType.TypeInt)
+                )
+            };
+            var result = ILGeneratorRunner.GenerateAndRunIL(statements);
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void Evaluate_SimpleAddition_ReturnsCorrectResult()
+        {
+            var expr = new BinaryExpression(
+                new IntegerLiteral(4),
+                OperatorType.Plus,
+                new IntegerLiteral(5)
+            );
+            var result = ILGeneratorRunner.GenerateAndRunIL(expr);
+
+            Assert.Equal(9, result);
+        }
+
+        [Fact]
+        public void Print_SimpleExpression_PrintsExpectedOutput()
+        {
+            var statements = new List<Statement>
+            {
+                new ExpressionStatement(
+                    new FunctionCall("print", new List<Expression>
+                    {
+                        new BinaryExpression(new IntegerLiteral(2), OperatorType.Plus, new IntegerLiteral(3))
+                    })
+                )
+            };
+            var output = CaptureConsole (() =>
+            {
+                ILGeneratorRunner.GenerateAndRunIL(statements);
+            });
+
+            Assert.Equal("5", output);            
+        }
+
+        [Fact]
+        public void Print_IntegerLiteral_PrintsExpectedOutput()
+        {
+            var statements = new List<Statement>
+            {
+                new ExpressionStatement(
+                    new FunctionCall("print", new List<Expression>
+                    {
+                        new IntegerLiteral(42)
+                    })
+                )
+            };
+            var output = CaptureConsole(() =>
+            {
+                ILGeneratorRunner.GenerateAndRunIL(statements);
+            });
+
+            Assert.Equal("42", output);
+        }
+
+        [Fact]
+        public void Print_FloatLiteral_PrintsExpectedOutput()
+        {
+            var statements = new List<Statement>
+            {
+                new ExpressionStatement(
+                    new FunctionCall("print", new List<Expression>
+                    {
+                        new FloatLiteral(3.14)
+                    })
+                )
+            };
+            var originalCulture = CultureInfo.CurrentCulture;
+            try
+            {
+                CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+                var output = CaptureConsole(() =>
+                {
+                    ILGeneratorRunner.GenerateAndRunIL(statements);
+                });
+
+                Assert.Equal("3.14", output);
+            }
+            finally
+            {
+                CultureInfo.CurrentCulture = originalCulture;
+            }
+        }
+
+        [Fact]
+        public void Print_ParenthesizedExpression_PrintsExpectedOutput()
+        {
+            var statements = new List<Statement>
+            {
+                new ExpressionStatement(
+                    new FunctionCall("print", new List<Expression>
+                    {
+                        new BinaryExpression(new BinaryExpression(new IntegerLiteral(1), OperatorType.Plus, new IntegerLiteral(2)),
+                        OperatorType.Multiply,
+                        new IntegerLiteral(2))
+                    })
+                )
+            };
+            var output = CaptureConsole(() =>
+            {
+                ILGeneratorRunner.GenerateAndRunIL(statements);
+            });
+
+            Assert.Equal("6", output);
         }
     }
 }
