@@ -463,10 +463,10 @@ namespace MinImpLangComp.Tests
         private string CaptureConsole(Action action) // Utilitaire
         {
             var originalOut = Console.Out;
-            using var writer = new StringWriter();
-            Console.SetOut(writer);
+            using var writer = new StringWriter();            
             try
             {
+                Console.SetOut(writer);
                 action();
             }
             finally
