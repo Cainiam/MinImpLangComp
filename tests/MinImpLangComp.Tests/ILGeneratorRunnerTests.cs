@@ -366,6 +366,7 @@ namespace MinImpLangComp.Tests
                 new FloatLiteral(3.14)
             });
             var originalculture = CultureInfo.CurrentCulture;
+            var originalOut = Console.Out;
             try
             {
                 CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
@@ -380,6 +381,7 @@ namespace MinImpLangComp.Tests
             finally
             {
                 CultureInfo.CurrentCulture = originalculture;
+                Console.SetOut(originalOut);
             }
         }
 
@@ -414,6 +416,7 @@ namespace MinImpLangComp.Tests
                 )
             });
             var originalculture = CultureInfo.CurrentCulture;
+            var originalOut = Console.Out;
             try
             {
                 CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
@@ -427,6 +430,7 @@ namespace MinImpLangComp.Tests
             finally
             {
                 CultureInfo.CurrentCulture = originalculture;
+                Console.SetOut(originalOut);
             }
         }
 
@@ -480,9 +484,9 @@ namespace MinImpLangComp.Tests
             {
                 new ConstantDeclaration("x", new IntegerLiteral(123), new TypeAnnotation("int", TokenType.TypeInt))
             };
-            var result = ILGeneratorRunner.GenerateAndRunIL(statements);
+            var exception = Record.Exception(() => ILGeneratorRunner.GenerateAndRunIL(statements));
 
-            Assert.Null(result);
+            Assert.Null(exception);
         }
 
         [Fact]
@@ -498,9 +502,9 @@ namespace MinImpLangComp.Tests
                     new TypeAnnotation("int", TokenType.TypeInt)
                 )
             };
-            var result = ILGeneratorRunner.GenerateAndRunIL(statements);
+            var exception = Record.Exception(() => ILGeneratorRunner.GenerateAndRunIL(statements));
 
-            Assert.Null(result);
+            Assert.Null(exception);
         }
 
         [Fact]
@@ -569,6 +573,7 @@ namespace MinImpLangComp.Tests
                 )
             };
             var originalCulture = CultureInfo.CurrentCulture;
+            var originalOut = Console.Out;
             try
             {
                 CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
@@ -582,6 +587,7 @@ namespace MinImpLangComp.Tests
             finally
             {
                 CultureInfo.CurrentCulture = originalCulture;
+                Console.SetOut(originalOut);
             }
         }
 
@@ -605,6 +611,42 @@ namespace MinImpLangComp.Tests
             });
 
             Assert.Equal("6", output);
+        }
+
+        [Fact]
+        public void Assignment_ToDeclareSetVariable_Works()
+        {
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("x", new IntegerLiteral(10), new TypeAnnotation("int", TokenType.TypeInt)),
+                new Assignment("x", new IntegerLiteral(42))
+            };
+            var result = ILGeneratorRunner.GenerateAndRunIL(statements);
+
+            Assert.Equal(42, result);
+        }
+
+        [Fact]
+        public void Assignment_ToUndeclaredVariable_Throws()
+        {
+            var statements = new List<Statement>
+            {
+                new Assignment("x", new IntegerLiteral(5))
+            };
+
+            Assert.Throws<InvalidOperationException>(() => ILGeneratorRunner.GenerateAndRunIL(statements));
+        }
+
+        [Fact]
+        public void Assignment_ToConstantBind_Throws()
+        {
+            var statements = new List<Statement>
+            {
+                new ConstantDeclaration("x", new IntegerLiteral(5), new TypeAnnotation("int", TokenType.TypeInt)),
+                new Assignment("x", new IntegerLiteral(10))
+            };
+
+            Assert.Throws<InvalidOperationException>(() => ILGeneratorRunner.GenerateAndRunIL(statements));
         }
     }
 }

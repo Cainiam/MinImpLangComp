@@ -1,6 +1,7 @@
 ﻿using MinImpLangComp.AST;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Text;
 
 namespace MinImpLangComp.ILGeneration
 {
@@ -15,15 +16,25 @@ namespace MinImpLangComp.ILGeneration
 
             // Pour set / bind :
             var locals = new Dictionary<string, LocalBuilder>();
+            var constants = new HashSet<string>();
 
             // Génération du corps des instructions :
             foreach(var statement in statements)
             {
-                ILGeneratorUtils.GenerateIL(statement, il, locals);
+                ILGeneratorUtils.GenerateIL(statement, il, locals, constants);
             }
 
-            // Retour IL
-            il.Emit(OpCodes.Ldnull);
+            // Retour IL 
+            if (locals.Count > 0) // Vérifie que si une variable a été modifiée, sa veleur est retournée
+            {
+                var lastVar = locals.Last();
+                il.Emit(OpCodes.Ldloc, lastVar.Value);
+                if(lastVar.Value.LocalType.IsValueType) il.Emit(OpCodes.Box, lastVar.Value.LocalType);
+            }
+            else
+            {
+                il.Emit(OpCodes.Ldnull);
+            }
             il.Emit(OpCodes.Ret);
 
             // Retour méthode :

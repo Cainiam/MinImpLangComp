@@ -80,17 +80,15 @@ namespace MinImpLangComp.ILGeneration
             }
         }
 
-        public static void GenerateIL(Statement stmt, ILGenerator il, Dictionary<string, LocalBuilder> locals)
+        public static void GenerateIL(Statement stmt, ILGenerator il, Dictionary<string, LocalBuilder> locals, HashSet<string> constants)
         {
             switch (stmt)
             {
                 case VariableDeclaration variableDeclaration:
-                    if(!locals.TryGetValue(variableDeclaration.Identifier, out var local))
-                    {
-                        var typeVariable = GetSystemTypeFromAnnotation(variableDeclaration.TypeAnnotation);
-                        local = il.DeclareLocal(typeVariable);
-                        locals[variableDeclaration.Identifier] = local;
-                    }
+                    if (locals.ContainsKey(variableDeclaration.Identifier)) throw new InvalidOperationException($"Variable '{variableDeclaration.Identifier}' already declared");
+                    var typeVariable = GetSystemTypeFromAnnotation(variableDeclaration.TypeAnnotation);
+                    var local = il.DeclareLocal(typeVariable);
+                    locals[variableDeclaration.Identifier] = local;
                     GenerateILWithConversion(variableDeclaration.Expression, il, locals[variableDeclaration.Identifier].LocalType);
                     il.Emit(OpCodes.Stloc, locals[variableDeclaration.Identifier]);
                     break;
@@ -100,11 +98,18 @@ namespace MinImpLangComp.ILGeneration
                     var localBind = il.DeclareLocal(typeConstant, pinned: false);
                     locals[constantDeclaration.Identifier] = localBind;
                     GenerateILWithConversion(constantDeclaration.Expression, il, typeConstant);
+                    constants.Add(constantDeclaration.Identifier);
                     il.Emit(OpCodes.Stloc, localBind);
                     break;
                 case ExpressionStatement expressionStatement:
                     GenerateIL(expressionStatement.Expression, il);
                     il.Emit(OpCodes.Pop);
+                    break;
+                case Assignment assignment:
+                    if (!locals.TryGetValue(assignment.Identifier, out var localAssign)) throw new InvalidOperationException($"Variable '{assignment.Identifier}' not declared");
+                    if (constants.Contains(assignment.Identifier)) throw new InvalidOperationException($"Cannot assign to constant '{assignment.Identifier}'");
+                    GenerateILWithConversion(assignment.Expression, il, localAssign.LocalType);
+                    il.Emit(OpCodes.Stloc, localAssign);
                     break;
                 default:
                     throw new NotSupportedException($"Unsupported statement type: {stmt.GetType().Name}");
