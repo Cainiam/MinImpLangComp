@@ -649,8 +649,9 @@ namespace MinImpLangComp.Tests
             Assert.Throws<InvalidOperationException>(() => ILGeneratorRunner.GenerateAndRunIL(statements));
         }
 
-        //////////////////
+        ////////////////// 
 
+        #region If-Else-Then
         [Fact]
         public void IfStatement_BranchTrue_EvaluatesThenBranch()
         {
@@ -784,5 +785,123 @@ namespace MinImpLangComp.Tests
             });
             Assert.Contains("not declared", error.Message);
         }
+        #endregion
+
+        #region While, Break, Continue
+        [Fact]
+        public void WhileStatement_LoopExecutesCorreclty()
+        {
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("x", new IntegerLiteral(0), new TypeAnnotation("int", TokenType.TypeInt)),
+                new VariableDeclaration("i", new IntegerLiteral(0), new TypeAnnotation("int",TokenType.TypeInt)),
+                new WhileStatement
+                (
+                    new BinaryExpression(new VariableReference("i"), OperatorType.Less, new IntegerLiteral(5)),
+                    new Block(new List<Statement>
+                    {
+                        new Assignment("x", new BinaryExpression(new VariableReference("x"), OperatorType.Plus, new VariableReference("i"))),
+                        new Assignment("i", new BinaryExpression(new VariableReference("i"), OperatorType.Plus, new IntegerLiteral(1)))
+                    })
+                ),
+                new ExpressionStatement(new VariableReference("x"))
+            };
+            var result = ILGeneratorRunner.GenerateAndRunIL(statements);
+
+            Assert.Equal(0 + 1 + 2 + 3 + 4, result);
+        }
+
+        [Fact]
+        public void WhileStatement_WithBreak_StopsLoopEarly()
+        {
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("x", new IntegerLiteral(0), new TypeAnnotation("int", TokenType.TypeInt)),
+                new VariableDeclaration("i", new IntegerLiteral(0), new TypeAnnotation("int", TokenType.TypeInt)),
+                new WhileStatement(
+                    new BooleanLiteral(true),
+                    new Block(new List<Statement>
+                    {
+                        new IfStatement(
+                            new BinaryExpression(new VariableReference("i"), OperatorType.Equalequal, new IntegerLiteral(3)),
+                            new BreakStatement()
+                        ),
+                        new Assignment("x", new BinaryExpression(new VariableReference("x"), OperatorType.Plus, new VariableReference("i"))),
+                        new Assignment("i", new BinaryExpression(new VariableReference("i"), OperatorType.Plus, new IntegerLiteral(1)))
+                    })
+                ),
+                new ExpressionStatement(new VariableReference("x"))
+            };
+            var result = ILGeneratorRunner.GenerateAndRunIL(statements);
+
+            Assert.Equal(0 + 1 + 2, result);
+        }
+
+        [Fact]
+        public void WhileStatement_WithContinue_SkipsIteration()
+        {
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("x", new IntegerLiteral(0), new TypeAnnotation("int", TokenType.TypeInt)),
+                new VariableDeclaration("i", new IntegerLiteral(0), new TypeAnnotation("int", TokenType.TypeInt)),
+                new WhileStatement
+                (
+                    new BinaryExpression(new VariableReference("i"), OperatorType.Less, new IntegerLiteral(5)),
+                    new Block(new List<Statement>
+                    {
+                        new IfStatement
+                        (
+                            new BinaryExpression(
+                                new BinaryExpression(new VariableReference("i"), OperatorType.Equalequal, new IntegerLiteral(2)),
+                                OperatorType.AndAnd,
+                                new BooleanLiteral(true)
+                            ),
+                            new Block(new List<Statement>
+                            {
+                                new Assignment("i", new BinaryExpression(new VariableReference("i"), OperatorType.Plus, new IntegerLiteral(1))),
+                                new ContinueStatement()
+                            })
+                        ),
+                        new Assignment("x", new BinaryExpression(new VariableReference("x"), OperatorType.Plus, new VariableReference("i"))),
+                        new Assignment("i", new BinaryExpression(new VariableReference("i"), OperatorType.Plus, new IntegerLiteral(1)))
+                    })
+                ),
+                new ExpressionStatement(new VariableReference("x"))
+            };
+            var result = ILGeneratorRunner.GenerateAndRunIL(statements);
+
+            Assert.Equal(1 + 3 + 4, result); 
+        }
+
+        [Fact]
+        public void BreakStatement_OutsideLoop_ThrowsException()
+        {
+            var statements = new List<Statement>
+            {
+                new BreakStatement()
+            };
+
+            var error = Assert.Throws<InvalidOperationException>(() =>
+            {
+                ILGeneratorRunner.GenerateAndRunIL(statements);
+            });
+            Assert.Contains("break", error.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void ContinueStatement_OutsideLoop_ThrowsException()
+        {
+            var statements = new List<Statement>
+            {
+                new ContinueStatement()
+            };
+
+            var error = Assert.Throws<InvalidOperationException>(() =>
+            {
+                ILGeneratorRunner.GenerateAndRunIL(statements);
+            });
+            Assert.Contains("continue", error.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        #endregion
     }
 }

@@ -5,6 +5,18 @@ using System.Reflection.Emit;
 
 namespace MinImpLangComp.ILGeneration
 {
+    public class LoopContext
+    {
+        public Label ContinueLabel { get; }
+        public Label BreakLabel { get; }
+
+        public LoopContext(Label continueLabel, Label breakLabel)
+        {
+            ContinueLabel = continueLabel;
+            BreakLabel = breakLabel;
+        }
+    }
+
     public static class ILGeneratorUtils
     {
 
@@ -31,7 +43,8 @@ namespace MinImpLangComp.ILGeneration
             OperatorType.BitwiseOr
         };
 
-        public static void GenerateIL(Expression expr, ILGenerator il)
+        // Generate IL pour expression
+        public static void GenerateIL(Expression expr, ILGenerator il, Dictionary<string, LocalBuilder> locals, HashSet<string> constants)
         {
             switch (expr)
             {
@@ -44,14 +57,18 @@ namespace MinImpLangComp.ILGeneration
                 case BooleanLiteral booleanLiteral:
                     il.Emit(booleanLiteral.Value ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
                     break;
+                case VariableReference variableReference:
+                    if (!locals.TryGetValue(variableReference.Name, out var local)) throw new InvalidOperationException($"Variable '{variableReference.Name}' not declared");
+                    il.Emit(OpCodes.Ldloc, local);
+                    break;
                 case BinaryExpression binaryExpression:
                     if (binaryExpression.Operator == OperatorType.AndAnd) // Cas spécifique de l'opérateur logique "&&"
                     {
                         Label falseLabel = il.DefineLabel();
                         Label endLabel = il.DefineLabel();
-                        GenerateIL(binaryExpression.Left, il);
+                        GenerateIL(binaryExpression.Left, il, locals, constants);
                         il.Emit(OpCodes.Brfalse, falseLabel);
-                        GenerateIL(binaryExpression.Right, il);
+                        GenerateIL(binaryExpression.Right, il, locals, constants);
                         il.Emit(OpCodes.Brfalse, falseLabel);
                         il.Emit(OpCodes.Ldc_I4_1); // true
                         il.Emit(OpCodes.Br, endLabel);
@@ -63,9 +80,9 @@ namespace MinImpLangComp.ILGeneration
                     {
                         Label trueLabel = il.DefineLabel();
                         Label endLabel = il.DefineLabel();
-                        GenerateIL(binaryExpression.Left, il);
+                        GenerateIL(binaryExpression.Left, il, locals, constants);
                         il.Emit(OpCodes.Brtrue, trueLabel);
-                        GenerateIL(binaryExpression.Right, il);
+                        GenerateIL(binaryExpression.Right, il, locals, constants);
                         il.Emit(OpCodes.Brtrue, trueLabel);
                         il.Emit(OpCodes.Ldc_I4_0); // false
                         il.Emit(OpCodes.Br, endLabel);
@@ -75,17 +92,17 @@ namespace MinImpLangComp.ILGeneration
                     }
                     else
                     {
-                        var targetType = GetExpressionType(binaryExpression);
-                        GenerateILWithConversion(binaryExpression.Left, il, targetType);
-                        GenerateILWithConversion(binaryExpression.Right, il, targetType);
+                        var targetType = GetExpressionType(binaryExpression, locals);
+                        GenerateILWithConversion(binaryExpression.Left, il, targetType, locals, constants);
+                        GenerateILWithConversion(binaryExpression.Right, il, targetType, locals, constants);
                         EmitBinaryOperator(binaryExpression.Operator, il); // Autre cas 
                     }
                     break;
                 case FunctionCall functionCall when functionCall.Name == "print":
                     foreach(var arg in functionCall.Arguments)
                     {
-                        GenerateIL(arg, il);
-                        var argType = GetExpressionType(arg);
+                        GenerateIL(arg, il, locals, constants);
+                        var argType = GetExpressionType(arg, locals);
                         var writeLineMethod = typeof(Console).GetMethod(
                             "WriteLine",
                             BindingFlags.Public | BindingFlags.Static,
@@ -107,21 +124,8 @@ namespace MinImpLangComp.ILGeneration
             }
         }
 
-        public static void GenerateIL(Expression expr, ILGenerator il, Dictionary<string, LocalBuilder> locals, HashSet<string> constants)
-        {
-            switch (expr)
-            {
-                case VariableReference variableReference:
-                    if (!locals.TryGetValue(variableReference.Name, out var local)) throw new InvalidOperationException($"Variable '{variableReference.Name}' not declared");
-                    il.Emit(OpCodes.Ldloc, local);
-                    break;
-                default:
-                    GenerateIL(expr, il);
-                    break;
-            }
-        }
-
-        public static void GenerateIL(Statement stmt, ILGenerator il, Dictionary<string, LocalBuilder> locals, HashSet<string> constants)
+        // Generate IL surchage pour statement avec variable et constante
+        public static void GenerateIL(Statement stmt, ILGenerator il, Dictionary<string, LocalBuilder> locals, HashSet<string> constants, LoopContext? context = null)
         {
             switch (stmt)
             {
@@ -130,7 +134,7 @@ namespace MinImpLangComp.ILGeneration
                     var typeVariable = GetSystemTypeFromAnnotation(variableDeclaration.TypeAnnotation);
                     var local = il.DeclareLocal(typeVariable);
                     locals[variableDeclaration.Identifier] = local;
-                    GenerateILWithConversion(variableDeclaration.Expression, il, locals[variableDeclaration.Identifier].LocalType);
+                    GenerateILWithConversion(variableDeclaration.Expression, il, locals[variableDeclaration.Identifier].LocalType, locals, constants);
                     il.Emit(OpCodes.Stloc, locals[variableDeclaration.Identifier]);
                     break;
                 case ConstantDeclaration constantDeclaration:
@@ -138,7 +142,7 @@ namespace MinImpLangComp.ILGeneration
                     var typeConstant = GetSystemTypeFromAnnotation(constantDeclaration.TypeAnnotation);
                     var localBind = il.DeclareLocal(typeConstant, pinned: false);
                     locals[constantDeclaration.Identifier] = localBind;
-                    GenerateILWithConversion(constantDeclaration.Expression, il, typeConstant);
+                    GenerateILWithConversion(constantDeclaration.Expression, il, typeConstant, locals, constants);
                     constants.Add(constantDeclaration.Identifier);
                     il.Emit(OpCodes.Stloc, localBind);
                     break;
@@ -149,21 +153,45 @@ namespace MinImpLangComp.ILGeneration
                 case Assignment assignment:
                     if (!locals.TryGetValue(assignment.Identifier, out var localAssign)) throw new InvalidOperationException($"Variable '{assignment.Identifier}' not declared");
                     if (constants.Contains(assignment.Identifier)) throw new InvalidOperationException($"Cannot assign to constant '{assignment.Identifier}'");
-                    GenerateILWithConversion(assignment.Expression, il, localAssign.LocalType);
+                    GenerateILWithConversion(assignment.Expression, il, localAssign.LocalType, locals, constants);
                     il.Emit(OpCodes.Stloc, localAssign);
                     break;
                 case IfStatement ifStatement:
-                    var conditionType = GetExpressionType(ifStatement.Condition);
+                    var conditionType = GetExpressionType(ifStatement.Condition, locals);
                     if (conditionType != typeof(bool)) throw new InvalidOperationException("The condition in if-statement must be of type 'bool'");
                     var elseLabel = il.DefineLabel();
                     var endLabel = il.DefineLabel();
-                    GenerateIL(ifStatement.Condition, il);
+                    GenerateIL(ifStatement.Condition, il, locals, constants);
                     il.Emit(OpCodes.Brfalse, elseLabel);
-                    GenerateIL(ifStatement.ThenBranch, il, locals, constants);
+                    GenerateIL(ifStatement.ThenBranch, il, locals, constants, context);
                     il.Emit(OpCodes.Br, endLabel);
                     il.MarkLabel(elseLabel);
-                    if (ifStatement.ElseBranch != null) GenerateIL(ifStatement.ElseBranch, il, locals, constants);
+                    if (ifStatement.ElseBranch != null) GenerateIL(ifStatement.ElseBranch, il, locals, constants, context);
                     il.MarkLabel(endLabel);
+                    break;
+                case WhileStatement whileStatement:
+                    var conditionTypeWhile = GetExpressionType(whileStatement.Condition, locals);
+                    if (conditionTypeWhile != typeof(bool)) throw new InvalidOperationException("The condition in while-statement must be of type 'bool'");
+                    var conditionLabel = il.DefineLabel();
+                    var loopEndLabel = il.DefineLabel();
+                    var newContext = new LoopContext(conditionLabel, loopEndLabel);
+                    il.MarkLabel(conditionLabel);
+                    GenerateIL(whileStatement.Condition, il, locals, constants);
+                    il.Emit(OpCodes.Brfalse, loopEndLabel);
+                    GenerateIL(whileStatement.Body, il, locals, constants, newContext);
+                    il.Emit(OpCodes.Br, conditionLabel);
+                    il.MarkLabel(loopEndLabel);
+                    break;
+                case BreakStatement:
+                    if (context == null) throw new InvalidOperationException("Cannot use 'break' outside of a loop");
+                    il.Emit(OpCodes.Br, context.BreakLabel);
+                    break;
+                case ContinueStatement:
+                    if (context == null) throw new InvalidOperationException("Cannot use 'continue' outside of a loop");
+                    il.Emit(OpCodes.Br, context.ContinueLabel);
+                    break;
+                case Block block:
+                    foreach (var inner in block.Statements) GenerateIL(inner, il, locals, constants, context);
                     break;
                 default:
                     throw new NotSupportedException($"Unsupported statement type: {stmt.GetType().Name}");
@@ -224,7 +252,7 @@ namespace MinImpLangComp.ILGeneration
             }
         }
 
-        private static Type GetExpressionType(Expression expression)
+        private static Type GetExpressionType(Expression expression, Dictionary<string, LocalBuilder> locals)
         {
             return expression switch
             {
@@ -232,23 +260,24 @@ namespace MinImpLangComp.ILGeneration
                 FloatLiteral => typeof(double),
                 BooleanLiteral => typeof(bool),
                 StringLiteral => typeof(string),
-                BinaryExpression binary => 
-                    BooleanOperators.Contains(binary.Operator) 
-                        ? typeof(bool) 
-                            : NumericOperators.Contains(binary.Operator) 
-                                ? GetExpressionType(binary.Left) == typeof(double) || GetExpressionType(binary.Right) == typeof(double) 
-                                    ? typeof(double) 
-                                    : typeof(int) 
+                BinaryExpression binary =>
+                    BooleanOperators.Contains(binary.Operator)
+                        ? typeof(bool)
+                            : NumericOperators.Contains(binary.Operator)
+                                ? GetExpressionType(binary.Left, locals) == typeof(double) || GetExpressionType(binary.Right, locals) == typeof(double)
+                                    ? typeof(double)
+                                    : typeof(int)
                                 : throw new NotSupportedException($"Cannot determine type of binary operator: {binary.Operator}"),
-                VariableReference variableReference => throw new InvalidOperationException("Cannot infer type from variable reference at compile time"),
+                VariableReference variableReference =>
+                    locals.TryGetValue(variableReference.Name, out var local) ? local.LocalType : throw new InvalidOperationException($"Cannot infer type: variable '{variableReference.Name}' not declared"),
                 _ => throw new NotSupportedException($"Cannot determine type of expression: {expression.GetType().Name}")
             };
         }
 
-        private static void GenerateILWithConversion(Expression expression, ILGenerator il, Type targetType)
+        private static void GenerateILWithConversion(Expression expression, ILGenerator il, Type targetType, Dictionary<string, LocalBuilder> locals, HashSet<string> constants)
         {
-            GenerateIL(expression, il);
-            var actualType = GetExpressionType(expression);
+            GenerateIL(expression, il, locals, constants);
+            var actualType = GetExpressionType(expression, locals);
             if (actualType == typeof(int) && targetType == typeof(double))
             {
                 il.Emit(OpCodes.Conv_R8);
