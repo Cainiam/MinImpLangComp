@@ -7,6 +7,30 @@ namespace MinImpLangComp.ILGeneration
 {
     public static class ILGeneratorUtils
     {
+
+        private static readonly HashSet<OperatorType> BooleanOperators = new()
+        {
+            OperatorType.Equalequal,
+            OperatorType.NotEqual,
+            OperatorType.Less,
+            OperatorType.Greater,
+            OperatorType.LessEqual,
+            OperatorType.GreaterEqual,
+            OperatorType.AndAnd,
+            OperatorType.OrOr
+        };
+
+        private static readonly HashSet<OperatorType> NumericOperators = new()
+        {
+            OperatorType.Plus,
+            OperatorType.Minus,
+            OperatorType.Multiply,
+            OperatorType.Divide,
+            OperatorType.Modulo,
+            OperatorType.BitwiseAnd,
+            OperatorType.BitwiseOr
+        };
+
         public static void GenerateIL(Expression expr, ILGenerator il)
         {
             switch (expr)
@@ -16,6 +40,9 @@ namespace MinImpLangComp.ILGeneration
                     break;
                 case FloatLiteral floatLiteral:
                     il.Emit(OpCodes.Ldc_R8, floatLiteral.Value);
+                    break;
+                case BooleanLiteral booleanLiteral:
+                    il.Emit(booleanLiteral.Value ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
                     break;
                 case BinaryExpression binaryExpression:
                     if (binaryExpression.Operator == OperatorType.AndAnd) // Cas spécifique de l'opérateur logique "&&"
@@ -80,6 +107,20 @@ namespace MinImpLangComp.ILGeneration
             }
         }
 
+        public static void GenerateIL(Expression expr, ILGenerator il, Dictionary<string, LocalBuilder> locals, HashSet<string> constants)
+        {
+            switch (expr)
+            {
+                case VariableReference variableReference:
+                    if (!locals.TryGetValue(variableReference.Name, out var local)) throw new InvalidOperationException($"Variable '{variableReference.Name}' not declared");
+                    il.Emit(OpCodes.Ldloc, local);
+                    break;
+                default:
+                    GenerateIL(expr, il);
+                    break;
+            }
+        }
+
         public static void GenerateIL(Statement stmt, ILGenerator il, Dictionary<string, LocalBuilder> locals, HashSet<string> constants)
         {
             switch (stmt)
@@ -102,7 +143,7 @@ namespace MinImpLangComp.ILGeneration
                     il.Emit(OpCodes.Stloc, localBind);
                     break;
                 case ExpressionStatement expressionStatement:
-                    GenerateIL(expressionStatement.Expression, il);
+                    GenerateIL(expressionStatement.Expression, il, locals, constants);
                     il.Emit(OpCodes.Pop);
                     break;
                 case Assignment assignment:
@@ -110,6 +151,19 @@ namespace MinImpLangComp.ILGeneration
                     if (constants.Contains(assignment.Identifier)) throw new InvalidOperationException($"Cannot assign to constant '{assignment.Identifier}'");
                     GenerateILWithConversion(assignment.Expression, il, localAssign.LocalType);
                     il.Emit(OpCodes.Stloc, localAssign);
+                    break;
+                case IfStatement ifStatement:
+                    var conditionType = GetExpressionType(ifStatement.Condition);
+                    if (conditionType != typeof(bool)) throw new InvalidOperationException("The condition in if-statement must be of type 'bool'");
+                    var elseLabel = il.DefineLabel();
+                    var endLabel = il.DefineLabel();
+                    GenerateIL(ifStatement.Condition, il);
+                    il.Emit(OpCodes.Brfalse, elseLabel);
+                    GenerateIL(ifStatement.ThenBranch, il, locals, constants);
+                    il.Emit(OpCodes.Br, endLabel);
+                    il.MarkLabel(elseLabel);
+                    if (ifStatement.ElseBranch != null) GenerateIL(ifStatement.ElseBranch, il, locals, constants);
+                    il.MarkLabel(endLabel);
                     break;
                 default:
                     throw new NotSupportedException($"Unsupported statement type: {stmt.GetType().Name}");
@@ -176,8 +230,17 @@ namespace MinImpLangComp.ILGeneration
             {
                 IntegerLiteral => typeof(int),
                 FloatLiteral => typeof(double),
+                BooleanLiteral => typeof(bool),
                 StringLiteral => typeof(string),
-                BinaryExpression binary => GetExpressionType(binary.Left) == typeof(double) || GetExpressionType(binary.Right) == typeof(double) ? typeof(double) : typeof(int),
+                BinaryExpression binary => 
+                    BooleanOperators.Contains(binary.Operator) 
+                        ? typeof(bool) 
+                            : NumericOperators.Contains(binary.Operator) 
+                                ? GetExpressionType(binary.Left) == typeof(double) || GetExpressionType(binary.Right) == typeof(double) 
+                                    ? typeof(double) 
+                                    : typeof(int) 
+                                : throw new NotSupportedException($"Cannot determine type of binary operator: {binary.Operator}"),
+                VariableReference variableReference => throw new InvalidOperationException("Cannot infer type from variable reference at compile time"),
                 _ => throw new NotSupportedException($"Cannot determine type of expression: {expression.GetType().Name}")
             };
         }

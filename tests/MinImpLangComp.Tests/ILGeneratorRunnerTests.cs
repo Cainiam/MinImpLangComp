@@ -648,5 +648,141 @@ namespace MinImpLangComp.Tests
 
             Assert.Throws<InvalidOperationException>(() => ILGeneratorRunner.GenerateAndRunIL(statements));
         }
+
+        //////////////////
+
+        [Fact]
+        public void IfStatement_BranchTrue_EvaluatesThenBranch()
+        {
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("x", new IntegerLiteral(0), new TypeAnnotation("int", TokenType.TypeInt)),
+                new IfStatement
+                (
+                    new BooleanLiteral(true),
+                    new Assignment("x", new IntegerLiteral(10)),
+                    new Assignment("x", new IntegerLiteral(20))
+                ),
+                new ExpressionStatement(new VariableReference("x"))
+            };
+            var result = ILGeneratorRunner.GenerateAndRunIL(statements);
+
+            Assert.Equal(10, result);
+        }
+
+        [Fact]
+        public void IfStatement_BranchFalse_EvaluatesElseBranch()
+        {
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("x", new IntegerLiteral(0), new TypeAnnotation("int", TokenType.TypeInt)),
+                new IfStatement
+                (
+                    new BooleanLiteral(false),
+                    new Assignment("x", new IntegerLiteral(10)),
+                    new Assignment("x", new IntegerLiteral(20))
+                ),
+                new ExpressionStatement(new VariableReference("x"))
+            };
+            var result = ILGeneratorRunner.GenerateAndRunIL(statements);
+
+            Assert.Equal(20, result);
+        }
+
+        [Fact]
+        public void IfStatement_BranchFalse_NoElse_DoesNothing()
+        {
+            var statement = new List<Statement>
+            {
+                new VariableDeclaration("x", new IntegerLiteral(5), new TypeAnnotation("int", TokenType.TypeInt)),
+                new IfStatement
+                (
+                    new BooleanLiteral(false),
+                    new Assignment("x", new IntegerLiteral(99))
+                ),
+                new ExpressionStatement(new VariableReference("x"))
+            };
+            var result = ILGeneratorRunner.GenerateAndRunIL(statement);
+
+            Assert.Equal(5, result);
+        }
+
+        [Fact]
+        public void IfStatement_BranchTrue_NoElse_ExecutesThen()
+        {
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("x", new IntegerLiteral(1), new TypeAnnotation("int", TokenType.TypeInt)),
+                new IfStatement
+                (
+                    new BooleanLiteral(true),
+                    new Assignment("x", new IntegerLiteral(42))
+                ),
+                new ExpressionStatement(new VariableReference("x"))
+            };
+            var result = ILGeneratorRunner.GenerateAndRunIL(statements);
+
+            Assert.Equal(42, result);
+        }
+
+        [Fact]
+        public void IfStatement_WithBinaryCondition_EvaluatesCorrectBranch()
+        {
+            var condition = new BinaryExpression(new IntegerLiteral(1), OperatorType.Less, new IntegerLiteral(2));
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("x", new IntegerLiteral(0), new TypeAnnotation("int", TokenType.TypeInt)),
+                new IfStatement
+                (
+                    condition,
+                    new Assignment("x", new IntegerLiteral(100)),
+                    new Assignment("x", new IntegerLiteral(-1))
+                ),
+                new ExpressionStatement(new VariableReference("x"))
+            };
+            var result = ILGeneratorRunner.GenerateAndRunIL(statements);
+
+            Assert.Equal(100, result);
+        }
+
+        [Fact]
+        public void IfStatement_WithNonBooleanCondition_ThrowsException()
+        {
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("x", new IntegerLiteral(0), new TypeAnnotation("int", TokenType.TypeInt)),
+                new IfStatement
+                (
+                    new IntegerLiteral(1),
+                    new Assignment("x", new IntegerLiteral(10)),
+                    new Assignment("x", new IntegerLiteral(20))
+                )
+            };
+
+            var error = Assert.Throws<InvalidOperationException>(() =>
+            {
+                ILGeneratorRunner.GenerateAndRunIL(statements);
+            });
+            Assert.Contains("The condition in if-statement must be of type 'bool'", error.Message);
+        }
+
+        [Fact]
+        public void IfStatement_AssignsToUndeclaredVariable_ThrowsException()
+        {
+            var statements = new List<Statement>
+            {
+                new IfStatement
+                (
+                    new BooleanLiteral(true),
+                    new Assignment("Undeclared", new IntegerLiteral(321))
+                )
+            };
+
+            var error = Assert.Throws<InvalidOperationException>(() =>
+            {
+                ILGeneratorRunner.GenerateAndRunIL(statements);
+            });
+            Assert.Contains("not declared", error.Message);
+        }
     }
 }

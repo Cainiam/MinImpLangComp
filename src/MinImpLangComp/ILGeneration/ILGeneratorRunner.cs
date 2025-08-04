@@ -61,6 +61,9 @@ namespace MinImpLangComp.ILGeneration
                 case FloatLiteral:
                     il.Emit(OpCodes.Box, typeof(double));
                     break;
+                case BooleanLiteral:
+                    il.Emit(OpCodes.Box, typeof(bool));
+                    break;
                 case BinaryExpression:
                     if (ContainsFloat(expression)) il.Emit(OpCodes.Box, typeof(double));
                     else il.Emit(OpCodes.Box, typeof(int));
