@@ -7,6 +7,7 @@ namespace MinImpLangComp.Tests
 {
     public class ILGeneratorRunnerTests
     {
+        #region issue13
         [Fact]
         public void Should_Evaluate_IntegerLiteral_Correctly()
         {
@@ -648,6 +649,7 @@ namespace MinImpLangComp.Tests
 
             Assert.Throws<InvalidOperationException>(() => ILGeneratorRunner.GenerateAndRunIL(statements));
         }
+        #endregion
 
         ////////////////// 
 
@@ -901,6 +903,144 @@ namespace MinImpLangComp.Tests
                 ILGeneratorRunner.GenerateAndRunIL(statements);
             });
             Assert.Contains("continue", error.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        #endregion
+
+        #region forstatement
+        [Fact]
+        public void ForStatement_BasicLoopWorks()
+        {
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("sum", new IntegerLiteral(0), new TypeAnnotation("int", TokenType.TypeInt)),
+                new ForStatement
+                (
+                    new VariableDeclaration("i", new IntegerLiteral(0), new TypeAnnotation("int", TokenType.TypeInt)),
+                    new BinaryExpression(new VariableReference("i"), OperatorType.Less, new IntegerLiteral(5)),
+                    new Assignment("i", new BinaryExpression(new VariableReference("i"), OperatorType.Plus, new IntegerLiteral(1))),
+                    new Block(new List<Statement>
+                    {
+                        new Assignment("sum", new BinaryExpression(new VariableReference("sum"), OperatorType.Plus, new VariableReference("i")))
+                    })
+                ),
+                new ExpressionStatement(new VariableReference("sum"))
+            };
+            var result = ILGeneratorRunner.GenerateAndRunIL(statements);
+
+            Assert.Equal(10, result); // 0 + 1 + 2 + 3 + 4 = 10
+        }
+
+        [Fact]
+        public void ForStatement_WithBreakStopsEarly()
+        {
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("sum", new IntegerLiteral(0), new TypeAnnotation("int", TokenType.TypeInt)),
+                new ForStatement
+                (
+                    new VariableDeclaration("i", new IntegerLiteral(0), new TypeAnnotation("int", TokenType.TypeInt)),
+                    new BinaryExpression(new VariableReference("i"), OperatorType.Less, new IntegerLiteral(5)),
+                    new Assignment("i", new BinaryExpression(new VariableReference("i"), OperatorType.Plus, new IntegerLiteral(1))),
+                    new Block(new List<Statement>
+                    {
+                        new IfStatement(
+                            new BinaryExpression(new VariableReference("i"), OperatorType.Equalequal, new IntegerLiteral(3)),
+                            new BreakStatement()
+                        ),
+                        new Assignment("sum", new BinaryExpression(new VariableReference("sum"), OperatorType.Plus, new VariableReference("i")))
+                    })
+                ),
+                new ExpressionStatement(new VariableReference("sum"))
+            };
+            var result = ILGeneratorRunner.GenerateAndRunIL(statements);
+
+            Assert.Equal(3, result); // 0 + 1 + 2 = 3
+        }
+
+        [Fact]
+        public void ForStatement_WithContinue_SkipsValue()
+        {
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("sum", new IntegerLiteral(0), new TypeAnnotation("int", TokenType.TypeInt)),
+                new ForStatement
+                (
+                    new VariableDeclaration("i", new IntegerLiteral(0), new TypeAnnotation("int", TokenType.TypeInt)),
+                    new BinaryExpression(new VariableReference("i"), OperatorType.Less, new IntegerLiteral(5)),
+                    new Assignment("i", new BinaryExpression(new VariableReference("i"), OperatorType.Plus, new IntegerLiteral(1))),
+                    new Block(new List<Statement>
+                    {
+                        new IfStatement(
+                            new BinaryExpression(new VariableReference("i"), OperatorType.Equalequal, new IntegerLiteral(2)),
+                            new ContinueStatement()
+                        ),
+                        new Assignment("sum", new BinaryExpression(new VariableReference("sum"), OperatorType.Plus, new VariableReference("i")))
+                    })
+                ),
+                new ExpressionStatement(new VariableReference("sum"))
+            };
+            var result = ILGeneratorRunner.GenerateAndRunIL(statements);
+
+            Assert.Equal(8, result); // 0 + 1 + 3 + 4 = 8
+        }
+
+        [Fact]
+        public void ForStatement_WithZeroIterations_DoesNothing()
+        {
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("sum", new IntegerLiteral(42), new TypeAnnotation("int", TokenType.TypeInt)),
+                new ForStatement
+                (
+                    new VariableDeclaration("i", new IntegerLiteral(10), new TypeAnnotation("int", TokenType.TypeInt)),
+                    new BinaryExpression(new VariableReference("i"), OperatorType.Less, new IntegerLiteral(5)),
+                    new Assignment("i", new BinaryExpression(new VariableReference("i"), OperatorType.Plus, new IntegerLiteral(1))),
+                    new Block(new List<Statement>
+                    {
+                        new Assignment("sum", new IntegerLiteral(0)) // ne doit jamais s'exécuter
+                    })
+                ),
+                new ExpressionStatement(new VariableReference("sum"))
+            };
+            var result = ILGeneratorRunner.GenerateAndRunIL(statements);
+
+            Assert.Equal(42, result); // pas modifié
+        }
+
+        [Fact]
+        public void ForStatement_WithNonBooleanCondition_Throws()
+        {
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("sum", new IntegerLiteral(0), new TypeAnnotation("int", TokenType.TypeInt)),
+
+                new ForStatement
+                (
+                    new VariableDeclaration("i", new IntegerLiteral(0), new TypeAnnotation("int", TokenType.TypeInt)),
+                    new BinaryExpression(
+                        new VariableReference("i"),
+                        OperatorType.Plus,
+                        new IntegerLiteral(1)
+                    ),
+                    new Assignment("i", new BinaryExpression(
+                        new VariableReference("i"),
+                        OperatorType.Plus,
+                        new IntegerLiteral(1))),
+                    new Block(new List<Statement>
+                    {
+                        new Assignment("sum", new BinaryExpression(
+                            new VariableReference("sum"),
+                            OperatorType.Plus,
+                            new VariableReference("i")))
+                    })
+                )
+            };
+
+            var error = Assert.Throws<InvalidOperationException>(() =>
+            {
+                ILGeneratorRunner.GenerateAndRunIL(statements);
+            });
+            Assert.Contains("The condition in for-statement must be of type 'bool'", error.Message);
         }
         #endregion
     }

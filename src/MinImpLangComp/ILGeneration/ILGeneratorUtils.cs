@@ -182,6 +182,23 @@ namespace MinImpLangComp.ILGeneration
                     il.Emit(OpCodes.Br, conditionLabel);
                     il.MarkLabel(loopEndLabel);
                     break;
+                case ForStatement forStatement:
+                    GenerateIL(forStatement.Initializer, il, locals, constants, context);
+                    var forStartLabel = il.DefineLabel();
+                    var forEndLabel = il.DefineLabel();
+                    var continueLabel = il.DefineLabel();
+                    var loopContext = new LoopContext(continueLabel, forEndLabel);
+                    il.MarkLabel(forStartLabel);
+                    var conditionTypeFor = GetExpressionType(forStatement.Condition, locals);
+                    if (conditionTypeFor != typeof(bool)) throw new InvalidOperationException("The condition in for-statement must be of type 'bool'");
+                    GenerateILWithConversion(forStatement.Condition, il, typeof(bool), locals, constants);
+                    il.Emit(OpCodes.Brfalse, forEndLabel);
+                    GenerateIL(forStatement.Body, il, locals, constants, loopContext);
+                    il.MarkLabel(continueLabel);
+                    GenerateIL(forStatement.Increment, il, locals,  constants, context);
+                    il.Emit(OpCodes.Br, forStartLabel);
+                    il.MarkLabel(forEndLabel);
+                    break;
                 case BreakStatement:
                     if (context == null) throw new InvalidOperationException("Cannot use 'break' outside of a loop");
                     il.Emit(OpCodes.Br, context.BreakLabel);
