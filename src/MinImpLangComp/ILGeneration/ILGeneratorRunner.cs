@@ -54,6 +54,21 @@ namespace MinImpLangComp.ILGeneration
             return del();
         }
 
+        // Runner statement pour envoyer un input
+        public static object? GenerateAndRunIL(List<Statement> statements, string? input)
+        {
+            var originalIn = Console.In;
+            try
+            {
+                if (input != null) Console.SetIn(new StringReader(input));
+                return GenerateAndRunIL(statements);
+            }
+            finally
+            {
+                Console.SetIn(originalIn);
+            }
+        }
+
         // Méthode précédente maintenue pour les tests
         public static object? GenerateAndRunIL(Expression expression)
         {

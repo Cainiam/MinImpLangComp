@@ -119,6 +119,10 @@ namespace MinImpLangComp.ILGeneration
                     }
                     il.Emit(OpCodes.Ldnull);
                     break;
+                case FunctionCall functionCall when functionCall.Name == "input":
+                    if (functionCall.Arguments.Count != 0) throw new InvalidOperationException("input() does not accept any arguments");
+                    il.EmitCall(OpCodes.Call, typeof(Console).GetMethod("ReadLine", Type.EmptyTypes)!, null);
+                    break;
                 default:
                     throw new NotSupportedException($"Unsupported expression type: {expr.GetType().Name}");
             }
@@ -287,6 +291,7 @@ namespace MinImpLangComp.ILGeneration
                                 : throw new NotSupportedException($"Cannot determine type of binary operator: {binary.Operator}"),
                 VariableReference variableReference =>
                     locals.TryGetValue(variableReference.Name, out var local) ? local.LocalType : throw new InvalidOperationException($"Cannot infer type: variable '{variableReference.Name}' not declared"),
+                FunctionCall functionCall when functionCall.Name == "input" => typeof(string),
                 _ => throw new NotSupportedException($"Cannot determine type of expression: {expression.GetType().Name}")
             };
         }
@@ -295,6 +300,34 @@ namespace MinImpLangComp.ILGeneration
         {
             GenerateIL(expression, il, locals, constants);
             var actualType = GetExpressionType(expression, locals);
+
+            if (actualType == typeof(string))
+            {
+                if (targetType == typeof(int))
+                {
+                    var parseInt = typeof(int).GetMethod("Parse", new[] { typeof(string) })!;
+                    il.EmitCall(OpCodes.Call, parseInt, null);
+                    return;
+                }
+
+                if (targetType == typeof(double)) 
+                {
+                    var parseDouble = typeof(double).GetMethod("Parse", new[] { typeof(string) })!;
+                    il.EmitCall(OpCodes.Call, parseDouble, null);
+                    return;
+                }
+
+                if (targetType == typeof(bool))
+                {
+                    var trimMethod = typeof(string).GetMethod("Trim", Type.EmptyTypes)!;
+                    il.EmitCall(OpCodes.Callvirt, trimMethod, null);
+                    var parseBool = typeof(bool).GetMethod("Parse", new[] { typeof(string) })!;
+                    il.EmitCall(OpCodes.Call, parseBool, null);
+                    return;
+                }
+                // String n'a pas besoin de conversion
+            }
+
             if (actualType == typeof(int) && targetType == typeof(double))
             {
                 il.Emit(OpCodes.Conv_R8);

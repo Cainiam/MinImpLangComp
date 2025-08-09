@@ -1043,5 +1043,70 @@ namespace MinImpLangComp.Tests
             Assert.Contains("The condition in for-statement must be of type 'bool'", error.Message);
         }
         #endregion
+
+        #region Input()
+        [Fact]
+        public void Input_ReadInt_ReturnsParsedInt()
+        {
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("x", new FunctionCall("input", new List<Expression>()), new TypeAnnotation("int", TokenType.TypeInt)),
+                new ExpressionStatement(new VariableReference("x"))
+            };
+            var result = ILGeneratorRunner.GenerateAndRunIL(statements, input: "42");
+
+            Assert.Equal(42, result);
+        }
+
+        [Fact]
+        public void Input_ReadBool_ReturnsParsedBool()
+        {
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("flag", new FunctionCall("input", new List<Expression>()), new TypeAnnotation("bool", TokenType.TypeBool)),
+                new ExpressionStatement(new VariableReference("flag"))
+            };
+            var result = ILGeneratorRunner.GenerateAndRunIL(statements, input: "true");
+
+            Assert.Equal(true, result);
+        }
+
+        [Fact]
+        public void Input_ReadString_ReturnsString()
+        {
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("s", new FunctionCall("input", new List<Expression>()), new TypeAnnotation("string", TokenType.TypeString)),
+                new ExpressionStatement(new VariableReference("s"))
+            };
+            var result = ILGeneratorRunner.GenerateAndRunIL(statements, input: "hello world");
+
+            Assert.Equal("hello world", result);
+        }
+
+        [Fact]
+        public void Input_WithArgument_Throws()
+        {
+            var statement = new List<Statement>
+            {
+                new VariableDeclaration("x", new FunctionCall("input", new List<Expression> { new IntegerLiteral(5) }), new TypeAnnotation("int", TokenType.TypeInt)),
+                new ExpressionStatement(new VariableReference("x"))
+            };
+
+            Assert.Throws<InvalidOperationException>(() => ILGeneratorRunner.GenerateAndRunIL(statement, input: "5")); 
+        }
+
+        [Fact]
+        public void Input_WithUnsupportedType_Throws()
+        {
+            var statements = new List<Statement>
+            {
+                new VariableDeclaration("t", new FunctionCall("input", new List<Expression>()), new TypeAnnotation("tinyint", TokenType.Identifier)), // Incorrect volontairement
+                new ExpressionStatement(new VariableReference("t"))
+            };
+
+            Assert.Throws<NotSupportedException>(() => ILGeneratorRunner.GenerateAndRunIL(statements, input: "a"));
+        }
+        #endregion
     }
 }
