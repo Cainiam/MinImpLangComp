@@ -353,9 +353,9 @@ namespace MinImpLangComp.Tests
             using var consoleOutput = new StringWriter();
             Console.SetOut(consoleOutput);
             ILGeneratorRunner.GenerateAndRunIL(expr);
-            var outpout = consoleOutput.ToString().Trim();
+            var output = consoleOutput.ToString().Trim();
 
-            Assert.Equal("123", outpout);
+            Assert.Equal("123", output);
         }
 
         [Fact]
@@ -464,7 +464,7 @@ namespace MinImpLangComp.Tests
         private string CaptureConsole(Action action) // Utilitaire
         {
             var originalOut = Console.Out;
-            using var writer = new StringWriter();            
+            var writer = new StringWriter();            
             try
             {
                 Console.SetOut(writer);
@@ -1106,6 +1106,152 @@ namespace MinImpLangComp.Tests
             };
 
             Assert.Throws<NotSupportedException>(() => ILGeneratorRunner.GenerateAndRunIL(statements, input: "a"));
+        }
+        #endregion
+
+        #region FunctionCall
+        [Fact]
+        public void FunctionCall_NoArguments_Works()
+        {
+            var statements = new List<Statement>
+                {
+                    new FunctionDeclaration(
+                        "hello",
+                        new List<string>(),
+                        new Block(new List<Statement>
+                        {
+                            new ExpressionStatement(
+                                new FunctionCall("print", new List<Expression>
+                                {
+                                    new StringLiteral("Hello!")
+                                })
+                            )
+                        })
+                    ),
+					// Appel : hello()
+					new ExpressionStatement(new FunctionCall("hello", new List<Expression>()))
+                };
+            var output = CaptureConsole(() =>
+            {
+                ILGeneratorRunner.GenerateAndRunIL(statements);
+            });
+
+            Assert.Equal("Hello!", output);
+        }
+
+        [Fact]
+        public void FunctionCall_WithOneArgument_Works()
+        {
+            var statements = new List<Statement>
+                {
+                    new FunctionDeclaration(
+                        "greet",
+                        new List<string> { "name" },
+                        new Block(new List<Statement>
+                        {
+							// Pour rester compatible sans concat string, on imprime juste le paramètre
+							new ExpressionStatement(
+                                new FunctionCall("print", new List<Expression>
+                                {
+                                    new VariableReference("name")
+                                })
+                            )
+                        })
+                    ),
+                    new ExpressionStatement(new FunctionCall("greet", new List<Expression>
+                    {
+                        new StringLiteral("Jordan")
+                    }))
+                };
+            var output = CaptureConsole(() =>
+            {
+                ILGeneratorRunner.GenerateAndRunIL(statements);
+            });
+
+            Assert.Equal("Jordan", output);
+        }
+
+        [Fact]
+        public void FunctionCall_WithMultipleArguments_Works()
+        {
+            var statements = new List<Statement>
+                {
+                    new FunctionDeclaration(
+                        "sum",
+                        new List<string> { "a", "b" },
+                        new Block(new List<Statement>
+                        {
+							// Addition d'entiers, pas de concat string
+							new ExpressionStatement(
+                                new FunctionCall("print", new List<Expression>
+                                {
+                                    new BinaryExpression(new VariableReference("a"), OperatorType.Plus, new VariableReference("b"))
+                                })
+                            )
+                        })
+                    ),
+                    new ExpressionStatement(new FunctionCall("sum", new List<Expression>
+                    {
+                        new IntegerLiteral(5),
+                        new IntegerLiteral(7)
+                    }))
+                };
+            var output = CaptureConsole(() =>
+            {
+                ILGeneratorRunner.GenerateAndRunIL(statements);
+            });
+
+            Assert.Equal("12", output);
+        }
+
+        [Fact]
+        public void FunctionCall_NestedInsideExpression_Works()
+        {
+            var statements = new List<Statement>
+                {
+                    new FunctionDeclaration(
+                        "five",
+                        new List<string>(),
+                        new Block(new List<Statement>
+                        {
+                            new ReturnStatement(new IntegerLiteral(5))
+                        })
+                    ),
+                    new ExpressionStatement(
+                        new FunctionCall("print", new List<Expression>
+                        {
+                            new BinaryExpression( new FunctionCall("five", new List<Expression>()), OperatorType.Plus, new IntegerLiteral(3))
+                        })
+                    )
+                };
+            var output = CaptureConsole(() =>
+            {
+                ILGeneratorRunner.GenerateAndRunIL(statements);
+            });
+
+            Assert.Equal("8", output);
+        }
+        #endregion
+
+        #region concat string test
+        [Fact]
+        public void StringConcatenation_WithPlus_Works()
+        {
+            var statements = new List<Statement>
+            {
+                new ExpressionStatement(
+                    new FunctionCall("print", new List<Expression>
+                    {
+                        new BinaryExpression(new StringLiteral("Hello "), OperatorType.Plus, new StringLiteral("world"))
+                    })
+                )
+            };
+            var output = CaptureConsole(() =>
+            {
+                ILGeneratorRunner.GenerateAndRunIL(statements);
+            });
+
+            Assert.Equal("Hello world", output);
         }
         #endregion
     }

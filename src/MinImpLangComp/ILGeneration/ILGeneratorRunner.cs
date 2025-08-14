@@ -11,6 +11,7 @@ namespace MinImpLangComp.ILGeneration
         public static object? GenerateAndRunIL(List<Statement> statements)
         {
             // Set-up :
+            Dictionary<string, MethodInfo>? fnRegistry = null;
             var method = new DynamicMethod("Eval", typeof(object), Type.EmptyTypes);
             var il = method.GetILGenerator();
 
@@ -21,37 +22,58 @@ namespace MinImpLangComp.ILGeneration
             // Pour return
             string? lastVariableToReturn = null;
 
-            // Génération du corps des instructions :
-            for(int i = 0; i < statements.Count; i++)
+            try
             {
-                var statement = statements[i];
-                ILGeneratorUtils.GenerateIL(statement, il, locals, constants);
-                if (i == statements.Count - 1)
+                // On construit les fonctions et reset le buffer d'output
+                fnRegistry = ILGeneratorUtils.BuildAndRegisterFunctions(statements);
+                RuntimeIO.Clear();
+
+                // Génération du corps des instructions :
+                for (int i = 0; i < statements.Count; i++)
                 {
-                    lastVariableToReturn = statement switch
+                    var statement = statements[i];
+                    ILGeneratorUtils.GenerateIL(statement, il, locals, constants);
+                    if (i == statements.Count - 1)
                     {
-                        VariableDeclaration variableDeclaration => variableDeclaration.Identifier,
-                        Assignment assignment => assignment.Identifier,
-                        ExpressionStatement expressionStatement when expressionStatement.Expression is VariableReference variableReference => variableReference.Name,
-                        _ => null
-                    };
+                        lastVariableToReturn = statement switch
+                        {
+                            VariableDeclaration variableDeclaration => variableDeclaration.Identifier,
+                            Assignment assignment => assignment.Identifier,
+                            ExpressionStatement expressionStatement when expressionStatement.Expression is VariableReference variableReference => variableReference.Name,
+                            _ => null
+                        };
+                    }
                 }
-            }
 
-            // Emission retour
-            if (lastVariableToReturn != null && locals.TryGetValue(lastVariableToReturn, out var local))
+                // Emission retour
+                if (lastVariableToReturn != null && locals.TryGetValue(lastVariableToReturn, out var local))
+                {
+                    il.Emit(OpCodes.Ldloc, local);
+                    if (local.LocalType.IsValueType) il.Emit(OpCodes.Box, local.LocalType);
+                }
+                else il.Emit(OpCodes.Ldnull);
+
+                // Retour Emit
+                il.Emit(OpCodes.Ret);
+
+                // Retour méthode :
+                var del = (Func<object?>)method.CreateDelegate(typeof(Func<object?>));
+                var result = del();
+
+                // Affichage de la sortie console si rien sur la pile
+                if(result == null)
+                {
+                    var output = RuntimeIO.Consume();
+                    return output;
+                }
+                // Sinon, on retourne la valeur
+                return result;
+            }
+            finally
             {
-                il.Emit(OpCodes.Ldloc, local);
-                if (local.LocalType.IsValueType) il.Emit(OpCodes.Box, local.LocalType);
+                // Libération du registre
+                ILGeneratorUtils.ClearFunctionRegistry();
             }
-            else il.Emit(OpCodes.Ldnull);
-
-            // Retour Emit
-            il.Emit(OpCodes.Ret);
-
-            // Retour méthode :
-            var del = (Func<object?>)method.CreateDelegate(typeof(Func<object?>));
-            return del();
         }
 
         // Runner statement pour envoyer un input
