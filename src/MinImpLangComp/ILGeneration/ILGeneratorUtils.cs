@@ -20,6 +20,10 @@ namespace MinImpLangComp.ILGeneration
     public static class ILGeneratorUtils
     {
 
+        private static Dictionary<string, MethodInfo>? _functionRegistry;
+
+        public static void ClearFunctionRegistry() => _functionRegistry = null;
+
         private static readonly HashSet<OperatorType> BooleanOperators = new()
         {
             OperatorType.Equalequal,
@@ -57,6 +61,9 @@ namespace MinImpLangComp.ILGeneration
                 case BooleanLiteral booleanLiteral:
                     il.Emit(booleanLiteral.Value ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
                     break;
+                case StringLiteral stringLiteral:
+                    il.Emit(OpCodes.Ldstr, stringLiteral.Value);
+                    break;
                 case VariableReference variableReference:
                     if (!locals.TryGetValue(variableReference.Name, out var local)) throw new InvalidOperationException($"Variable '{variableReference.Name}' not declared");
                     il.Emit(OpCodes.Ldloc, local);
@@ -93,9 +100,23 @@ namespace MinImpLangComp.ILGeneration
                     else
                     {
                         var targetType = GetExpressionType(binaryExpression, locals);
-                        GenerateILWithConversion(binaryExpression.Left, il, targetType, locals, constants);
-                        GenerateILWithConversion(binaryExpression.Right, il, targetType, locals, constants);
-                        EmitBinaryOperator(binaryExpression.Operator, il); // Autre cas 
+                        if(binaryExpression.Operator == OperatorType.Plus && targetType == typeof(string))
+                        {
+                            GenerateIL(binaryExpression.Left, il, locals, constants);
+                            var lt = GetExpressionType(binaryExpression.Left, locals);
+                            if (lt.IsValueType) il.Emit(OpCodes.Box, lt);
+                            GenerateIL(binaryExpression.Right, il, locals, constants);
+                            var rt = GetExpressionType(binaryExpression.Right, locals);
+                            if (rt.IsValueType) il.Emit(OpCodes.Box, rt);
+                            var concatObj = typeof(string).GetMethod("Concat", new[] { typeof(object), typeof(object) })!;
+                            il.EmitCall(OpCodes.Call, concatObj, null);
+                        }
+                        else
+                        {
+                            GenerateILWithConversion(binaryExpression.Left, il, targetType, locals, constants);
+                            GenerateILWithConversion(binaryExpression.Right, il, targetType, locals, constants);
+                            EmitBinaryOperator(binaryExpression.Operator, il); // Autre cas 
+                        }
                     }
                     break;
                 case FunctionCall functionCall when functionCall.Name == "print":
@@ -103,19 +124,9 @@ namespace MinImpLangComp.ILGeneration
                     {
                         GenerateIL(arg, il, locals, constants);
                         var argType = GetExpressionType(arg, locals);
-                        var writeLineMethod = typeof(Console).GetMethod(
-                            "WriteLine",
-                            BindingFlags.Public | BindingFlags.Static,
-                            null,
-                            new Type[] { argType },
-                            null
-                        );
-                        if(writeLineMethod == null)
-                        {
-                            il.Emit(OpCodes.Box, argType);
-                            writeLineMethod = typeof(Console).GetMethod("WriteLine", new[] { typeof(object) });
-                        }
-                        il.EmitCall(OpCodes.Call, writeLineMethod!, null);
+                        if (argType.IsValueType) il.Emit(OpCodes.Box, argType);
+                        var printMethod = typeof(RuntimeIO).GetMethod(nameof(RuntimeIO.Print), new[] { typeof(object) })!;
+                        il.EmitCall(OpCodes.Call, printMethod, null);
                     }
                     il.Emit(OpCodes.Ldnull);
                     break;
@@ -123,6 +134,31 @@ namespace MinImpLangComp.ILGeneration
                     if (functionCall.Arguments.Count != 0) throw new InvalidOperationException("input() does not accept any arguments");
                     il.EmitCall(OpCodes.Call, typeof(Console).GetMethod("ReadLine", Type.EmptyTypes)!, null);
                     break;
+                case FunctionCall functionCall:
+                    if(locals.TryGetValue(functionCall.Name, out var functionLocal))
+                    {
+                        var delegateType = functionLocal.LocalType;
+                        if (!typeof(Delegate).IsAssignableFrom(delegateType)) throw new InvalidOperationException($"Local '{functionCall.Name}' is not callable delegate");
+                        var invokeMethod = delegateType.GetMethod("Invoke");
+                        if (invokeMethod == null) throw new InvalidOperationException($"Cannot find Invole on delegate type '{delegateType.Name}'");
+                        var parameters = invokeMethod.GetParameters();
+                        if (parameters.Length != functionCall.Arguments.Count) throw new InvalidOperationException($"Function '{functionCall.Name}' expects {parameters.Length} argument but {functionCall.Arguments.Count} were provided");
+                        il.Emit(OpCodes.Ldloc, functionLocal);
+                        for (int i = 0; i < parameters.Length; i++) GenerateILWithConversion(functionCall.Arguments[i], il, parameters[i].ParameterType, locals, constants);
+                        il.EmitCall(OpCodes.Callvirt, invokeMethod, null);
+                        if (invokeMethod.ReturnType == typeof(void)) il.Emit(OpCodes.Ldnull);
+                        break;
+                    }
+                    if(_functionRegistry != null && _functionRegistry.TryGetValue(functionCall.Name, out var targetMethod))
+                    {
+                        var paramInfos = targetMethod.GetParameters();
+                        if (paramInfos.Length != functionCall.Arguments.Count) throw new InvalidOperationException($"Function '{functionCall.Name}' expects {paramInfos.Length} argument but {functionCall.Arguments.Count} were provided");
+                        for (int i = 0; i < paramInfos.Length; i++) GenerateILWithConversion(functionCall.Arguments[i], il, paramInfos[i].ParameterType, locals, constants);
+                        il.EmitCall(OpCodes.Call, targetMethod, null);
+                        if (targetMethod.ReturnType == typeof(void)) il.Emit(OpCodes.Ldnull);
+                        break;
+                    }
+                    throw new NotSupportedException($"Function '{functionCall.Name}' not supported: expected a delegate in locals or compiled function");
                 default:
                     throw new NotSupportedException($"Unsupported expression type: {expr.GetType().Name}");
             }
@@ -211,6 +247,8 @@ namespace MinImpLangComp.ILGeneration
                     if (context == null) throw new InvalidOperationException("Cannot use 'continue' outside of a loop");
                     il.Emit(OpCodes.Br, context.ContinueLabel);
                     break;
+                case FunctionDeclaration:
+                    break;
                 case Block block:
                     foreach (var inner in block.Statements) GenerateIL(inner, il, locals, constants, context);
                     break;
@@ -275,25 +313,44 @@ namespace MinImpLangComp.ILGeneration
 
         private static Type GetExpressionType(Expression expression, Dictionary<string, LocalBuilder> locals)
         {
-            return expression switch
+            switch(expression)
             {
-                IntegerLiteral => typeof(int),
-                FloatLiteral => typeof(double),
-                BooleanLiteral => typeof(bool),
-                StringLiteral => typeof(string),
-                BinaryExpression binary =>
-                    BooleanOperators.Contains(binary.Operator)
-                        ? typeof(bool)
-                            : NumericOperators.Contains(binary.Operator)
-                                ? GetExpressionType(binary.Left, locals) == typeof(double) || GetExpressionType(binary.Right, locals) == typeof(double)
-                                    ? typeof(double)
-                                    : typeof(int)
-                                : throw new NotSupportedException($"Cannot determine type of binary operator: {binary.Operator}"),
-                VariableReference variableReference =>
-                    locals.TryGetValue(variableReference.Name, out var local) ? local.LocalType : throw new InvalidOperationException($"Cannot infer type: variable '{variableReference.Name}' not declared"),
-                FunctionCall functionCall when functionCall.Name == "input" => typeof(string),
-                _ => throw new NotSupportedException($"Cannot determine type of expression: {expression.GetType().Name}")
-            };
+                case IntegerLiteral:
+                    return typeof(int);
+                case FloatLiteral:
+                    return typeof(double);
+                case BooleanLiteral:
+                    return typeof(bool);
+                case StringLiteral:
+                    return typeof(string);
+                case VariableReference variableReference:
+                    if (locals.TryGetValue(variableReference.Name, out var local)) return local.LocalType;
+                    throw new InvalidOperationException($"Cannot infer type: variable '{variableReference.Name}' not declared");
+                case BinaryExpression binaryExpression:
+                    if (BooleanOperators.Contains(binaryExpression.Operator)) return typeof(bool);
+                    var leftType = GetExpressionType(binaryExpression.Left, locals);
+                    var rightType = GetExpressionType(binaryExpression.Right, locals);
+                    if (binaryExpression.Operator == OperatorType.Plus && (leftType == typeof(string) || rightType == typeof(string))) return typeof(string);
+                    if(NumericOperators.Contains(binaryExpression.Operator))
+                        return (leftType == typeof(double) || rightType == typeof (double)) ? typeof(double) : typeof(int);
+                    throw new NotSupportedException($"Cannot determine type of binary operator: {binaryExpression.Operator}");
+                case FunctionCall functionCall:
+                    if(functionCall.Name == "input") return typeof(string);
+                    if (functionCall.Name == "print") return typeof(void);
+                    if(locals.TryGetValue(functionCall.Name, out var functionLocal))
+                    {
+                        var delegateType = functionLocal.LocalType;
+                        if(typeof(Delegate).IsAssignableFrom(delegateType))
+                        {
+                            var invoke = delegateType.GetMethod("Invoke");
+                            if (invoke != null) return invoke.ReturnType == typeof(void) ? typeof(void) : invoke.ReturnType;
+                        }
+                    }
+                    if(_functionRegistry != null && _functionRegistry.TryGetValue(functionCall.Name, out var methodInfo)) return methodInfo.ReturnType == typeof (void) ? typeof(void) : methodInfo.ReturnType;
+                    throw new NotSupportedException($"Cannot determine type of function: '{functionCall.Name}'");
+                default:
+                    throw new NotSupportedException($"Cannot determine type of expression: {expression.GetType().Name}");
+            }
         }
 
         private static void GenerateILWithConversion(Expression expression, ILGenerator il, Type targetType, Dictionary<string, LocalBuilder> locals, HashSet<string> constants)
@@ -332,6 +389,276 @@ namespace MinImpLangComp.ILGeneration
             {
                 il.Emit(OpCodes.Conv_R8);
             }
+        }
+
+        public static Dictionary<string, MethodInfo> BuildAndRegisterFunctions(List<Statement> statements)
+        {
+            // Préparation ASM/Module/Type
+            var asmName = new AssemblyName("MinImpLangComp.Dynamic_" + Guid.NewGuid().ToString("N"));
+            var asm = AssemblyBuilder.DefineDynamicAssembly(asmName, AssemblyBuilderAccess.Run);
+            var module = asm.DefineDynamicModule(asmName.Name!);
+            var typeBuilder = module.DefineType("Script" + Guid.NewGuid().ToString("N"), TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Abstract);
+
+            // MethodBuilder pour chaque FunctionDeclaration
+            var functionDecls = new List<FunctionDeclaration>();
+            foreach (var s in statements)
+                if (s is FunctionDeclaration fd) functionDecls.Add(fd);
+            var mbByName = new Dictionary<string, MethodBuilder>();
+            var sigByName = new Dictionary<string, (Type Ret, Type[] Params, Dictionary<string, Type> ParamMap)>();
+            foreach(var fd in functionDecls)
+            {
+                var paramTypes = InferParameterTypes(fd);
+                var paramMap = new Dictionary<string, Type>();
+                for(int i = 0; i < fd.Parameters.Count; i++) paramMap[fd.Parameters[i]] = paramTypes[i];
+                var retType = InferReturnType(fd, paramMap);
+                var mb = typeBuilder.DefineMethod(fd.Name, MethodAttributes.Public | MethodAttributes.Static, retType, paramTypes);
+                for (int i = 0; i < fd.Parameters.Count; i++) mb.DefineParameter(i + 1, ParameterAttributes.None, fd.Parameters[i]);
+                mbByName[fd.Name] = mb;
+                sigByName[fd.Name] = (retType, paramTypes, paramMap);
+            }
+
+            // Corps de la fonction
+            foreach(var fd in functionDecls)
+            {
+                var (retType, paramTypes, paramMap) = sigByName[fd.Name];
+                EmitFunctionBody(mbByName[fd.Name], fd, retType, paramTypes, paramMap);
+            }
+
+            // Finalisation + registre
+            var builtType = typeBuilder.CreateType()!;
+            var registry = new Dictionary<string, MethodInfo>();
+            foreach (var fd in functionDecls)
+            {
+                var mi = builtType.GetMethod(fd.Name, BindingFlags.Public | BindingFlags.Static)!;
+                registry[fd.Name] = mi;
+            }
+            _functionRegistry = registry;
+            return registry;
+        }
+
+        private static Type[] InferParameterTypes(FunctionDeclaration fd)
+        {
+            var types = new Type[fd.Parameters.Count];
+            for (int i = 0; i < types.Length; i++) types[i] = typeof(int);
+            foreach (var stmt in fd.Body.Statements) InferParamTypesFromStatement(stmt, fd.Parameters, types);
+            return types;
+        }
+
+        private static void InferParamTypesFromStatement(Statement stmt, List<string> paramNames, Type[] types)
+        {
+            switch (stmt)
+            {
+                case ExpressionStatement expressionStatement:
+                    InferParamTypesFromExpression(expressionStatement.Expression, paramNames, types);
+                    break;
+                case Assignment assignment:
+                    InferParamTypesFromExpression(assignment.Expression, paramNames, types);
+                    break;
+                case IfStatement ifStatement:
+                    InferParamTypesFromExpression(ifStatement.Condition, paramNames, types);
+                    InferParamTypesFromStatement(ifStatement.ThenBranch, paramNames, types);
+                    if(ifStatement.ElseBranch != null) InferParamTypesFromStatement(ifStatement.ElseBranch, paramNames, types);
+                    break;
+                case WhileStatement whileStatement:
+                    InferParamTypesFromExpression(whileStatement.Condition, paramNames, types);
+                    InferParamTypesFromStatement(whileStatement.Body, paramNames, types);
+                    break;
+                case ForStatement forStatement:
+                    InferParamTypesFromStatement(forStatement.Initializer, paramNames, types);
+                    InferParamTypesFromExpression(forStatement.Condition, paramNames, types);
+                    InferParamTypesFromStatement(forStatement.Increment, paramNames, types);
+                    InferParamTypesFromStatement(forStatement.Body, paramNames, types);
+                    break;
+                case ReturnStatement returnStatement:
+                    InferParamTypesFromExpression(returnStatement.Expression, paramNames, types);
+                    break;
+                case VariableDeclaration variableDeclaration:
+                    InferParamTypesFromExpression(variableDeclaration.Expression, paramNames, types);
+                    break;
+                case ConstantDeclaration constantDeclaration:
+                    InferParamTypesFromExpression(constantDeclaration.Expression, paramNames, types);
+                    break;
+            }
+        }
+
+        private static void InferParamTypesFromExpression(Expression expr, List<string> paramNames, Type[] types)
+        {
+            switch(expr)
+            {
+                case VariableReference variableReference:
+                    break;
+                case BinaryExpression binaryExpression:
+                    if (binaryExpression.Operator == OperatorType.Plus && (ContainsString(binaryExpression.Left) || ContainsString(binaryExpression.Right))) MarkParamsAs(paramNames, types, binaryExpression, typeof(string));
+                    else if (IsNumericOperator(binaryExpression.Operator) && (ContainsFloat(binaryExpression.Left) || ContainsFloat(binaryExpression.Right))) MarkParamsAs(paramNames, types, binaryExpression, typeof(double), preferUpgrade: true);
+                    InferParamTypesFromExpression(binaryExpression.Left, paramNames, types);
+                    InferParamTypesFromExpression(binaryExpression.Right, paramNames, types);
+                    break;
+                case FunctionCall functionCall:
+                    if(functionCall.Name == "print")
+                    {
+                        foreach(var arg in functionCall.Arguments)
+                        {
+                            if (arg is VariableReference variableReference)
+                            {
+                                int idx = paramNames.IndexOf(variableReference.Name);
+                                if (idx >= 0)
+                                {
+                                    types[idx] = typeof(string);
+                                }
+                            }
+                            else
+                            {
+                                InferParamTypesFromExpression(arg, paramNames, types);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach (var a in functionCall.Arguments) InferParamTypesFromExpression(a, paramNames, types);
+                    }
+                break;
+            }
+        }
+
+        private static bool IsNumericOperator(OperatorType op)
+        {
+            return op == OperatorType.Plus || op == OperatorType.Minus || op == OperatorType.Multiply || op == OperatorType.Divide || op == OperatorType.Modulo || op == OperatorType.BitwiseAnd || op == OperatorType.BitwiseOr;
+        }
+
+        private static bool ContainsFloat(Expression e)
+        {
+            return e switch
+            {
+                FloatLiteral => true,
+                BinaryExpression be => ContainsFloat(be.Left) || ContainsFloat(be.Right),
+                FunctionCall fc => fc.Arguments.Exists(ContainsFloat),
+                _ => false
+            };
+        }
+
+        private static bool ContainsString(Expression e)
+        {
+            return e switch
+            {
+                StringLiteral => true,
+                BinaryExpression be => ContainsString(be.Left) || ContainsString(be.Right),
+                FunctionCall fc => fc.Arguments.Exists(ContainsString),
+                _ => false
+            };
+        }
+
+        private static void MarkParamsAs(List<string> paramNames, Type[] types, Expression e, Type t, bool preferUpgrade = false)
+        {
+            void Touch(Expression x)
+            {
+                if (x is VariableReference variableReference)
+                {
+                    int idx = paramNames.IndexOf(variableReference.Name);
+                    if(idx >= 0)
+                    {
+                        if (preferUpgrade)
+                        {
+                            if (types[idx] == typeof(int)) types[idx] = t;
+                        }
+                        else
+                        {
+                            types[idx] = t;
+                        }
+                    }
+                }
+                else if (x is BinaryExpression binaryExpression)
+                {
+                    Touch(binaryExpression.Left);
+                    Touch(binaryExpression.Right);
+                }
+                else if(x is FunctionCall functionCall)
+                {
+                    foreach (var a in functionCall.Arguments) Touch(a);
+                }
+            }
+            Touch(e);
+        }
+
+        private static Type InferReturnType(FunctionDeclaration fd, Dictionary<string, Type> paramMap)
+        {
+            foreach(var st in fd.Body.Statements)
+            { 
+                if(st is ReturnStatement rs)
+                {
+                    return InferExpressionTypeForFunction(rs.Expression, paramMap);
+                }
+            }
+            return typeof(void);
+        }
+
+        private static Type InferExpressionTypeForFunction(Expression e, Dictionary<string, Type> paramMap)
+        {
+            switch(e)
+            {
+                case IntegerLiteral: 
+                    return typeof(int);
+                case FloatLiteral: 
+                    return typeof(double);
+                case BooleanLiteral: 
+                    return typeof(bool);
+                case StringLiteral: 
+                    return typeof(string);
+                case VariableReference variableReference:
+                    if (paramMap.TryGetValue(variableReference.Name, out var pt)) return pt;
+                    return typeof(int);
+                case FunctionCall functionCall:
+                    if (functionCall.Name == "input") return typeof(string);
+                    if (_functionRegistry != null && _functionRegistry.TryGetValue(functionCall.Name, out var mi)) return mi.ReturnType;
+                    return typeof(int);
+                case BinaryExpression binaryExpression:
+                    if(BooleanOperators.Contains(binaryExpression.Operator)) return typeof(bool);
+                    if (binaryExpression.Operator == OperatorType.Plus && (ContainsString(binaryExpression.Left) || ContainsString(binaryExpression.Right))) return typeof(string);
+                    var lt = InferExpressionTypeForFunction(binaryExpression.Left, paramMap);
+                    var rt = InferExpressionTypeForFunction(binaryExpression.Right, paramMap);
+                    if (lt == typeof(double) || rt == typeof(double)) return typeof(double);
+                    return typeof(int);
+                default:
+                    return typeof(int);
+            }
+        }
+
+        private static void EmitFunctionBody(MethodBuilder mb, FunctionDeclaration fd, Type returnType, Type[] paramTypes, Dictionary<string, Type> paramMap)
+        {
+            // Set Up
+            var il = mb.GetILGenerator();
+            var locals = new Dictionary<string, LocalBuilder>();
+            var constants = new HashSet<string>();
+
+            // Copie param dans locals
+            for(int i = 0; i < fd.Parameters.Count; i++)
+            {
+                var vLocal = il.DeclareLocal(paramTypes[i]);
+                locals[fd.Parameters[i]] = vLocal;
+                il.Emit(OpCodes.Ldarg, i);
+                il.Emit(OpCodes.Stloc, vLocal);
+            }
+
+            // Label fin + retour si
+            var endLabel = il.DefineLabel();
+            LocalBuilder? retLocal = null;
+            if(returnType != typeof(void)) retLocal = il.DeclareLocal(returnType);
+            
+            // Statement du body
+            foreach(var st in fd.Body.Statements)
+            {
+                if (st is ReturnStatement returnStatement)
+                {
+                    GenerateILWithConversion(returnStatement.Expression, il, returnType, locals, constants);
+                    il.Emit(OpCodes.Stloc, retLocal);
+                    il.Emit(OpCodes.Br, endLabel);
+                }
+                else GenerateIL(st, il, locals, constants, null);
+            }
+
+            // Fin : retour si non void
+            il.MarkLabel(endLabel);
+            if (returnType != typeof(void)) il.Emit(OpCodes.Ldloc, retLocal!);
+            il.Emit(OpCodes.Ret);
         }
 
         private static Type GetSystemTypeFromAnnotation(TypeAnnotation? annotation)
