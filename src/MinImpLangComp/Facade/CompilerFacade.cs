@@ -1,5 +1,7 @@
 ﻿using System.Text;
 using MinImpLangComp.AST;
+using MinImpLangComp.Lexing;
+using MinImpLangComp.Parsing;
 using MinImpLangComp.ILGeneration;
 
 namespace MinImpLangComp.Facade
@@ -30,9 +32,31 @@ namespace MinImpLangComp.Facade
 
         private static List<Statement> ParseToStatement(string source)
         {
-            // ToDo : Le parser ici
+            var lexer = new Lexer(source);
+            var parser = new Parser(lexer);
+            var parseProgram = parser.GetType().GetMethod("ParseProgram", Type.EmptyTypes);
+            if (parseProgram != null)
+            {
+                var result = parseProgram.Invoke(parser, null) as List<Statement>;
+                return result ?? new List<Statement>();
+            }
 
-            throw new NotImplementedException("Parser not pluged in");
+            var statements = new List<Statement>();
+            while(!IsParserAtEnd(parser))
+            {
+                var stMethod = parser.GetType().GetMethod("ParseStatement");
+                if (stMethod == null) throw new NotImplementedException("Parser.ParseStatement() is missing");
+                var st = stMethod.Invoke(parser, null) as Statement;
+                if (st != null) statements.Add(st);
+            }
+            return statements;
+        }
+
+        private static bool IsParserAtEnd(object parser)
+        {
+            var prop = parser.GetType().GetProperty("IsAtEnd");
+            if (prop != null && prop.PropertyType == typeof(bool)) return (bool)prop.GetValue(parser);
+            return false;
         }
     }
 }
