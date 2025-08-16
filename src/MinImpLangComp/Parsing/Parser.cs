@@ -9,6 +9,7 @@ namespace MinImpLangComp.Parsing
     {
         private readonly Lexer _lexer;
         private Token _currentToken;
+        public bool IsAtEnd => _currentToken.Type == TokenType.EOF; // Pour CompilerFacade
 
         public Parser(Lexer lexer)
         {
@@ -446,6 +447,17 @@ namespace MinImpLangComp.Parsing
                 }
             }
             return null;
+        }
+
+        // Pour CompilerFacade
+        public List<Statement> ParseProgram()
+        {
+            var statements = new List<Statement>();
+            while(_currentToken.Type != TokenType.EOF)
+            {
+                statements.Add(ParseStatement());
+            }
+            return statements;
         }
     }
 }

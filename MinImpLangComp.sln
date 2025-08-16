@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinImpLangComp", "src\MinIm
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinImpLangComp.Tests", "tests\MinImpLangComp.Tests\MinImpLangComp.Tests.csproj", "{2A63B173-F099-42D2-AEDD-72FE1E500A8D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinImpLangComp.CLI", "src\MinImpLangComp.CLI\MinImpLangComp.CLI.csproj", "{6E44605B-7500-4275-95E2-CA4C9C6A40C9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{2A63B173-F099-42D2-AEDD-72FE1E500A8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2A63B173-F099-42D2-AEDD-72FE1E500A8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2A63B173-F099-42D2-AEDD-72FE1E500A8D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E44605B-7500-4275-95E2-CA4C9C6A40C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E44605B-7500-4275-95E2-CA4C9C6A40C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E44605B-7500-4275-95E2-CA4C9C6A40C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E44605B-7500-4275-95E2-CA4C9C6A40C9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
