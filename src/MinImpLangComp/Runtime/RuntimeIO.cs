@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace MinImpLangComp.ILGeneration
+namespace MinImpLangComp.Runtime
 {
     public static class RuntimeIO
     {
