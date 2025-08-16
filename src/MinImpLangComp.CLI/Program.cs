@@ -25,7 +25,21 @@ namespace MinImpLangComp.CLI
                         Console.Error.WriteLine("Missing file path. Use a .milc file or '-' for stdin.");
                         return 2;
                     }
+                    if (args[1] == "--pick") return RunPickSample();
+                    if (args[1].StartsWith("sample:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var name = args[1].Substring("sample:".Length);
+                        var path = ResolveSampleByName(name);
+                        if (path == null)
+                        {
+                            Console.Error.WriteLine($"Sample '{name}' not found.");
+                            return 4;
+                        }
+                        return RunFileOrStdin(path);
+                    }
                     return RunFileOrStdin(args[1]);
+                case "samples":
+                    return ListSamples();
                 case "repl":
                     return RunRepl();
                 case "repl-interp":
@@ -43,7 +57,10 @@ namespace MinImpLangComp.CLI
             Console.WriteLine("Usage :");
             Console.WriteLine("  1. MinImpLangComp run <file.milc>");
             Console.WriteLine("  2. MinImpLangComp run -");
-            Console.WriteLine("  3. MinImpLangComp repl");
+            Console.WriteLine("  3. MinImpLangComp run --pick   (interactive sample picker)");
+            Console.WriteLine("  4. MinImpLangComp run sample:<name>");
+            Console.WriteLine("  5. MinImpLangComp samples      (list available samples)");
+            Console.WriteLine("  6. MinImpLangComp repl");
             Console.ResetColor();
         }
 
@@ -136,6 +153,73 @@ namespace MinImpLangComp.CLI
                 Console.Error.WriteLine(e.Message);
                 return 7;
             }
+        }
+
+        private static int RunPickSample()
+        {
+            var files = GetSampleFiles();
+            if (files.Length == 0)
+            {
+                Console.Error.WriteLine("No sample found.");
+                return 4;
+            }
+            Console.WriteLine("Available samples:");
+            for(int i = 0; i < files.Length; i++)
+            {
+                Console.WriteLine($"  {i+1}. {Path.GetFileName(files[i])}");
+            }
+            Console.Write("Choose a number (or press Enter for 1): ");
+            var choice = Console.ReadLine();
+            int index = 1;
+            if (!string.IsNullOrWhiteSpace(choice) && !int.TryParse(choice, out index))
+            {
+                Console.Error.WriteLine("Invalid selection.");
+                return 4;
+            }
+            if (index < 1 || index > files.Length)
+            {
+                Console.Error.WriteLine("Selection out of range.");
+                return 4;
+            }
+            return RunFileOrStdin(files[index - 1]);
+        }
+
+        private static int ListSamples()
+        {
+            var files = GetSampleFiles();
+            if (files.Length == 0)
+            {
+                Console.WriteLine("No samples found.");
+                return 0;
+            }
+            foreach (var file in files) Console.WriteLine(Path.GetFileName(file));
+            return 0;
+        }
+
+        private static string? ResolveSampleByName(string name)
+        {
+            var files = GetSampleFiles();
+            foreach (var file in files)
+            {
+                var filename = Path.GetFileName(file);
+                if (filename.Equals(name, StringComparison.OrdinalIgnoreCase)) return file;
+                if (Path.GetFileNameWithoutExtension(filename).Equals(name, StringComparison.OrdinalIgnoreCase)) return file;
+            }
+            return null;
+        }
+
+        private static string[] GetSampleFiles()
+        {
+            var overrideDir = Environment.GetEnvironmentVariable("MINIMPLANGCOMP_SAMPLES_DIR");
+            if (!string.IsNullOrWhiteSpace(overrideDir) && Directory.Exists(overrideDir)) return Directory.GetFiles(overrideDir, "*.milc", SearchOption.TopDirectoryOnly);
+            var dir = new DirectoryInfo(AppContext.BaseDirectory);
+            while(dir != null)
+            {
+                var candidate = Path.Combine(dir.FullName, "samples");
+                if (Directory.Exists(candidate)) return Directory.GetFiles(candidate, "*.milc", SearchOption.TopDirectoryOnly);
+                dir = dir.Parent;
+            }
+            return Array.Empty<string>();
         }
     }
 }

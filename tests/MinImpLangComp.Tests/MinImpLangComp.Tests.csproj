@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\MinImpLangComp.CLI\MinImpLangComp.CLI.csproj" />
     <ProjectReference Include="..\..\src\MinImpLangComp\MinImpLangComp.csproj" />
   </ItemGroup>
 
