@@ -1,7 +1,5 @@
-﻿using MinImpLangComp;
-using MinImpLangComp.AST;
+﻿using MinImpLangComp.AST;
 using MinImpLangComp.Facade;
-using MinImpLangComp.ILGeneration;
 using MinImpLangComp.ReplLoop;
 using System.Globalization;
 
@@ -24,10 +22,10 @@ namespace MinImpLangComp.CLI
                 case "run":
                     if (args.Length < 2)
                     {
-                        Console.Error.WriteLine("Missing file path.");
+                        Console.Error.WriteLine("Missing file path. Use a .milc file or '-' for stdin.");
                         return 2;
                     }
-                    return RunFile(args[1]);
+                    return RunFileOrStdin(args[1]);
                 case "repl":
                     return RunRepl();
                 case "repl-interp":
@@ -43,27 +41,36 @@ namespace MinImpLangComp.CLI
         {
             Console.ForegroundColor = ConsoleColor.Blue;
             Console.WriteLine("Usage :");
-            Console.WriteLine("  1. micl run <file.mil>");
-            Console.WriteLine("  2. micl repl");
+            Console.WriteLine("  1. MinImpLangComp run <file.milc>");
+            Console.WriteLine("  2. MinImpLangComp run -");
+            Console.WriteLine("  3. MinImpLangComp repl");
             Console.ResetColor();
         }
 
-        private static int RunFile(string path)
+        private static int RunFileOrStdin(string pathOrDash)
         {
             string source;
             try
             {
-                source = File.ReadAllText(path);
+                if (pathOrDash == "-") source = Console.In.ReadToEnd();
+                else
+                {
+                    if (!pathOrDash.EndsWith(".milc", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Console.Error.WriteLine("Expected a  .milc file (or '-' for stdin).");
+                        return 4;
+                    }
+                    source = File.ReadAllText(pathOrDash);
+                }
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine (e.Message);
+                Console.Error.WriteLine(e.Message);
                 return 4;
             }
             try
             {
-                var output = CompilerFacade.Run(source);
-                if (!string.IsNullOrEmpty(output)) Console.Write(output);
+                _ = CompilerFacade.Run(source);
                 return 0;
             }
             catch (NotImplementedException ne)
@@ -71,7 +78,7 @@ namespace MinImpLangComp.CLI
                 Console.Error.WriteLine("Parser not wired yet: " + ne.Message);
                 return 5;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.Error.WriteLine("Runtime error: " + ex.Message);
                 return 6;
@@ -81,16 +88,18 @@ namespace MinImpLangComp.CLI
         private static int RunRepl()
         {
             Console.ForegroundColor = ConsoleColor.Blue;
-            Console.Write("> ");
+            Console.Write("MinImpLangComp IL REPL - type 'exit' to quit.");
             Console.ResetColor();
             while (true)
             {
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.Write("> ");
+                Console.ResetColor();
                 var line = Console.ReadLine();
                 if (line == null || line.Trim().Equals("exit", StringComparison.OrdinalIgnoreCase)) break;
                 try
                 {
-                    var result = CompilerFacade.Run(line);
-                    if(!string.IsNullOrEmpty(result)) Console.Write(result);
+                    _ = CompilerFacade.Run(line);
                 }
                 catch (Exception e)
                 {
@@ -106,7 +115,7 @@ namespace MinImpLangComp.CLI
         {
             try
             {
-                MinImpLangComp.ReplLoop.Repl.Run();
+                Repl.Run();
                 return 0;
             }
             catch (Exception e)
