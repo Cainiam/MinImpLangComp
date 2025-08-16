@@ -21,9 +21,9 @@ namespace MinImpLangComp.ILGeneration
     public static class ILGeneratorUtils
     {
 
-        private static Dictionary<string, MethodInfo>? _functionRegistry;
+        private static readonly ThreadLocal<Dictionary<string, MethodInfo>?> _functionRegistry = new ThreadLocal<Dictionary<string, MethodInfo>?>(() => null);
 
-        public static void ClearFunctionRegistry() => _functionRegistry = null;
+        public static void ClearFunctionRegistry() => _functionRegistry.Value = null;
 
         private static readonly HashSet<OperatorType> BooleanOperators = new()
         {
@@ -150,7 +150,7 @@ namespace MinImpLangComp.ILGeneration
                         if (invokeMethod.ReturnType == typeof(void)) il.Emit(OpCodes.Ldnull);
                         break;
                     }
-                    if(_functionRegistry != null && _functionRegistry.TryGetValue(functionCall.Name, out var targetMethod))
+                    if(_functionRegistry.Value != null && _functionRegistry.Value.TryGetValue(functionCall.Name, out var targetMethod))
                     {
                         var paramInfos = targetMethod.GetParameters();
                         if (paramInfos.Length != functionCall.Arguments.Count) throw new InvalidOperationException($"Function '{functionCall.Name}' expects {paramInfos.Length} argument but {functionCall.Arguments.Count} were provided");
@@ -236,7 +236,7 @@ namespace MinImpLangComp.ILGeneration
                     il.Emit(OpCodes.Brfalse, forEndLabel);
                     GenerateIL(forStatement.Body, il, locals, constants, loopContext);
                     il.MarkLabel(continueLabel);
-                    GenerateIL(forStatement.Increment, il, locals,  constants, context);
+                    GenerateIL(forStatement.Increment, il, locals,  constants, loopContext);
                     il.Emit(OpCodes.Br, forStartLabel);
                     il.MarkLabel(forEndLabel);
                     break;
@@ -347,7 +347,7 @@ namespace MinImpLangComp.ILGeneration
                             if (invoke != null) return invoke.ReturnType == typeof(void) ? typeof(void) : invoke.ReturnType;
                         }
                     }
-                    if(_functionRegistry != null && _functionRegistry.TryGetValue(functionCall.Name, out var methodInfo)) return methodInfo.ReturnType == typeof (void) ? typeof(void) : methodInfo.ReturnType;
+                    if(_functionRegistry.Value != null && _functionRegistry.Value.TryGetValue(functionCall.Name, out var methodInfo)) return methodInfo.ReturnType == typeof (void) ? typeof(void) : methodInfo.ReturnType;
                     throw new NotSupportedException($"Cannot determine type of function: '{functionCall.Name}'");
                 default:
                     throw new NotSupportedException($"Cannot determine type of expression: {expression.GetType().Name}");
@@ -433,7 +433,7 @@ namespace MinImpLangComp.ILGeneration
                 var mi = builtType.GetMethod(fd.Name, BindingFlags.Public | BindingFlags.Static)!;
                 registry[fd.Name] = mi;
             }
-            _functionRegistry = registry;
+            _functionRegistry.Value = registry;
             return registry;
         }
 
@@ -609,7 +609,7 @@ namespace MinImpLangComp.ILGeneration
                     return typeof(int);
                 case FunctionCall functionCall:
                     if (functionCall.Name == "input") return typeof(string);
-                    if (_functionRegistry != null && _functionRegistry.TryGetValue(functionCall.Name, out var mi)) return mi.ReturnType;
+                    if (_functionRegistry.Value != null && _functionRegistry.Value.TryGetValue(functionCall.Name, out var mi)) return mi.ReturnType;
                     return typeof(int);
                 case BinaryExpression binaryExpression:
                     if(BooleanOperators.Contains(binaryExpression.Operator)) return typeof(bool);

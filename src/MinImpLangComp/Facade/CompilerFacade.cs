@@ -1,4 +1,4 @@
-﻿using System.Text;
+﻿using MinImpLangComp.Runtime;
 using MinImpLangComp.AST;
 using MinImpLangComp.Lexing;
 using MinImpLangComp.Parsing;
@@ -8,25 +8,27 @@ namespace MinImpLangComp.Facade
 {
     public static class CompilerFacade
     {
+        private static readonly object _runLock = new object();
+
         public static string Run(string source, string? input = null)
         {
-            var statements = ParseToStatement(source);
-            ILGeneratorUtils.BuildAndRegisterFunctions(statements);
-            var originalOut = Console.Out;
-            var origianlIn = Console.In;
-            using var writer = new StringWriter(new StringBuilder());
-            try
-            {
-                Console.SetOut(writer);
-                if (input != null) Console.SetIn(new StringReader(input));
-                ILGeneratorRunner.GenerateAndRunIL(statements);
-                writer.Flush();
-                return writer.ToString();
-            }
-            finally
-            {
-                Console.SetOut(originalOut);
-                Console.SetIn(origianlIn);
+            lock (_runLock)
+            { 
+                var statements = ParseToStatement(source);
+                ILGeneratorUtils.BuildAndRegisterFunctions(statements);
+                RuntimeIO.Clear();
+                var originalIn = Console.In;
+                try
+                {
+                    if (input != null) Console.SetIn(new StringReader(input));
+                    ILGeneratorRunner.RunScript(statements);
+                    var output = RuntimeIO.Consume();
+                    return output;
+                }
+                finally
+                {
+                    Console.SetIn(originalIn);
+                }
             }
         }
 

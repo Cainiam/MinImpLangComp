@@ -31,7 +31,7 @@ namespace MinImpLangComp.CLI
                 case "repl-interp":
                     return RunInterpreterRepl();
                 default:
-                    Console.Error.WriteLine($"Unknow command '{args[0]}'.");
+                    Console.Error.WriteLine($"Unknonw command '{args[0]}'.");
                     PrintUsage();
                     return 3;
             }
@@ -52,12 +52,23 @@ namespace MinImpLangComp.CLI
             string source;
             try
             {
-                if (pathOrDash == "-") source = Console.In.ReadToEnd();
+                if (pathOrDash == "-")
+                {
+                    if (!Console.IsInputRedirected)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Blue;
+                        Console.WriteLine("Reading from stdin. Paste your program then end with:");
+                        Console.WriteLine("  - Windows : Ctrl+Z then Enter");
+                        Console.WriteLine("  - Linux/Mac : Ctrl+D");
+                        Console.ResetColor();
+                    }
+                    source = Console.In.ReadToEnd();
+                }
                 else
                 {
                     if (!pathOrDash.EndsWith(".milc", StringComparison.OrdinalIgnoreCase))
                     {
-                        Console.Error.WriteLine("Expected a  .milc file (or '-' for stdin).");
+                        Console.Error.WriteLine("Expected a .milc file (or '-' for stdin).");
                         return 4;
                     }
                     source = File.ReadAllText(pathOrDash);
@@ -70,7 +81,8 @@ namespace MinImpLangComp.CLI
             }
             try
             {
-                _ = CompilerFacade.Run(source);
+                var output = CompilerFacade.Run(source);
+                if (!string.IsNullOrEmpty(output)) Console.Write(output);
                 return 0;
             }
             catch (NotImplementedException ne)
@@ -88,7 +100,7 @@ namespace MinImpLangComp.CLI
         private static int RunRepl()
         {
             Console.ForegroundColor = ConsoleColor.Blue;
-            Console.Write("MinImpLangComp IL REPL - type 'exit' to quit.");
+            Console.WriteLine("MinImpLangComp IL REPL - type 'exit' to quit.");
             Console.ResetColor();
             while (true)
             {
@@ -99,7 +111,8 @@ namespace MinImpLangComp.CLI
                 if (line == null || line.Trim().Equals("exit", StringComparison.OrdinalIgnoreCase)) break;
                 try
                 {
-                    _ = CompilerFacade.Run(line);
+                    var output = CompilerFacade.Run(line);
+                    if (!string.IsNullOrEmpty (output)) Console.Write(output);
                 }
                 catch (Exception e)
                 {

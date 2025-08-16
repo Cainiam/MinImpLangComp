@@ -6,6 +6,7 @@ using Xunit;
 
 namespace MinImpLangComp.Tests
 {
+    [Collection("ConsoleSerial")]
     public class InterpreterTests
     {
         [Fact]

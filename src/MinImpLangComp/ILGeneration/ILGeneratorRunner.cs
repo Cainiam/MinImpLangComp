@@ -8,7 +8,20 @@ namespace MinImpLangComp.ILGeneration
 {
     public static class ILGeneratorRunner
     {
-        // Runner actuel :
+        // Runner pour CompilerFacade
+        public static void RunScript(List<Statement> statements)
+        {
+            var method = new DynamicMethod("ScriptMain", typeof(void), Type.EmptyTypes, typeof(ILGeneratorRunner).Module, true);
+            var il = method.GetILGenerator();
+            var locals = new Dictionary<string, LocalBuilder>();
+            var constants = new HashSet<string>();
+            foreach (var statement in statements) ILGeneratorUtils.GenerateIL(statement, il, locals, constants);
+            il.Emit(OpCodes.Ret);
+            var action = (Action)method.CreateDelegate(typeof(Action));
+            action();
+        }
+
+        // Runner statetement pour les test de génération IL :
         public static object? GenerateAndRunIL(List<Statement> statements)
         {
             // Set-up :
@@ -65,6 +78,7 @@ namespace MinImpLangComp.ILGeneration
                 if(result == null)
                 {
                     var output = RuntimeIO.Consume();
+                    if (!string.IsNullOrEmpty(output)) Console.Write(output.TrimEnd('\r', '\n'));
                     return output;
                 }
                 // Sinon, on retourne la valeur
@@ -77,7 +91,7 @@ namespace MinImpLangComp.ILGeneration
             }
         }
 
-        // Runner statement pour envoyer un input
+        // Runner statetement pour les test de génération IL avec simulation d'un input utilisateur
         public static object? GenerateAndRunIL(List<Statement> statements, string? input)
         {
             var originalIn = Console.In;
@@ -92,7 +106,7 @@ namespace MinImpLangComp.ILGeneration
             }
         }
 
-        // Méthode précédente maintenue pour les tests
+        // Méthode précédente de runner maintenue pour les tests d'expression
         public static object? GenerateAndRunIL(Expression expression)
         {
             // Set-up :
@@ -129,7 +143,14 @@ namespace MinImpLangComp.ILGeneration
 
             // Retour méthode :
             var del = (Func<object?>)method.CreateDelegate(typeof(Func<object?>));
-            return del();
+            var result = del();
+
+            if(result == null)
+            {
+                var output = RuntimeIO.Consume();
+                if (!string.IsNullOrEmpty(output)) Console.Write(output.TrimEnd('\r', '\n'));
+            }
+            return result;
         }
 
         public static bool ContainsFloat(Expression expression)
