@@ -5,8 +5,22 @@ using System.Text;
 
 namespace MinImpLangComp.Transpiling
 {
+    /// <summary>
+    /// Very lightweight source-to-source transpiler that emits a C# program from a MinImp AST <see cref="Block"/> (treated as a "program").
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This transpiler is intnentionnaly simple and conservative: it keeps generation rules close to the original implementation and does not attempt advanced type inference.
+    /// </para>
+    /// </remarks>
     public class Transpiler
     {
+
+        /// <summary>
+        /// Transpiles a MinImp <see cref="Block"/> into a self-contained C# Program.
+        /// </summary>
+        /// <param name="program">The AST program block.</param>
+        /// <returns>The generated C# source code.</returns>
         public string Transpile(Block program)
         {
             var sb = new StringBuilder();
@@ -30,6 +44,12 @@ namespace MinImpLangComp.Transpiling
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Transpiles a single statement into C#.
+        /// </summary>
+        /// <param name="statement"><see cref="Statement"/> to be transpiled.</param>
+        /// <returns>The generated C# source code.</returns>
+        /// <exception cref="NotImplementedException">Throws if action not implemented</exception>
         private string TranspileStatement(Statement statement)
         {
             switch (statement)
@@ -105,6 +125,12 @@ namespace MinImpLangComp.Transpiling
             }
         }
 
+        /// <summary>
+        /// Transpiles an expression into C#.
+        /// </summary>
+        /// <param name="expression"><see cref="Expression"/> to be transpiled.</param>
+        /// <returns>The generated C# source code.</returns>
+        /// <exception cref="NotImplementedException">Throws  if action not implemented.</exception>
         private string TranspileExpression(Expression expression)
         {
             switch (expression)
@@ -134,6 +160,12 @@ namespace MinImpLangComp.Transpiling
             }
         }
 
+        /// <summary>
+        /// Maps MinImp <see cref="OperatorType"/> to teh corresponding C# operator symbol.
+        /// </summary>
+        /// <param name="operatorType"><see cref="OperatorType"/> who will give its symbol.</param>
+        /// <returns>The character (symbol) of the <see cref="OperatorType"/>.</returns>
+        /// <exception cref="NotImplementedException">Throws if <see cref="OperatorType"/> doesn't exist.</exception>
         private string GetOperatorSymbol(OperatorType operatorType)
         {
             return operatorType switch
@@ -157,6 +189,12 @@ namespace MinImpLangComp.Transpiling
             };
         }
 
+        /// <summary>
+        /// Resolves a MinImp type annotation into a C# type identifier (or <c>var</c> when missing)
+        /// </summary>
+        /// <param name="annotation"><see cref="TypeAnnotation"/> to be map into a C# type identifier.</param>
+        /// <returns>The C# type identifier</returns>
+        /// <exception cref="NotImplementedException">Throws is <see cref="TypeAnnotation"/> doesn't exist.</exception>
         private string ResolveCSharpType(TypeAnnotation? annotation)
         {
             if (annotation == null) return "var";
