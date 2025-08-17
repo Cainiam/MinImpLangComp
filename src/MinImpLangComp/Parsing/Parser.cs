@@ -2,7 +2,6 @@
 using MinImpLangComp.Lexing;
 using MinImpLangComp.Exceptions;
 using System.Globalization;
-using System.Runtime.CompilerServices;
 
 namespace MinImpLangComp.Parsing
 {
