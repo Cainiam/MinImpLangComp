@@ -241,7 +241,7 @@ namespace MinImpLangComp.Lexing
         /// <summary>
         /// Scans an identifier or a reserved keyword.
         /// </summary>
-        /// <returns><see cref="TokenType.Identifier"/> when not a keywoard; otherwise the corresponding keyword token type.</returns>
+        /// <returns><see cref="TokenType.Identifier"/> when not a keyword; otherwise the corresponding keyword token type.</returns>
         private Token Identifier()
         {
             int start = _position;
