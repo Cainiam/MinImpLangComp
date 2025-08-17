@@ -2,13 +2,26 @@
 using MinImpLangComp.Runtime;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
 
 namespace MinImpLangComp.ILGeneration
 {
+    /// <summary>
+    /// Hosts dynamic-method execution paths used by the IL backend.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <see cref="RunScript(List{Statement})"/> is the execution path used by the public facade: it does <b>not</b> consume <see cref="RuntimeIO"/> and returns <c>void</c>.
+    /// </para>
+    /// <para>
+    /// The <c>GenerateAndRunIL</c> overloads are legacy/testing helpers used by unit tests: if the last evaluated statement does not produce a value, they consume the buffered output from <see cref="RuntimeIO"/> and (for convenience) also echo it to <see cref="Console.Out"/>.
+    /// </para>
+    /// </remarks>
     public static class ILGeneratorRunner
     {
-        // Runner pour CompilerFacade
+        /// <summary>
+        /// Executes a list of statements as a script body (facade code path).
+        /// </summary>
+        /// <param name="statements">The statements to emit and run.</param>
         public static void RunScript(List<Statement> statements)
         {
             var method = new DynamicMethod("ScriptMain", typeof(void), Type.EmptyTypes, typeof(ILGeneratorRunner).Module, true);
@@ -21,28 +34,33 @@ namespace MinImpLangComp.ILGeneration
             action();
         }
 
-        // Runner statetement pour les test de génération IL :
+        /// <summary>
+        /// Test helper: emits a dynamic method for a list of statements and returns either the value of the last variable/expression or the consumed <see cref="RuntimeIO"/> output (as string) when no value is produced.
+        /// </summary>
+        /// <param name="statements">The statement to generate and run.</param>
+        /// <remarks>
+        /// Also writes the consumed output to <see cref="Console.Out"/> (trimed) when returning the string branch.
+        /// </remarks>
+        /// <returns>Value of the <see cref="List{T}"/> <see cref="Statement"/> given.</returns>
         public static object? GenerateAndRunIL(List<Statement> statements)
         {
-            // Set-up :
+            // Set-up 
             Dictionary<string, MethodInfo>? fnRegistry = null;
             var method = new DynamicMethod("Eval", typeof(object), Type.EmptyTypes);
             var il = method.GetILGenerator();
-
-            // Pour set / bind :
             var locals = new Dictionary<string, LocalBuilder>();
             var constants = new HashSet<string>();
 
-            // Pour return
+            // Track last assignable variable to return
             string? lastVariableToReturn = null;
 
             try
             {
-                // On construit les fonctions et reset le buffer d'output
+                // Build functions and reset output buffer
                 fnRegistry = ILGeneratorUtils.BuildAndRegisterFunctions(statements);
                 RuntimeIO.Clear();
 
-                // Génération du corps des instructions :
+                // Emit statements
                 for (int i = 0; i < statements.Count; i++)
                 {
                     var statement = statements[i];
@@ -59,7 +77,7 @@ namespace MinImpLangComp.ILGeneration
                     }
                 }
 
-                // Emission retour
+                // Load return value if present; otherwise push null
                 if (lastVariableToReturn != null && locals.TryGetValue(lastVariableToReturn, out var local))
                 {
                     il.Emit(OpCodes.Ldloc, local);
@@ -67,31 +85,35 @@ namespace MinImpLangComp.ILGeneration
                 }
                 else il.Emit(OpCodes.Ldnull);
 
-                // Retour Emit
+                // Return
                 il.Emit(OpCodes.Ret);
 
-                // Retour méthode :
+                // Invoke
                 var del = (Func<object?>)method.CreateDelegate(typeof(Func<object?>));
                 var result = del();
 
-                // Affichage de la sortie console si rien sur la pile
+                // If null result, consume buffered output and also echo to Console (trimmed)
                 if(result == null)
                 {
                     var output = RuntimeIO.Consume();
                     if (!string.IsNullOrEmpty(output)) Console.Write(output.TrimEnd('\r', '\n'));
                     return output;
                 }
-                // Sinon, on retourne la valeur
                 return result;
             }
             finally
             {
-                // Libération du registre
+                // Ensure function registry is cleared after the run
                 ILGeneratorUtils.ClearFunctionRegistry();
             }
         }
 
-        // Runner statetement pour les test de génération IL avec simulation d'un input utilisateur
+        /// <summary>
+        /// Test helper: same as <see cref="GenerateAndRunIL(List{Statement})", but with an optional redirected stdin content./>
+        /// </summary>
+        /// <param name="statements">The statemetns to generate and run</param>
+        /// <param name="input">Emulated input from an user.</param>
+        /// <returns>Value of the <see cref="List{T}"/> <see cref="Statement"/> given.</returns>
         public static object? GenerateAndRunIL(List<Statement> statements, string? input)
         {
             var originalIn = Console.In;
@@ -106,21 +128,18 @@ namespace MinImpLangComp.ILGeneration
             }
         }
 
-        // Méthode précédente de runner maintenue pour les tests d'expression
+        /// <summary>
+        /// Test helper: emits a dynamic method for a single expression and returns its value; when the evulation yields null, consumes the <see cref="RuntimeIO"/> output and echoes it to <see cref="Console.Out"/>.
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <returns>Value of the <see cref="Expression"/> given.</returns>
         public static object? GenerateAndRunIL(Expression expression)
         {
-            // Set-up :
             var method = new DynamicMethod("Eval", typeof(object), Type.EmptyTypes);
             var il = method.GetILGenerator();
-
-            // Pour set / bind :
             var locals = new Dictionary<string, LocalBuilder>();
             var constants = new HashSet<string>();
-
-            // Génération du corps de l'expression :
             ILGeneratorUtils.GenerateIL(expression, il, locals, constants);
-
-            // Boxing du type de retour :
             switch(expression)
             {
                 case IntegerLiteral:
@@ -137,14 +156,9 @@ namespace MinImpLangComp.ILGeneration
                     else il.Emit(OpCodes.Box, typeof(int));
                     break;
             }
-
-            // Retour IL :
             il.Emit(OpCodes.Ret);
-
-            // Retour méthode :
             var del = (Func<object?>)method.CreateDelegate(typeof(Func<object?>));
             var result = del();
-
             if(result == null)
             {
                 var output = RuntimeIO.Consume();
@@ -153,6 +167,11 @@ namespace MinImpLangComp.ILGeneration
             return result;
         }
 
+        /// <summary>
+        /// Returns true if <paramref name="expression"/> contains a float literal (directly or nested) - used to box arithmetic results properly.
+        /// </summary>
+        /// <param name="expression">Expression to check if it contains a float literal</param>
+        /// <returns><c>True</c> if <see cref="Expression"/> contains a float lieral, if not <c>false</c></returns>
         public static bool ContainsFloat(Expression expression)
         {
             return expression switch
