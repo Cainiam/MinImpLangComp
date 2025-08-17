@@ -1,16 +1,32 @@
 ﻿using MinImpLangComp.AST;
 using MinImpLangComp.Lexing;
 using MinImpLangComp.Runtime;
+using System.Threading;
 using System.Reflection;
 using System.Reflection.Emit;
 
 namespace MinImpLangComp.ILGeneration
 {
+    /// <summary>
+    /// Holds loop labels used during IL emission for <c>break</c>/<c>continue</c>.
+    /// </summary>
     public class LoopContext
     {
+        /// <summary>
+        /// Target label for <c>continue</c>.
+        /// </summary>
         public Label ContinueLabel { get; }
+
+        /// <summary>
+        /// Target label for <c>break</c>.
+        /// </summary>
         public Label BreakLabel { get; }
 
+        /// <summary>
+        /// Creates a new loop context with the given labels.
+        /// </summary>
+        /// <param name="continueLabel">Label for continue.</param>
+        /// <param name="breakLabel">Label for break.</param>
         public LoopContext(Label continueLabel, Label breakLabel)
         {
             ContinueLabel = continueLabel;
@@ -18,11 +34,23 @@ namespace MinImpLangComp.ILGeneration
         }
     }
 
+    /// <summary>
+    /// Utilities to emit IL for MinImp AST nodes and to build dynamic function stubs.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Maintains a thread-local function registry so multiple runs/tests do not clash.
+    /// </para>
+    /// </remarks>
     public static class ILGeneratorUtils
     {
 
+        // Thread-local registry for compiled functions
         private static readonly ThreadLocal<Dictionary<string, MethodInfo>?> _functionRegistry = new ThreadLocal<Dictionary<string, MethodInfo>?>(() => null);
 
+        /// <summary>
+        /// Clears the thread-local function registry.
+        /// </summary>
         public static void ClearFunctionRegistry() => _functionRegistry.Value = null;
 
         private static readonly HashSet<OperatorType> BooleanOperators = new()
@@ -48,7 +76,15 @@ namespace MinImpLangComp.ILGeneration
             OperatorType.BitwiseOr
         };
 
-        // Generate IL pour expression
+        /// <summary>
+        /// Emits IL fon an <see cref="Expression"/> and leaves its value on the evaluation stack.
+        /// </summary>
+        /// <param name="expr">Expression to be IL emitted.</param>
+        /// <param name="il">ILGenerator.</param>
+        /// <param name="locals">Variables.</param>
+        /// <param name="constants">Constants.</param>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="NotSupportedException"></exception>
         public static void GenerateIL(Expression expr, ILGenerator il, Dictionary<string, LocalBuilder> locals, HashSet<string> constants)
         {
             switch (expr)
@@ -70,8 +106,9 @@ namespace MinImpLangComp.ILGeneration
                     il.Emit(OpCodes.Ldloc, local);
                     break;
                 case BinaryExpression binaryExpression:
-                    if (binaryExpression.Operator == OperatorType.AndAnd) // Cas spécifique de l'opérateur logique "&&"
+                    if (binaryExpression.Operator == OperatorType.AndAnd)
                     {
+                        // Short-circuit &&
                         Label falseLabel = il.DefineLabel();
                         Label endLabel = il.DefineLabel();
                         GenerateIL(binaryExpression.Left, il, locals, constants);
@@ -84,8 +121,9 @@ namespace MinImpLangComp.ILGeneration
                         il.Emit(OpCodes.Ldc_I4_0); // false
                         il.MarkLabel(endLabel);
                     }
-                    else if (binaryExpression.Operator == OperatorType.OrOr) // Cas spécifique de l'opérateur logique "||"
+                    else if (binaryExpression.Operator == OperatorType.OrOr)
                     {
+                        // Short-circuit ||
                         Label trueLabel = il.DefineLabel();
                         Label endLabel = il.DefineLabel();
                         GenerateIL(binaryExpression.Left, il, locals, constants);
@@ -101,6 +139,8 @@ namespace MinImpLangComp.ILGeneration
                     else
                     {
                         var targetType = GetExpressionType(binaryExpression, locals);
+
+                        // Special-case: string concatenation with +
                         if(binaryExpression.Operator == OperatorType.Plus && targetType == typeof(string))
                         {
                             GenerateIL(binaryExpression.Left, il, locals, constants);
@@ -136,6 +176,7 @@ namespace MinImpLangComp.ILGeneration
                     il.EmitCall(OpCodes.Call, typeof(Console).GetMethod("ReadLine", Type.EmptyTypes)!, null);
                     break;
                 case FunctionCall functionCall:
+                    // First, check local delegate
                     if(locals.TryGetValue(functionCall.Name, out var functionLocal))
                     {
                         var delegateType = functionLocal.LocalType;
@@ -150,6 +191,7 @@ namespace MinImpLangComp.ILGeneration
                         if (invokeMethod.ReturnType == typeof(void)) il.Emit(OpCodes.Ldnull);
                         break;
                     }
+                    // Then check compiled functions
                     if(_functionRegistry.Value != null && _functionRegistry.Value.TryGetValue(functionCall.Name, out var targetMethod))
                     {
                         var paramInfos = targetMethod.GetParameters();
@@ -165,7 +207,16 @@ namespace MinImpLangComp.ILGeneration
             }
         }
 
-        // Generate IL surchage pour statement avec variable et constante
+        /// <summary>
+        /// Emits IL for a <see cref="Statement"/>.
+        /// </summary>
+        /// <param name="stmt">Statement to be IL emits.</param>
+        /// <param name="il">IlGenerator.</param>
+        /// <param name="locals">Variables.</param>
+        /// <param name="constants">Constants.</param>
+        /// <param name="context">Context.</param>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="NotSupportedException"></exception>
         public static void GenerateIL(Statement stmt, ILGenerator il, Dictionary<string, LocalBuilder> locals, HashSet<string> constants, LoopContext? context = null)
         {
             switch (stmt)
@@ -249,6 +300,7 @@ namespace MinImpLangComp.ILGeneration
                     il.Emit(OpCodes.Br, context.ContinueLabel);
                     break;
                 case FunctionDeclaration:
+                    // Handled by BuildAndRegisterFunctions; no body emission here.
                     break;
                 case Block block:
                     foreach (var inner in block.Statements) GenerateIL(inner, il, locals, constants, context);
@@ -258,6 +310,12 @@ namespace MinImpLangComp.ILGeneration
             }
         }
 
+        /// <summary>
+        /// Emits the IL instruction corresponding to a binary operator (assuming operands are already on stack).
+        /// </summary>
+        /// <param name="oper">Operand to be IL emited.</param>
+        /// <param name="il">ILGenerator.</param>
+        /// <exception cref="NotSupportedException">Throws if binary operator is not supported.</exception>
         private static void EmitBinaryOperator(OperatorType oper, ILGenerator il)
         {
             switch (oper)
@@ -312,6 +370,14 @@ namespace MinImpLangComp.ILGeneration
             }
         }
 
+        /// <summary>
+        /// Returns the static type of an expression for IL emission purposes.
+        /// </summary>
+        /// <param name="expression">Expression to be checked.</param>
+        /// <param name="locals">Variables.</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">Throws if problem with binary operator.</exception>
+        /// <exception cref="NotSupportedException">Throws if problem with function or expression.</exception>
         private static Type GetExpressionType(Expression expression, Dictionary<string, LocalBuilder> locals)
         {
             switch(expression)
@@ -354,6 +420,14 @@ namespace MinImpLangComp.ILGeneration
             }
         }
 
+        /// <summary>
+        /// Emits an expression and converts the value to <paramref name="targetType"/> when necessary.
+        /// </summary>
+        /// <param name="expression">Expression to be IL emited.</param>
+        /// <param name="il">ILGenerator.</param>
+        /// <param name="targetType">Type for the conversion.</param>
+        /// <param name="locals">Variables.</param>
+        /// <param name="constants">Constants.</param>
         private static void GenerateILWithConversion(Expression expression, ILGenerator il, Type targetType, Dictionary<string, LocalBuilder> locals, HashSet<string> constants)
         {
             GenerateIL(expression, il, locals, constants);
@@ -383,7 +457,7 @@ namespace MinImpLangComp.ILGeneration
                     il.EmitCall(OpCodes.Call, parseBool, null);
                     return;
                 }
-                // String n'a pas besoin de conversion
+                // String -> string : no conversion
             }
 
             if (actualType == typeof(int) && targetType == typeof(double))
@@ -392,20 +466,27 @@ namespace MinImpLangComp.ILGeneration
             }
         }
 
+        /// <summary>
+        /// Builds dynamic methods for all top-level function declarations and registers them for calls.
+        /// </summary>
+        /// <param name="statements">List of statements (functions) to be build.</param>
+        /// <returns></returns>
         public static Dictionary<string, MethodInfo> BuildAndRegisterFunctions(List<Statement> statements)
         {
-            // Préparation ASM/Module/Type
+            // Prepare assembly/module/type
             var asmName = new AssemblyName("MinImpLangComp.Dynamic_" + Guid.NewGuid().ToString("N"));
             var asm = AssemblyBuilder.DefineDynamicAssembly(asmName, AssemblyBuilderAccess.Run);
             var module = asm.DefineDynamicModule(asmName.Name!);
             var typeBuilder = module.DefineType("Script" + Guid.NewGuid().ToString("N"), TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Abstract);
 
-            // MethodBuilder pour chaque FunctionDeclaration
+            // Collect function declarations
             var functionDecls = new List<FunctionDeclaration>();
             foreach (var s in statements)
                 if (s is FunctionDeclaration fd) functionDecls.Add(fd);
             var mbByName = new Dictionary<string, MethodBuilder>();
             var sigByName = new Dictionary<string, (Type Ret, Type[] Params, Dictionary<string, Type> ParamMap)>();
+
+            // Signatures (params + return) inferred from bodies
             foreach(var fd in functionDecls)
             {
                 var paramTypes = InferParameterTypes(fd);
@@ -418,14 +499,14 @@ namespace MinImpLangComp.ILGeneration
                 sigByName[fd.Name] = (retType, paramTypes, paramMap);
             }
 
-            // Corps de la fonction
+            // Bodies
             foreach(var fd in functionDecls)
             {
                 var (retType, paramTypes, paramMap) = sigByName[fd.Name];
                 EmitFunctionBody(mbByName[fd.Name], fd, retType, paramTypes, paramMap);
             }
 
-            // Finalisation + registre
+            // Build and register
             var builtType = typeBuilder.CreateType()!;
             var registry = new Dictionary<string, MethodInfo>();
             foreach (var fd in functionDecls)
@@ -437,6 +518,11 @@ namespace MinImpLangComp.ILGeneration
             return registry;
         }
 
+        /// <summary>
+        /// Naively infers parameter types from function usage (int by default).
+        /// </summary>
+        /// <param name="fd">Function decleration to be infered.</param>
+        /// <returns>Types infered.</returns>
         private static Type[] InferParameterTypes(FunctionDeclaration fd)
         {
             var types = new Type[fd.Parameters.Count];
@@ -445,6 +531,12 @@ namespace MinImpLangComp.ILGeneration
             return types;
         }
 
+        /// <summary>
+        /// Walks statements to refine parameter types.
+        /// </summary>
+        /// <param name="stmt">Statement to be walked.</param>
+        /// <param name="paramNames">List of parameters name.</param>
+        /// <param name="types">List of parameters type.</param>
         private static void InferParamTypesFromStatement(Statement stmt, List<string> paramNames, Type[] types)
         {
             switch (stmt)
@@ -482,6 +574,12 @@ namespace MinImpLangComp.ILGeneration
             }
         }
 
+        /// <summary>
+        /// Walks expression to refine parameter types.
+        /// </summary>
+        /// <param name="expr">Expression to be walked.</param>
+        /// <param name="paramNames">List of parameters name.</param>
+        /// <param name="types">Lost of paramters type.</param>
         private static void InferParamTypesFromExpression(Expression expr, List<string> paramNames, Type[] types)
         {
             switch(expr)
@@ -580,6 +678,12 @@ namespace MinImpLangComp.ILGeneration
             Touch(e);
         }
 
+        /// <summary>
+        /// Infers the return type of a function from its first return statement (defaults to void).
+        /// </summary>
+        /// <param name="fd">Function declaration to be infered.</param>
+        /// <param name="paramMap">Map of parameters type.</param>
+        /// <returns></returns>
         private static Type InferReturnType(FunctionDeclaration fd, Dictionary<string, Type> paramMap)
         {
             foreach(var st in fd.Body.Statements)
@@ -592,6 +696,12 @@ namespace MinImpLangComp.ILGeneration
             return typeof(void);
         }
 
+        /// <summary>
+        /// Infers the type of an expression within a function context.
+        /// </summary>
+        /// <param name="e">Expression to be infered.</param>
+        /// <param name="paramMap">Map of parameters type.</param>
+        /// <returns></returns>
         private static Type InferExpressionTypeForFunction(Expression e, Dictionary<string, Type> paramMap)
         {
             switch(e)
@@ -623,6 +733,14 @@ namespace MinImpLangComp.ILGeneration
             }
         }
 
+        /// <summary>
+        /// Emits the body of a compiled function
+        /// </summary>
+        /// <param name="mb">MethodBuilder.</param>
+        /// <param name="fd">FunctionDecleration to be IL emited.</param>
+        /// <param name="returnType">Return type.</param>
+        /// <param name="paramTypes">Parameters types.</param>
+        /// <param name="paramMap">Map of paramaters type.</param>
         private static void EmitFunctionBody(MethodBuilder mb, FunctionDeclaration fd, Type returnType, Type[] paramTypes, Dictionary<string, Type> paramMap)
         {
             // Set Up
@@ -630,7 +748,7 @@ namespace MinImpLangComp.ILGeneration
             var locals = new Dictionary<string, LocalBuilder>();
             var constants = new HashSet<string>();
 
-            // Copie param dans locals
+            // Copy params into local
             for(int i = 0; i < fd.Parameters.Count; i++)
             {
                 var vLocal = il.DeclareLocal(paramTypes[i]);
@@ -639,12 +757,12 @@ namespace MinImpLangComp.ILGeneration
                 il.Emit(OpCodes.Stloc, vLocal);
             }
 
-            // Label fin + retour si
+            // End label + return local if needed
             var endLabel = il.DefineLabel();
             LocalBuilder? retLocal = null;
             if(returnType != typeof(void)) retLocal = il.DeclareLocal(returnType);
             
-            // Statement du body
+            // Emit statements
             foreach(var st in fd.Body.Statements)
             {
                 if (st is ReturnStatement returnStatement)
@@ -656,12 +774,19 @@ namespace MinImpLangComp.ILGeneration
                 else GenerateIL(st, il, locals, constants, null);
             }
 
-            // Fin : retour si non void
+            // Epilogue
             il.MarkLabel(endLabel);
             if (returnType != typeof(void)) il.Emit(OpCodes.Ldloc, retLocal!);
             il.Emit(OpCodes.Ret);
         }
 
+        /// <summary>
+        /// Maps MinImp type annotation to CLR types (thorws if missing / unknown).
+        /// </summary>
+        /// <param name="annotation">TypeAnnotation who will give the system type.</param>
+        /// <returns>System type from <see cref="TypeAnnotation"/>.</returns>
+        /// <exception cref="InvalidOperationException">Throws if type is missing.</exception>
+        /// <exception cref="NotSupportedException">Throws if unknown type.</exception>
         private static Type GetSystemTypeFromAnnotation(TypeAnnotation? annotation)
         {
             if (annotation == null) throw new InvalidOperationException("Missing type annotation");
