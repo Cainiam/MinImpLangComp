@@ -5,74 +5,65 @@ using System.Globalization;
 
 namespace MinImpLangComp.Parsing
 {
+    /// <summary>
+    /// Recurvise-descent parser turning tokens into an AST.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The parser exposes granular methods to parser expressions and statements as well as a <see cref="ParseProgram"/> entry point used by the facade.
+    /// </para>
+    /// <para>
+    /// Error policy: user-facing syntax errors raise <see cref="ParsingException"/>.
+    /// </para>
+    /// </remarks>
     public class Parser
     {
         private readonly Lexer _lexer;
         private Token _currentToken;
-        public bool IsAtEnd => _currentToken.Type == TokenType.EOF; // Pour CompilerFacade
 
+        /// <summary>
+        /// Indicates whether the current lookahead token is EOF. Used by facade.
+        /// </summary>
+        public bool IsAtEnd => _currentToken.Type == TokenType.EOF;
+
+        /// <summary>
+        /// Initializes a new parser over a given lexer
+        /// </summary>
+        /// <param name="lexer">Given lexer to parse.</param>
         public Parser(Lexer lexer)
         {
             _lexer = lexer;
             _currentToken = _lexer.GetNextToken();
         }
 
+        /// <summary>
+        /// Consumes a toekn of the expetected <paramref name="type"/> or throws a <see cref="ParsingException"/>.
+        /// </summary>
+        /// <param name="type">Expected <paramref name="type"/></param>
+        /// <exception cref="ParsingException">If type doesn't match</exception>
         private void Eat(TokenType type)
         {
             if (_currentToken.Type == type) _currentToken = _lexer.GetNextToken();
             else throw new ParsingException($"Unexpected token: {_currentToken.Type}, expected: {type}");
         }
 
+        /// <summary>
+        /// Returns the current token type without consuming.
+        /// </summary>
+        private TokenType CurrentType => _currentToken.Type;
+
+        /// <summary>
+        /// Parses an expression with precedence: additive/relationnal/logical over multiplicative.
+        /// </summary>
+        /// <returns></returns>
         public Expression ParseExpression()
         {
             var left = ParseTerm();
-            while (_currentToken.Type == TokenType.Plus || _currentToken.Type == TokenType.Minus || _currentToken.Type == TokenType.Less 
-                || _currentToken.Type == TokenType.Greater || _currentToken.Type == TokenType.LessEqual || _currentToken.Type == TokenType.GreaterEqual 
-                || _currentToken.Type == TokenType.Equalequal || _currentToken.Type == TokenType.NotEqual || _currentToken.Type == TokenType.AndAnd 
-                || _currentToken.Type == TokenType.OrOr || _currentToken.Type == TokenType.BitwiseAnd || _currentToken.Type == TokenType.BitwiseOr)
+
+            // +, -,<, >, <=, >=, ==, !=, &&, ||, &, |
+            while (TryMapAddRelLogicOperator(CurrentType, out var oper))
             {
-                OperatorType oper;
-                switch(_currentToken.Type)
-                {
-                    case TokenType.Plus:
-                        oper = OperatorType.Plus;
-                        break;
-                    case TokenType.Minus:
-                        oper = OperatorType.Minus;
-                        break;
-                    case TokenType.Less:
-                        oper = OperatorType.Less;
-                        break;
-                    case TokenType.Greater:
-                        oper = OperatorType.Greater;
-                        break;
-                    case TokenType.LessEqual:
-                        oper = OperatorType.LessEqual;
-                        break;
-                    case TokenType.GreaterEqual:
-                        oper = OperatorType.GreaterEqual;
-                        break;
-                    case TokenType.Equalequal:
-                        oper = OperatorType.Equalequal;
-                        break;
-                    case TokenType.NotEqual:
-                        oper = OperatorType.NotEqual;
-                        break;
-                    case TokenType.AndAnd:
-                        oper = OperatorType.AndAnd;
-                        break;
-                    case TokenType.OrOr:
-                        oper = OperatorType.OrOr;
-                        break;
-                    case TokenType.BitwiseAnd:
-                        oper = OperatorType.BitwiseAnd;
-                        break;
-                    case TokenType.BitwiseOr:
-                        oper = OperatorType.BitwiseOr;
-                        break;
-                    default:
-                        throw new ParsingException($"Unexpected operator token: {_currentToken.Type}");
-                }
+
                 Eat(_currentToken.Type);
                 var right = ParseTerm();
                 left = new BinaryExpression(left, oper, right);
@@ -80,26 +71,15 @@ namespace MinImpLangComp.Parsing
             return left;
         }
 
+        /// <summary>
+        /// Parse multiplicative expressions: *, /, %.
+        /// </summary>
+        /// <returns><see cref="Expression"/></returns>
         private Expression ParseTerm()
         {
             var left = ParseFactor();
-            while(_currentToken.Type == TokenType.Multiply || _currentToken.Type == TokenType.Divide || _currentToken.Type == TokenType.Modulo)
+            while(TryMapMulOperator(CurrentType, out var oper))
             {
-                OperatorType oper;
-                switch(_currentToken.Type)
-                {
-                    case TokenType.Multiply:
-                        oper = OperatorType.Multiply;
-                        break;
-                    case TokenType.Divide:
-                        oper = OperatorType.Divide;
-                        break;
-                    case TokenType.Modulo:
-                        oper = OperatorType.Modulo;
-                        break;
-                    default:
-                        throw new ParsingException($"Unexpected operator token: {_currentToken.Type}");
-                }
                 Eat(_currentToken.Type);
                 var right = ParseFactor();
                 left = new BinaryExpression(left, oper, right);
@@ -107,41 +87,47 @@ namespace MinImpLangComp.Parsing
             return left;
         }
 
+
+        /// <summary>
+        /// Parses literals, grouped expressions, array, identifier, booleans, null and unary not.
+        /// </summary>
+        /// <returns><see cref="Expression"/>.</returns>
+        /// <exception cref="ParsingException">Unexpected token.</exception>
         private Expression ParseFactor()
         {
-            if (_currentToken.Type == TokenType.Integer)
+            if (CurrentType == TokenType.Integer)
             {
                 int value = int.Parse(_currentToken.Value);
                 Eat(TokenType.Integer);
                 return new IntegerLiteral(value);
             }
-            else if(_currentToken.Type == TokenType.Float)
+            else if(CurrentType == TokenType.Float)
             {
                 double value = double.Parse(_currentToken.Value, CultureInfo.InvariantCulture);
                 Eat(TokenType.Float);
                 return new FloatLiteral(value);
             }
-            else if (_currentToken.Type == TokenType.StringLiteral)
+            else if (CurrentType == TokenType.StringLiteral)
             {
                 string value = _currentToken.Value;
                 Eat(TokenType.StringLiteral);
                 return new StringLiteral(value);
             }
-            else if (_currentToken.Type == TokenType.LeftParen)
+            else if (CurrentType == TokenType.LeftParen)
             {
                 Eat(TokenType.LeftParen);
                 var expr = ParseExpression();
                 Eat(TokenType.RightParen);
                 return expr;
             }
-            else if (_currentToken.Type == TokenType.LeftBracket)
+            else if (CurrentType == TokenType.LeftBracket)
             {
                 Eat(TokenType.LeftBracket);
-                List<Expression> elements = new List<Expression>();
-                if (_currentToken.Type != TokenType.RightBracket)
+                var elements = new List<Expression>();
+                if (CurrentType != TokenType.RightBracket)
                 {
                     elements.Add(ParseExpression());
-                    while(_currentToken.Type == TokenType.Comma)
+                    while(CurrentType == TokenType.Comma)
                     {
                         Eat(TokenType.Comma);
                         elements.Add(ParseExpression());
@@ -154,23 +140,14 @@ namespace MinImpLangComp.Parsing
             {
                 string name = _currentToken.Value;
                 Eat(TokenType.Identifier);
-                if (_currentToken.Type == TokenType.LeftParen)
+                if (CurrentType == TokenType.LeftParen)
                 {
                     Eat(TokenType.LeftParen);
-                    List<Expression> arguments = new List<Expression>();
-                    if (_currentToken.Type != TokenType.RightParen)
-                    {
-                        arguments.Add(ParseExpression());
-                        while (_currentToken.Type == TokenType.Comma)
-                        {
-                            Eat(TokenType.Comma);
-                            arguments.Add(ParseExpression());
-                        }
-                    }
+                    var arguments = ParseArgumentList();
                     Eat(TokenType.RightParen);
                     return new FunctionCall(name, arguments);
                 }
-                else if (_currentToken.Type == TokenType.LeftBracket)
+                else if (CurrentType == TokenType.LeftBracket)
                 {
                     Eat(TokenType.LeftBracket);
                     var indexExpr = ParseExpression();
@@ -179,22 +156,22 @@ namespace MinImpLangComp.Parsing
                 }
                 else return new VariableReference(name);
             }
-            else if (_currentToken.Type == TokenType.True)
+            else if (CurrentType == TokenType.True)
             {
                 Eat(TokenType.True);
                 return new BooleanLiteral(true);
             }
-            else if (_currentToken.Type == TokenType.False)
+            else if (CurrentType == TokenType.False)
             {
                 Eat(TokenType.False);
                 return new BooleanLiteral(false);
             }
-            else if(_currentToken.Type == TokenType.Null)
+            else if(CurrentType == TokenType.Null)
             {
                 Eat(TokenType.Null);
                 return new NullLiteral();
             }
-            else if (_currentToken.Type == TokenType.Not)
+            else if (CurrentType == TokenType.Not)
             {
                 Eat(TokenType.Not);
                 var operand = ParseFactor();
@@ -203,32 +180,37 @@ namespace MinImpLangComp.Parsing
             else throw new ParsingException($"Unexpected token; {_currentToken.Type}");
         }
 
+        /// <summary>
+        /// Parses a single statement (declarations, control-flow, expression statements, ...)
+        /// </summary>
+        /// <returns><see cref="Statement"/>.</returns>
+        /// <exception cref="ParsingException">No identifier.</exception>
         public Statement ParseStatement()
         {
-            if (_currentToken.Type == TokenType.Set) return ParseVariableDeclaration();
-            else if (_currentToken.Type == TokenType.Bind) return ParseConstantDeclaration();
-            else if (_currentToken.Type == TokenType.Break)
+            if (CurrentType == TokenType.Set) return ParseVariableDeclaration();
+            else if (CurrentType == TokenType.Bind) return ParseConstantDeclaration();
+            else if (CurrentType == TokenType.Break)
             {
                 Eat(TokenType.Break);
                 Eat(TokenType.Semicolon);
                 return new BreakStatement();
             }
-            else if (_currentToken.Type == TokenType.Continue)
+            else if (CurrentType == TokenType.Continue)
             {
                 Eat(TokenType.Continue);
                 Eat(TokenType.Semicolon);
                 return new ContinueStatement();
             }
-            else if (_currentToken.Type == TokenType.Identifier)
+            else if (CurrentType == TokenType.Identifier)
             {
                 string identifier = _currentToken.Value;
                 Eat(TokenType.Identifier);
-                if (_currentToken.Type == TokenType.LeftBracket)
+                if (CurrentType == TokenType.LeftBracket)
                 {
                     Eat(TokenType.LeftBracket);
                     var indexEpr = ParseExpression();
                     Eat(TokenType.RightBracket);
-                    if (_currentToken.Type == TokenType.Assign)
+                    if (CurrentType == TokenType.Assign)
                     {
                         Eat(TokenType.Assign);
                         var valueExpr = ParseExpression();
@@ -241,24 +223,15 @@ namespace MinImpLangComp.Parsing
                         return new ExpressionStatement(new ArrayAccess(identifier, indexEpr));
                     }
                 }
-                else if (_currentToken.Type == TokenType.LeftParen)
+                else if (CurrentType == TokenType.LeftParen)
                 {
                     Eat(TokenType.LeftParen);
-                    List<Expression> arguments = new List<Expression>();
-                    if (_currentToken.Type != TokenType.RightParen)
-                    {
-                        arguments.Add(ParseExpression());
-                        while (_currentToken.Type == TokenType.Comma)
-                        {
-                            Eat(TokenType.Comma);
-                            arguments.Add(ParseExpression());
-                        }
-                    }
+                    var arguments = ParseArgumentList();
                     Eat(TokenType.RightParen);
                     Eat(TokenType.Semicolon);
                     return new ExpressionStatement(new FunctionCall(identifier, arguments));
                 }
-                else if (_currentToken.Type == TokenType.Assign)
+                else if (CurrentType == TokenType.Assign)
                 {
                     Eat(TokenType.Assign);
                     var expr = ParseExpression();
@@ -272,22 +245,22 @@ namespace MinImpLangComp.Parsing
                     return new ExpressionStatement(expr);
                 }
             }
-            else if (_currentToken.Type == TokenType.LeftBrace) return ParseBlock();
-            else if (_currentToken.Type == TokenType.If) return ParseIfStatement();
-            else if (_currentToken.Type == TokenType.While) return ParseWhileStatement();
-            else if (_currentToken.Type == TokenType.For) return ParseForStatement();
-            else if (_currentToken.Type == TokenType.PlusPlus || _currentToken.Type == TokenType.MinusMinus)
+            else if (CurrentType == TokenType.LeftBrace) return ParseBlock();
+            else if (CurrentType == TokenType.If) return ParseIfStatement();
+            else if (CurrentType == TokenType.While) return ParseWhileStatement();
+            else if (CurrentType == TokenType.For) return ParseForStatement();
+            else if (CurrentType == TokenType.PlusPlus || CurrentType == TokenType.MinusMinus)
             {
                 OperatorType oper = _currentToken.Type == TokenType.PlusPlus ? OperatorType.PlusPlus : OperatorType.MinusMinus;
-                Eat(_currentToken.Type);
-                if (_currentToken.Type != TokenType.Identifier) throw new ParsingException($"Expected identifier after {oper}");
+                Eat(CurrentType);
+                if (CurrentType != TokenType.Identifier) throw new ParsingException($"Expected identifier after {oper}");
                 string identifier = _currentToken.Value;
                 Eat(TokenType.Identifier);
                 Eat(TokenType.Semicolon);
                 return new ExpressionStatement(new UnaryExpression(oper, identifier));
             }
-            else if (_currentToken.Type == TokenType.Function) return ParseFunctionDeclaration();
-            else if (_currentToken.Type == TokenType.Return) return ParseReturnStatement();
+            else if (CurrentType == TokenType.Function) return ParseFunctionDeclaration();
+            else if (CurrentType == TokenType.Return) return ParseReturnStatement();
             else
             {
                 var expr = ParseExpression();
@@ -296,11 +269,15 @@ namespace MinImpLangComp.Parsing
             }
         }
 
+        /// <summary>
+        /// Parses a block delimited by braces, containing zero or more statements.
+        /// </summary>
+        /// <returns><see cref="Block"/>.</returns>
         public Block ParseBlock()
         {
             Eat(TokenType.LeftBrace);
-            List<Statement> statements = new List<Statement>();
-            while(_currentToken.Type != TokenType.RightBrace && _currentToken.Type != TokenType.EOF)
+            var statements = new List<Statement>();
+            while(CurrentType != TokenType.RightBrace && CurrentType != TokenType.EOF)
             {
                 statements.Add(ParseStatement());
             }
@@ -308,6 +285,10 @@ namespace MinImpLangComp.Parsing
             return new Block(statements);
         }
 
+        /// <summary>
+        /// Parses an if/else statement.
+        /// </summary>
+        /// <returns><see cref="Statement"/>.</returns>
         public Statement ParseIfStatement()
         {
             Eat(TokenType.If);
@@ -316,7 +297,7 @@ namespace MinImpLangComp.Parsing
             Eat(TokenType.RightParen);
             var thenBranch = ParseStatement();
             Statement? elseBranch = null;
-            if(_currentToken.Type == TokenType.Else)
+            if(CurrentType == TokenType.Else)
             {
                 Eat(TokenType.Else);
                 elseBranch = ParseStatement();
@@ -324,6 +305,10 @@ namespace MinImpLangComp.Parsing
             return new IfStatement(condition, thenBranch, elseBranch);
         }
 
+        /// <summary>
+        /// Parses a while-loop.
+        /// </summary>
+        /// <returns><see cref="Statement"/>.</returns>
         public Statement ParseWhileStatement()
         {
             Eat(TokenType.While);
@@ -334,24 +319,28 @@ namespace MinImpLangComp.Parsing
             return new WhileStatement(condition, body);
         }
 
+        /// <summary>
+        /// Parses a for-loop with optional initializer/condition/increment segments.
+        /// </summary>
+        /// <returns><see cref="Statement"/>.</returns>
         public Statement ParseForStatement()
         {
             Eat(TokenType.For);
             Eat(TokenType.LeftParen);
             Statement? initializer;
-            if (_currentToken.Type != TokenType.Semicolon) initializer = ParseStatement();
+            if (CurrentType != TokenType.Semicolon) initializer = ParseStatement();
             else
             {
                 initializer = null;
                 Eat(TokenType.Semicolon);
             }
             Expression? condition = null;
-            if (_currentToken.Type != TokenType.Semicolon) condition = ParseExpression();
+            if (CurrentType != TokenType.Semicolon) condition = ParseExpression();
             Eat(TokenType.Semicolon);
             Statement? increment = null;
-            if (_currentToken.Type != TokenType.RightParen)
+            if (CurrentType != TokenType.RightParen)
             {
-                if (_currentToken.Type == TokenType.Identifier)
+                if (CurrentType == TokenType.Identifier)
                 {
                     string identifier = _currentToken.Value;
                     Eat(TokenType.Identifier);
@@ -366,18 +355,22 @@ namespace MinImpLangComp.Parsing
             return new ForStatement(initializer, condition, increment, body);
         }
 
+        /// <summary>
+        /// Parses a function declaration with a parameter list and a block body.
+        /// </summary>
+        /// <returns><see cref="FunctionDeclaration"/>.</returns>
         private FunctionDeclaration ParseFunctionDeclaration()
         {
             Eat(TokenType.Function);
             string functionName = _currentToken.Value;
             Eat(TokenType.Identifier);
             Eat(TokenType.LeftParen);
-            List<string> parameters = new List<string>();
-            if(_currentToken.Type != TokenType.RightParen)
+            var parameters = new List<string>();
+            if(CurrentType != TokenType.RightParen)
             {
                 parameters.Add(_currentToken.Value);
                 Eat(TokenType.Identifier);
-                while(_currentToken.Type == TokenType.Comma)
+                while(CurrentType == TokenType.Comma)
                 {
                     Eat(TokenType.Comma);
                     parameters.Add(_currentToken.Value);
@@ -389,6 +382,10 @@ namespace MinImpLangComp.Parsing
             return new FunctionDeclaration(functionName, parameters, body);
         }
 
+        /// <summary>
+        /// Parses a return statement with an expression.
+        /// </summary>
+        /// <returns><see cref="ReturnStatement"/>.</returns>
         private ReturnStatement ParseReturnStatement()
         {
             Eat(TokenType.Return);
@@ -397,10 +394,15 @@ namespace MinImpLangComp.Parsing
             return new ReturnStatement(expr);
         }
 
+        /// <summary>
+        /// Parses a variable declaration (set &lt;id&gt; [:type] = expr;).
+        /// </summary>
+        /// <returns><see cref="Statement"/>.</returns>
+        /// <exception cref="ParsingException">Identifier needed after 'set'.</exception>
         private Statement ParseVariableDeclaration()
         {
             Eat(TokenType.Set);
-            if (_currentToken.Type != TokenType.Identifier) throw new ParsingException("Expected identifier after 'set'");
+            if (CurrentType != TokenType.Identifier) throw new ParsingException("Expected identifier after 'set'");
             string variableName = _currentToken.Value;
             Eat(TokenType.Identifier);
             var typeAnnotation = ParseOptionalTypeAnnotation();
@@ -410,10 +412,15 @@ namespace MinImpLangComp.Parsing
             return new VariableDeclaration(variableName, value, typeAnnotation);
         }
 
+        /// <summary>
+        /// Parses a constant declaration (bind &lt;id&gt; [:type] = expr;)
+        /// </summary>
+        /// <returns><see cref="Statement"/>.</returns>
+        /// <exception cref="ParsingException">Identifier needed after 'bind'.</exception>
         private Statement ParseConstantDeclaration()
         {
             Eat(TokenType.Bind);
-            if (_currentToken.Type != TokenType.Identifier) throw new ParsingException("Expected identifier after 'bind'");
+            if (CurrentType != TokenType.Identifier) throw new ParsingException("Expected identifier after 'bind'");
             string constantName = _currentToken.Value;
             Eat(TokenType.Identifier);
             var typeAnnotation = ParseOptionalTypeAnnotation();
@@ -423,12 +430,17 @@ namespace MinImpLangComp.Parsing
             return new ConstantDeclaration(constantName, value, typeAnnotation);
         }
 
+        /// <summary>
+        /// Parses an optional type annotation (<c>: int|float|bool|string</c>).
+        /// </summary>
+        /// <returns><see cref="TypeAnnotation"/></returns>
+        /// <exception cref="ParsingException">Unexpected token given.</exception>
         private TypeAnnotation? ParseOptionalTypeAnnotation()
         {
-            if (_currentToken.Type == TokenType.Colon)
+            if (CurrentType == TokenType.Colon)
             {
                 Eat(TokenType.Colon);
-                switch(_currentToken.Type)
+                switch(CurrentType)
                 {
                     case TokenType.TypeInt:
                         Eat(TokenType.TypeInt);
@@ -449,7 +461,10 @@ namespace MinImpLangComp.Parsing
             return null;
         }
 
-        // Pour CompilerFacade
+        /// <summary>
+        /// Parses an entire program until EOF (used by the facade).
+        /// </summary>
+        /// <returns><see cref="List{T}"/> of <see cref="Statement"/>.</returns>
         public List<Statement> ParseProgram()
         {
             var statements = new List<Statement>();
@@ -458,6 +473,106 @@ namespace MinImpLangComp.Parsing
                 statements.Add(ParseStatement());
             }
             return statements;
+        }
+
+        // =============================================================================================================
+        // HELPER :
+        // =============================================================================================================
+
+        /// <summary>
+        /// Parses a comma-separated argument list (possibly empty) ending whi RightParen. Caller must have consumed the LeftParen.
+        /// </summary>
+        /// <returns><see cref="List{T}"/> of <see cref="Expression"/>.</returns>
+        private List<Expression> ParseArgumentList()
+        {
+            var args = new List<Expression>();
+            if(CurrentType != TokenType.RightParen)
+            {
+                args.Add(ParseExpression());
+                while(CurrentType == TokenType.Comma)
+                {
+                    Eat(TokenType.Comma);
+                    args.Add(ParseExpression());
+                }
+            }
+            return args;
+        }
+
+        /// <summary>
+        /// Maps additive/relational/logical/bitwise tokens to <see cref="OperatorType"/>.
+        /// </summary>
+        /// <param name="t">A TokenType</param>
+        /// <param name="oper">Out value</param>
+        /// <returns><see cref="bool"/> true if known logic operator, if not false.</returns>
+        private static bool TryMapAddRelLogicOperator(TokenType t, out OperatorType oper)
+        {
+            switch(t)
+            {
+                case TokenType.Plus:
+                    oper = OperatorType.Plus;
+                    return true;
+                case TokenType.Minus:
+                    oper = OperatorType.Minus;
+                    return true;
+                case TokenType.Less:
+                    oper = OperatorType.Less;
+                    return true;
+                case TokenType.Greater:
+                    oper = OperatorType.Greater;
+                    return true;
+                case TokenType.LessEqual:
+                    oper = OperatorType.LessEqual;
+                    return true;
+                case TokenType.GreaterEqual:
+                    oper = OperatorType.GreaterEqual;
+                    return true;
+                case TokenType.Equalequal:
+                    oper = OperatorType.Equalequal;
+                    return true;
+                case TokenType.NotEqual:
+                    oper = OperatorType.NotEqual;
+                    return true;
+                case TokenType.AndAnd:
+                    oper = OperatorType.AndAnd;
+                    return true;
+                case TokenType.OrOr:
+                    oper = OperatorType.OrOr;
+                    return true;
+                case TokenType.BitwiseAnd:
+                    oper = OperatorType.BitwiseAnd;
+                    return true;
+                case TokenType.BitwiseOr:
+                    oper = OperatorType.BitwiseOr;
+                    return true;
+                default:
+                    oper = default;
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Maps multiplicative tokens to <see cref="OperatorType"/>.
+        /// </summary>
+        /// <param name="t">A TokenType</param>
+        /// <param name="oper">Out value</param>
+        /// <returns><see cref="bool"/> true if known multiplicative token, false if not.</returns>
+        private static bool TryMapMulOperator(TokenType t, out OperatorType oper)
+        {
+            switch(t)
+            {
+                case TokenType.Multiply:
+                    oper = OperatorType.Multiply;
+                    return true;
+                case TokenType.Divide:
+                    oper = OperatorType.Divide;
+                    return true;
+                case TokenType.Modulo:
+                    oper = OperatorType.Modulo;
+                    return true;
+                default:
+                    oper = default;
+                    return false;
+            }
         }
     }
 }

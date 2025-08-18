@@ -5,13 +5,24 @@ using Xunit;
 
 namespace MinImpLangComp.Tests
 {
+    /// <summary>
+    /// Parser statement tests: covers variable declarations, empty blocks, and blocks with multiple statements.
+    /// </summary>
     public class ParserStatementTests
     {
+        /// <summary>
+        /// Small helper that wires a <see cref="Parser"/> to a <see cref="Lexer"/> from source text.
+        /// </summary>
+        private static Parser MakeParser(string source) => new Parser(new Lexer(source));
+
+        /// <summary>
+        /// Parses a simple variable declaration with an infix expression on the right-hand side.
+        /// Input: <c>setx = 1 + 2;</c>
+        /// </summary>
         [Fact]
         public void ParseStatement_Assignment_ReturnsAssignmentNode()
         {
-            var lexer = new Lexer("set x = 1 + 2;");
-            var parser = new Parser(lexer);
+            var parser = MakeParser("set x = 1 + 2;");
             var statement = parser.ParseStatement();
 
             var assignment = Assert.IsType<VariableDeclaration>(statement);
@@ -24,16 +35,27 @@ namespace MinImpLangComp.Tests
             Assert.Equal(2, right.Value);
         }
 
+        /// <summary>
+        /// Parses an empty block <c>{ }</c> and verifies it contains no statements.
+        /// </summary>
         [Fact]
         public void ParseStatement_BlockEmpty_ReturnsBlockNode()
         {
-            var lexer = new Lexer("{ }");
-            var parser = new Parser(lexer);
+            var parser = MakeParser("{ }");
             var block = parser.ParseBlock();
 
             Assert.Empty(block.Statements);
         }
 
+        /// <summary>
+        /// Parses a block with two statements and validates their structure.
+        /// <code>
+        /// {
+        ///     set a = 1;
+        ///     set b = a + 2;
+        /// }
+        /// </code>
+        /// </summary>
         [Fact]
         public void ParseStatement_BlockWithMultipleStatements_ReturnsBlockNodewithStatements()
         {
@@ -43,8 +65,7 @@ namespace MinImpLangComp.Tests
                         set b = a + 2; 
                     }                
                 ";
-            var lexer = new Lexer(input);
-            var parser = new Parser(lexer);
+            var parser = MakeParser(input);
             var block = parser.ParseBlock();
 
             Assert.Equal(2, block.Statements.Count);

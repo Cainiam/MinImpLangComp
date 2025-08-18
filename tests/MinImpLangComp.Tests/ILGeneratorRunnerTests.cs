@@ -2,12 +2,41 @@
 using MinImpLangComp.Lexing;
 using MinImpLangComp.ILGeneration;
 using System.Globalization;
+using Xunit;
 
 namespace MinImpLangComp.Tests
 {
+    /// <summary>
+    /// Tests that validate IL generation and execution behavior for expressions and statements.
+    /// </summary>
+    [Collection("ConsoleSerial")]
     public class ILGeneratorRunnerTests
     {
+        #region Helper
+        /// <summary>
+        /// Captures <see cref="Console.Out"/> while executing provided action and returns the trimmed output.
+        /// </summary>
+        private string CaptureConsole(Action action) // Utilitaire
+        {
+            var originalOut = Console.Out;
+            var writer = new StringWriter();
+            try
+            {
+                Console.SetOut(writer);
+                action();
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+            }
+            return writer.ToString().Trim();
+        }
+        #endregion
+
         #region issue13
+        /// <summary>
+        /// 42 should evaluate 42.
+        /// </summary>
         [Fact]
         public void Should_Evaluate_IntegerLiteral_Correctly()
         {
@@ -17,6 +46,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(42, result);
         }
 
+        /// <summary>
+        /// 3.14 should evaluate near 3.14 as double.
+        /// </summary>
         [Fact]
         public void Should_Evaluate_FloatLiteral_Correctly()
         {
@@ -25,7 +57,10 @@ namespace MinImpLangComp.Tests
 
             Assert.True(result is double d && d >= 3.139 && d <= 3.141);
         }
-
+        
+        /// <summary>
+        /// 7 + 5 = 12.
+        /// </summary>
         [Fact]
         public void Should_Evaluate_Plus_Correctly()
         {
@@ -39,6 +74,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(12, result);
         }
 
+        /// <summary>
+        /// 10 - 4 = 6.
+        /// </summary>
         [Fact]
         public void Should_Evaluate_Minus_Correctly()
         {
@@ -52,6 +90,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(6, result);
         }
 
+        /// <summary>
+        /// 3 * 6 = 18.
+        /// </summary>
         [Fact]
         public void Should_Evaluate_Multiply_Correctly()
         {
@@ -65,6 +106,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(18, result);
         }
 
+        /// <summary>
+        /// 12 / 3 = 4.
+        /// </summary>
         [Fact]
         public void Should_Evaluate_Divide_Correctly()
         {
@@ -78,6 +122,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(4, result);
         }
 
+        /// <summary>
+        /// 10 % 3 = 1.
+        /// </summary>
         [Fact]
         public void Should_Evaluate_Module_Correctly()
         {
@@ -91,6 +138,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(1, result);
         }
 
+        /// <summary>
+        /// Equality returns 1 for true, 0 for false (int semantics).
+        /// </summary>
         [Fact]
         public void Should_Evaluate_EqualEqual_Correctly()
         {
@@ -113,6 +163,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(0, result);
         }
 
+        /// <summary>
+        /// Inequality returns 1 for true.
+        /// </summary>
         [Fact]
         public void Should_Evaluate_NotEqual_Correctly()
         {
@@ -126,6 +179,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(1, result);
         }
 
+        /// <summary>
+        /// 2 &lt; 10 -> 1.
+        /// </summary>
         [Fact]
         public void Should_Evaluate_Less_Correctly()
         {
@@ -139,6 +195,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(1, result);
         }
 
+        /// <summary>
+        /// 7 &lt;= 7 -> 1.
+        /// </summary>
         [Fact]
         public void Should_Evaluate_LessEqual_Correctly()
         {
@@ -152,6 +211,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(1, result);
         }
 
+        /// <summary>
+        /// 10 &gt; 3 -> 1.
+        /// </summary>
         [Fact]
         public void Should_Evaluate_Greater_Correctly()
         {
@@ -165,6 +227,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(1, result);
         }
 
+        /// <summary>
+        /// 8 &gt;= 8 -> 1.
+        /// </summary>
         [Fact]
         public void Should_Evaluate_GreaterEqual_Correctly()
         {
@@ -178,8 +243,11 @@ namespace MinImpLangComp.Tests
             Assert.Equal(1, result);
         }
 
+        /// <summary>
+        /// Bitwise AND: 6 &amp; 3 = 2.
+        /// </summary>
         [Fact]
-        public void Should_Evaluate_BitiwseAnd_Correctly()
+        public void Should_Evaluate_BitwiseAnd_Correctly()
         {
             var expr = new BinaryExpression(
                 new IntegerLiteral(6), // 110
@@ -191,6 +259,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(2, result); // 110 & 011 = 010
         }
 
+        /// <summary>
+        /// Bitwise OR: 6 | 3 = 7.
+        /// </summary>
         [Fact]
         public void Should_Evaluate_BitwiseOr_Correctly()
         {
@@ -204,6 +275,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(7, result); // 110 | 011 = 111
         }
 
+        /// <summary>
+        /// Logical AND (short-circuit) with integer 0/1 semantics.
+        /// </summary>
         [Fact]
         public void Should_Evaluate_LogicalAnd_Correctly()
         {
@@ -226,6 +300,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(1, result);
         }
 
+        /// <summary>
+        /// Logical OR (short-circuit) with integer 0/1 semantics.
+        /// </summary>
         [Fact]
         public void Should_Evaluate_LogicalOr_Correctly()
         {
@@ -248,6 +325,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(1, result);
         }
 
+        /// <summary>
+        /// Operator precedence: 1 + 2 * 3 = 7.
+        /// </summary>
         [Fact]
         public void Should_Respect_OperatorPrecedence()
         {
@@ -265,6 +345,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(7, result);
         }
 
+        /// <summary>
+        /// Parantheses grouping: (1 + 2) * 3 = 9.
+        /// </summary>
         [Fact]
         public void Should_Respect_ParenthesizedGrouping()
         {
@@ -282,6 +365,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(9, result);
         }
 
+        /// <summary>
+        /// Left associativity : (10 - 3) - 2 = 5.
+        /// </summary>
         [Fact]
         public void Should_Respect_LeftAssociativity()
         {
@@ -299,6 +385,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(5, result);
         }
 
+        /// <summary>
+        /// Complex logical AND expression returns 1.
+        /// </summary>
         [Fact]
         public void Should_Evaluate_LogicalAnd_Complex()
         {
@@ -321,6 +410,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(1, result);
         }
 
+        /// <summary>
+        /// Complex logical OR expression returns 1.
+        /// </summary>
         [Fact]
         public void Should_Evaluate_LogicalOr_Complex()
         {
@@ -343,6 +435,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(1, result);
         }
 
+        /// <summary>
+        /// print(123) writes "123" (capture from Console.Out).
+        /// </summary>
         [Fact]
         public void Should_Print_IntegerLiteral()
         {
@@ -358,6 +453,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("123", output);
         }
 
+        /// <summary>
+        /// Print(42, 3.14) writes two lines.
+        /// </summary>
         [Fact]
         public void Should_Print_MultipleValues()
         {
@@ -386,6 +484,9 @@ namespace MinImpLangComp.Tests
             }
         }
 
+        /// <summary>
+        /// print(1 + 2) -> "3".
+        /// </summary>
         [Fact]
         public void Should_Print_SimpleAddition()
         {
@@ -405,6 +506,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("3", output);
         }
 
+        /// <summary>
+        /// print (10 / 4.0) respects invariant culture -> "2.5".
+        /// </summary>
         [Fact]
         public void Should_Print_FloatDivision()
         {
@@ -435,6 +539,9 @@ namespace MinImpLangComp.Tests
             }
         }
 
+        /// <summary>
+        /// print((2 + 3) * 4) -> "20".
+        /// </summary>
         [Fact]
         public void Should_Print_ParenthesizedExpression()
         {
@@ -460,24 +567,10 @@ namespace MinImpLangComp.Tests
 
 
         /////// ILGeneratorRunner.cs with statements here : //////
-        
-        private string CaptureConsole(Action action) // Utilitaire
-        {
-            var originalOut = Console.Out;
-            var writer = new StringWriter();            
-            try
-            {
-                Console.SetOut(writer);
-                action();
-            }
-            finally
-            {
-                Console.SetOut(originalOut);
-            }
-            return writer.ToString().Trim();
-        }
 
-
+        /// <summary>
+        /// bind x:int = 123; should not throw.
+        /// </summary>
         [Fact]
         public void Bind_IntegerLiteral_DoesNotThrow()
         {
@@ -490,6 +583,9 @@ namespace MinImpLangComp.Tests
             Assert.Null(exception);
         }
 
+        /// <summary>
+        /// set y:int = 10 +5; should not throw.
+        /// </summary>
         [Fact]
         public void Set_SimpleBinaryAddition_DoesNotThrow()
         {
@@ -508,6 +604,9 @@ namespace MinImpLangComp.Tests
             Assert.Null(exception);
         }
 
+        /// <summary>
+        /// (4 + 5) should evaluate to 9.
+        /// </summary>
         [Fact]
         public void Evaluate_SimpleAddition_ReturnsCorrectResult()
         {
@@ -521,6 +620,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(9, result);
         }
 
+        /// <summary>
+        /// print(2 + 3) -> "5".
+        /// </summary>
         [Fact]
         public void Print_SimpleExpression_PrintsExpectedOutput()
         {
@@ -541,6 +643,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("5", output);            
         }
 
+        /// <summary>
+        /// print(42) -> "42".
+        /// </summary>
         [Fact]
         public void Print_IntegerLiteral_PrintsExpectedOutput()
         {
@@ -561,6 +666,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("42", output);
         }
 
+        /// <summary>
+        /// print(3.14) with invariant culture -> "3.14".
+        /// </summary>
         [Fact]
         public void Print_FloatLiteral_PrintsExpectedOutput()
         {
@@ -592,6 +700,9 @@ namespace MinImpLangComp.Tests
             }
         }
 
+        /// <summary>
+        /// print((1 + 2) * 2) -> "6".
+        /// </summary>
         [Fact]
         public void Print_ParenthesizedExpression_PrintsExpectedOutput()
         {
@@ -614,6 +725,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("6", output);
         }
 
+        /// <summary>
+        /// Assignment to a declared variable returns the new value.
+        /// </summary>
         [Fact]
         public void Assignment_ToDeclareSetVariable_Works()
         {
@@ -627,6 +741,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(42, result);
         }
 
+        /// <summary>
+        /// Assigning to an undeclared variable should throw.
+        /// </summary>
         [Fact]
         public void Assignment_ToUndeclaredVariable_Throws()
         {
@@ -638,6 +755,9 @@ namespace MinImpLangComp.Tests
             Assert.Throws<InvalidOperationException>(() => ILGeneratorRunner.GenerateAndRunIL(statements));
         }
 
+        /// <summary>
+        /// Reassigning to a constant should throw.
+        /// </summary>
         [Fact]
         public void Assignment_ToConstantBind_Throws()
         {
@@ -654,6 +774,9 @@ namespace MinImpLangComp.Tests
         ////////////////// 
 
         #region If-Else-Then
+        /// <summary>
+        /// If(true) assigns then-branch.
+        /// </summary>
         [Fact]
         public void IfStatement_BranchTrue_EvaluatesThenBranch()
         {
@@ -673,6 +796,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(10, result);
         }
 
+        /// <summary>
+        /// If(false) assigns else-branch.
+        /// </summary>
         [Fact]
         public void IfStatement_BranchFalse_EvaluatesElseBranch()
         {
@@ -692,6 +818,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(20, result);
         }
 
+        /// <summary>
+        /// IF(false) without else leaves value unchanged.
+        /// </summary>
         [Fact]
         public void IfStatement_BranchFalse_NoElse_DoesNothing()
         {
@@ -710,6 +839,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(5, result);
         }
 
+        /// <summary>
+        /// If(true) without else excutes then-branch.
+        /// </summary>
         [Fact]
         public void IfStatement_BranchTrue_NoElse_ExecutesThen()
         {
@@ -728,6 +860,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(42, result);
         }
 
+        /// <summary>
+        /// Binary condition drives correct branch.
+        /// </summary>
         [Fact]
         public void IfStatement_WithBinaryCondition_EvaluatesCorrectBranch()
         {
@@ -748,6 +883,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(100, result);
         }
 
+        /// <summary>
+        /// Non-boolean if-condition should throw.
+        /// </summary>
         [Fact]
         public void IfStatement_WithNonBooleanCondition_ThrowsException()
         {
@@ -769,6 +907,9 @@ namespace MinImpLangComp.Tests
             Assert.Contains("The condition in if-statement must be of type 'bool'", error.Message);
         }
 
+        /// <summary>
+        /// Assigning to undeclared variable inside If should throw.
+        /// </summary>
         [Fact]
         public void IfStatement_AssignsToUndeclaredVariable_ThrowsException()
         {
@@ -790,6 +931,9 @@ namespace MinImpLangComp.Tests
         #endregion
 
         #region While, Break, Continue
+        /// <summary>
+        /// While loop accumulates expected sum.
+        /// </summary>
         [Fact]
         public void WhileStatement_LoopExecutesCorreclty()
         {
@@ -813,6 +957,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(0 + 1 + 2 + 3 + 4, result);
         }
 
+        /// <summary>
+        /// Breaks exits the loop early.
+        /// </summary>
         [Fact]
         public void WhileStatement_WithBreak_StopsLoopEarly()
         {
@@ -839,6 +986,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(0 + 1 + 2, result);
         }
 
+        /// <summary>
+        /// Continue skips the iteration where i == 2.
+        /// </summary>
         [Fact]
         public void WhileStatement_WithContinue_SkipsIteration()
         {
@@ -875,6 +1025,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(1 + 3 + 4, result); 
         }
 
+        /// <summary>
+        /// Break outside of loop should throw.
+        /// </summary>
         [Fact]
         public void BreakStatement_OutsideLoop_ThrowsException()
         {
@@ -890,6 +1043,9 @@ namespace MinImpLangComp.Tests
             Assert.Contains("break", error.Message, StringComparison.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// Continue outside of loop should throw.
+        /// </summary>
         [Fact]
         public void ContinueStatement_OutsideLoop_ThrowsException()
         {
@@ -907,6 +1063,9 @@ namespace MinImpLangComp.Tests
         #endregion
 
         #region forstatement
+        /// <summary>
+        /// Basic for-loop sums 0..4 = 10.
+        /// </summary>
         [Fact]
         public void ForStatement_BasicLoopWorks()
         {
@@ -930,6 +1089,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(10, result); // 0 + 1 + 2 + 3 + 4 = 10
         }
 
+        /// <summary>
+        /// for-loop with break stops at i == 3.
+        /// </summary>
         [Fact]
         public void ForStatement_WithBreakStopsEarly()
         {
@@ -957,6 +1119,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(3, result); // 0 + 1 + 2 = 3
         }
 
+        /// <summary>
+        /// for-loop with continue skips i == 2; sum = 8.
+        /// </summary>
         [Fact]
         public void ForStatement_WithContinue_SkipsValue()
         {
@@ -984,6 +1149,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(8, result); // 0 + 1 + 3 + 4 = 8
         }
 
+        /// <summary>
+        /// for-loop with zero iterations leaves value unchanged.
+        /// </summary>
         [Fact]
         public void ForStatement_WithZeroIterations_DoesNothing()
         {
@@ -997,16 +1165,19 @@ namespace MinImpLangComp.Tests
                     new Assignment("i", new BinaryExpression(new VariableReference("i"), OperatorType.Plus, new IntegerLiteral(1))),
                     new Block(new List<Statement>
                     {
-                        new Assignment("sum", new IntegerLiteral(0)) // ne doit jamais s'exécuter
+                        new Assignment("sum", new IntegerLiteral(0)) // should never execute
                     })
                 ),
                 new ExpressionStatement(new VariableReference("sum"))
             };
             var result = ILGeneratorRunner.GenerateAndRunIL(statements);
 
-            Assert.Equal(42, result); // pas modifié
+            Assert.Equal(42, result); // unchanged
         }
 
+        /// <summary>
+        /// Non-boolean for-condition should throw.
+        /// </summary>
         [Fact]
         public void ForStatement_WithNonBooleanCondition_Throws()
         {
@@ -1045,6 +1216,9 @@ namespace MinImpLangComp.Tests
         #endregion
 
         #region Input()
+        /// <summary>
+        /// input() into int-annotated variable parses int.
+        /// </summary>
         [Fact]
         public void Input_ReadInt_ReturnsParsedInt()
         {
@@ -1058,6 +1232,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(42, result);
         }
 
+        /// <summary>
+        /// input() into bool-annotated variable parses bool.
+        /// </summary>
         [Fact]
         public void Input_ReadBool_ReturnsParsedBool()
         {
@@ -1071,6 +1248,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(true, result);
         }
 
+        /// <summary>
+        /// input() into string-annotated variable returns string.
+        /// </summary>
         [Fact]
         public void Input_ReadString_ReturnsString()
         {
@@ -1084,6 +1264,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("hello world", result);
         }
 
+        /// <summary>
+        /// input() with argument should throw.
+        /// </summary>
         [Fact]
         public void Input_WithArgument_Throws()
         {
@@ -1096,6 +1279,9 @@ namespace MinImpLangComp.Tests
             Assert.Throws<InvalidOperationException>(() => ILGeneratorRunner.GenerateAndRunIL(statement, input: "5")); 
         }
 
+        /// <summary>
+        /// input() into unsupported type should throw.
+        /// </summary>
         [Fact]
         public void Input_WithUnsupportedType_Throws()
         {
@@ -1110,6 +1296,9 @@ namespace MinImpLangComp.Tests
         #endregion
 
         #region FunctionCall
+        /// <summary>
+        /// User-defined function without args that prints "Hello!".
+        /// </summary>
         [Fact]
         public void FunctionCall_NoArguments_Works()
         {
@@ -1128,7 +1317,7 @@ namespace MinImpLangComp.Tests
                             )
                         })
                     ),
-					// Appel : hello()
+					// Call : hello()
 					new ExpressionStatement(new FunctionCall("hello", new List<Expression>()))
                 };
             var output = CaptureConsole(() =>
@@ -1139,6 +1328,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("Hello!", output);
         }
 
+        /// <summary>
+        /// User-defined function with one argument (echo via print).
+        /// </summary>
         [Fact]
         public void FunctionCall_WithOneArgument_Works()
         {
@@ -1149,7 +1341,7 @@ namespace MinImpLangComp.Tests
                         new List<string> { "name" },
                         new Block(new List<Statement>
                         {
-							// Pour rester compatible sans concat string, on imprime juste le paramètre
+							// To stay compatible without string concat, directly print the parameter
 							new ExpressionStatement(
                                 new FunctionCall("print", new List<Expression>
                                 {
@@ -1171,6 +1363,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("Jordan", output);
         }
 
+        /// <summary>
+        /// User-defined function with two integer args (sum via print).
+        /// </summary>
         [Fact]
         public void FunctionCall_WithMultipleArguments_Works()
         {
@@ -1181,7 +1376,7 @@ namespace MinImpLangComp.Tests
                         new List<string> { "a", "b" },
                         new Block(new List<Statement>
                         {
-							// Addition d'entiers, pas de concat string
+							// Integer addition, not string concat
 							new ExpressionStatement(
                                 new FunctionCall("print", new List<Expression>
                                 {
@@ -1204,6 +1399,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("12", output);
         }
 
+        /// <summary>
+        /// Nested function call inside expression (five() + 3) printed as "8".
+        /// </summary>
         [Fact]
         public void FunctionCall_NestedInsideExpression_Works()
         {
@@ -1234,6 +1432,9 @@ namespace MinImpLangComp.Tests
         #endregion
 
         #region concat string test
+        /// <summary>
+        /// "Hello " + "world" printed as "Hello world".
+        /// </summary>
         [Fact]
         public void StringConcatenation_WithPlus_Works()
         {

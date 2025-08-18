@@ -6,9 +6,55 @@ using Xunit;
 
 namespace MinImpLangComp.Tests
 {
+    /// <summary>
+    /// Unit tests for the tree-walking <see cref="Interpreter"/>. Marked with "ConsoleSerial" to avoid concurrency on Console I/O.
+    /// </summary>
     [Collection("ConsoleSerial")]
     public class InterpreterTests
     {
+        #region Helper
+        /// <summary>
+        /// Capture <see cref="Console.Out"/> during the provided action, then restore it. Returns the trimmed captured output.
+        /// </summary>
+        /// <param name="action"></param>
+        private static string CaptureOut(Action action)
+        {
+            var originalOut = Console.Out;
+            try
+            {
+                using var sw = new StringWriter();
+                Console.SetOut(sw);
+                action();
+                return sw.ToString().Trim();
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+            }
+        }
+
+        /// <summary>
+        /// Temporarily sets <see cref="Console.In"/> from the provided string while executing <paramref name="func"/>, then restore the original input.
+        /// Returns the function's result.
+        /// </summary>
+        private static T WithStdin<T>(string stdin, Func<T> func)
+        {
+            var originalIn = Console.In;
+            try
+            {
+                Console.SetIn(new StringReader(stdin));
+                return func();
+            }
+            finally
+            {
+                Console.SetIn(originalIn);
+            }
+        }
+        #endregion
+
+        /// <summary>
+        /// Integer literal evaluates to its integer value.
+        /// </summary>
         [Fact]
         public void Evaluate_IntegerLiteral_ReturnsIntegerValue()
         {
@@ -20,6 +66,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(1, result);
         }
 
+        /// <summary>
+        /// Float literal evaluates to its double value.
+        /// </summary>
         [Fact]
         public void Evaluate_FloatLiteral_ReturnsFloatValue()
         {
@@ -31,6 +80,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(1.23, (double)result, 2);
         }
 
+        /// <summary>
+        /// Addition of two integer returns their sum.
+        /// </summary>
         [Fact]
         public void Evaluate_BinaryExpression_Addition_ReturnsSum()
         {
@@ -45,7 +97,10 @@ namespace MinImpLangComp.Tests
             Assert.IsType<int>(result);
             Assert.Equal(3, result);
         }
-
+        
+        /// <summary>
+        /// Multiplication of two integers returns their products.
+        /// </summary>
         [Fact]
         public void Evaluate_BinaryExpression_Multiplication_ReturnsProduct()
         {
@@ -61,6 +116,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(30, result);
         }
 
+        /// <summary>
+        /// Addition between float and int returns a double.
+        /// </summary>
         [Fact]
         public void Evaluate_BinaryExpression_IntAndFloat_Addition_ReturnsSum()
         {
@@ -76,6 +134,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(9.5, (double)result, 2);
         }
 
+        /// <summary>
+        /// Assignement store value in the interpreter environment.
+        /// </summary>
         [Fact]
         public void Evaluate_Assignment_AddsVariableToEnvironment()
         {
@@ -94,6 +155,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(5, result);
         }
 
+        /// <summary>
+        /// Referencing a variable returns the stored value.
+        /// </summary>
         [Fact]
         public void Evaluate_VariableReference_ReturnsStoredValue()
         {
@@ -106,6 +170,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(4, result);
         }
 
+        /// <summary>
+        /// Blocks execute statements in order and return last expression value.
+        /// </summary>
         [Fact]
         public void Evaluate_BlockWithMultipleStatements_ExecutesAll()
         {
@@ -126,6 +193,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(5, interp.GetEnvironment()["y"]);
         }
 
+        /// <summary>
+        /// == returns true for equal values.
+        /// </summary>
         [Fact]
         public void Evaluate_BinaryExpression_EqualEqual_ReturnsTrue()
         {
@@ -141,6 +211,9 @@ namespace MinImpLangComp.Tests
             Assert.True((bool)result);
         }
 
+        /// <summary>
+        /// != returns true for different value.
+        /// </summary>
         [Fact]
         public void Evaluate_BinaryExpression_NotEqual_ReturnsTrue()
         {
@@ -156,6 +229,9 @@ namespace MinImpLangComp.Tests
             Assert.True((bool)result);
         }
 
+        /// <summary>
+        /// Boolean literals evaluate to bool value.
+        /// </summary>
         [Fact]
         public void Evaluate_BooleanLiteral_ReturnsBooleanValue()
         {
@@ -171,6 +247,9 @@ namespace MinImpLangComp.Tests
             Assert.False((bool)falseResult);
         }
 
+        /// <summary>
+        /// If with boolean condition executes the correct branch.
+        /// </summary>
         [Fact]
         public void Evaluate_IfStatement_WithBooleanLiteralCondition_WorksCorreclty()
         {
@@ -185,6 +264,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(11, interp.GetEnvironment()["x"]);
         }
 
+        /// <summary>
+        /// Less-than comparison returns a boolean.
+        /// </summary>
         [Fact]
         public void Evaluate_BinaryExpression_BooleanComparison_ReturnsCorrectResult()
         {
@@ -200,6 +282,9 @@ namespace MinImpLangComp.Tests
             Assert.True((bool)result);
         }
 
+        /// <summary>
+        /// Logical AND short-circuits to false.
+        /// </summary>
         [Fact]
         public void Evaluate_LogicalAnd_ReturnsExpected()
         {
@@ -215,6 +300,9 @@ namespace MinImpLangComp.Tests
             Assert.False((bool)result);
         }
 
+        /// <summary>
+        /// Logical OR short-circuits to true.
+        /// </summary>
         [Fact]
         public void Evaluate_LogicalOr_ReturnsExpected()
         {
@@ -230,6 +318,9 @@ namespace MinImpLangComp.Tests
             Assert.True((bool)result);
         }
 
+        /// <summary>
+        /// ++ increments an integer variable.
+        /// </summary>
         [Fact]
         public void Evaluate_UnaryIncrement_IncrementsVariable()
         {
@@ -242,6 +333,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(6, interp.GetEnvironment()["x"]);
         }
 
+        /// <summary>
+        /// -- decrements an integer variable.
+        /// </summary>
         [Fact]
         public void Evaluate_UnaryDecrement_DecrementsVariable()
         {
@@ -254,20 +348,22 @@ namespace MinImpLangComp.Tests
             Assert.Equal(2, interp.GetEnvironment()["y"]);
         }
 
+        /// <summary>
+        /// print(...) writes argument value to Console.
+        /// </summary>
         [Fact]
         public void Evaluate_FunctionCall_Print_WritesOutput()
         {
             var interp = new Interpreter();
             var functionCall = new FunctionCall("print", new List<Expression> { new IntegerLiteral(5) });
-            using (var sw = new StringWriter())
-            {
-                Console.SetOut(sw);
-                interp.Evaluate(functionCall);
-                string result = sw.ToString().Trim();
-                Assert.Equal("5", result);
-            }
+            var output = CaptureOut(() => interp.Evaluate(functionCall));
+
+            Assert.Equal("5", output);
         }
 
+        /// <summary>
+        /// Function declaration adds entry to environment.
+        /// </summary>
         [Fact]
         public void Evaluate_FunctionDeclaration_AddsFunctionToEnvironment()
         {
@@ -280,6 +376,9 @@ namespace MinImpLangComp.Tests
             Assert.IsType<FunctionDeclaration>(interp.GetEnvironment()["myFunc"]);
         }
 
+        /// <summary>
+        /// User-defined function executes and can print inside.
+        /// </summary>
         [Fact]
         public void Evaluate_FunctionCall_UserFunction_ExecutesFunction()
         {
@@ -294,17 +393,18 @@ namespace MinImpLangComp.Tests
                 })
             );
             interp.Evaluate(funct);
-            using (var sw = new StringWriter())
+            var output = CaptureOut(() =>
             {
-                Console.SetOut(sw);
-                var result = interp.Evaluate(new FunctionCall("addOne", new List<Expression> { new IntegerLiteral(5) }));
-                string console = sw.ToString().Trim();
+                var _ = interp.Evaluate(new FunctionCall("addOne", new List<Expression> { new IntegerLiteral(5) }));
+            });
 
-                Assert.Equal("999", console);
-                Assert.Null(result);
-            }
+            Assert.Equal("999", output);
+
         }
 
+        /// <summary>
+        /// Function can return a value via return statement.
+        /// </summary>
         [Fact]
         public void Evaluate_Function_ReturnStatement_ReturnsValue()
         {
@@ -320,6 +420,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(99, result);
         }
 
+        /// <summary>
+        /// Function arguments flow into return expression.
+        /// </summary>
         [Fact]
         public void Evaluate_FunctionCall_WithReturn_ReturnsCorrectValue()
         {
@@ -342,6 +445,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(10.0, result);
         }
 
+        /// <summary>
+        /// Execution stops after the first return in a function.
+        /// </summary>
         [Fact]
         public void Evaluate_FunctionCall_Returns_StopsExecutionAfterReturn()
         {
@@ -356,17 +462,17 @@ namespace MinImpLangComp.Tests
                 })
             );
             interp.Evaluate(funct);
-            using(var sw = new StringWriter())
+            string output = CaptureOut(() =>
             {
-                Console.SetOut(sw);
-                var result = interp.Evaluate(new FunctionCall("earlyReturn", new List<Expression> { }));
-                string output = sw.ToString().Trim();
+                var _ = interp.Evaluate(new FunctionCall("earlyReturn", new List<Expression> { }));
+            });
 
-                Assert.Equal(10, result);
-                Assert.Equal("", output);
-            }
+            Assert.Equal("", output);
         }
 
+        /// <summary>
+        /// String literal evaluates to its value.
+        /// </summary>
         [Fact]
         public void Evaluate_StringLiteral_ReturnsString()
         {
@@ -377,6 +483,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("test123", result);
         }
 
+        /// <summary>
+        /// String + String concatenation.
+        /// </summary>
         [Fact]
         public void Evaluate_BinaryExpression_StringConcat_ReturnsConcatenatedString()
         {
@@ -389,6 +498,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("Hello World", result);
         }
 
+        /// <summary>
+        /// String + Int concatenation.
+        /// </summary>
         [Fact]
         public void Evaluate_BinaryExpression_StringAndIntConcat_ReturnsConcatenatedString()
         {
@@ -401,6 +513,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("Value: 10", result);
         }
 
+        /// <summary>
+        ///  Int + String concatenation.
+        /// </summary>
         [Fact]
         public void Evaluate_BinaryExpression_IntAndStringCOncat_ReturnsConcatenatedString()
         {
@@ -413,31 +528,37 @@ namespace MinImpLangComp.Tests
             Assert.Equal("100 dogs", result);
         }
 
+        /// <summary>
+        /// input() redas from stdin, returning parsed int or raw string.
+        /// </summary>
         [Fact]
         public void Evaluate_FunctionCall_Input_ReadsUserInput()
         {
             var interp = new Interpreter();
-            using (var sr = new StringReader("123\n"))
-            using (var sw = new StringWriter())
+            object? result1 = null;
+            CaptureOut(() =>
             {
-                Console.SetIn(sr);
-                Console.SetOut(sw);
-                var result = interp.Evaluate(new FunctionCall("input", new List<Expression>()));
+                result1 = WithStdin("123\n", () =>
+                    interp.Evaluate(new FunctionCall("input", new List<Expression>()))
+                );
+            });
 
-                Assert.Equal(123, result);
-            }
+            Assert.Equal(123, result1);
 
-            using (var sr = new StringReader("hello world\n"))
-            using (var sw = new StringWriter())
+            object? result2 = null;
+            CaptureOut(() =>
             {
-                Console.SetIn(sr);
-                Console.SetOut(sw);
-                var result = interp.Evaluate(new FunctionCall("input", new List<Expression>()));
+                result2 = WithStdin("hello world\n", () =>
+                    interp.Evaluate(new FunctionCall("input", new List<Expression>()))
+                );
+            });
 
-                Assert.Equal("hello world", result);
-            }
+            Assert.Equal("hello world", result2);
         }
 
+        /// <summary>
+        /// Modulo (%) over integers.
+        /// </summary>
         [Fact]
         public void Evaluate_Modulo_ReturnsCorrectResult()
         {
@@ -447,6 +568,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(1, interp.Evaluate(expr));
         }
 
+        /// <summary>
+        /// Logical NOT (!).
+        /// </summary>
         [Fact]
         public void Evaluate_UnaryNot_ReturnsCorrectResult()
         {
@@ -456,6 +580,9 @@ namespace MinImpLangComp.Tests
             Assert.False((bool)interp.Evaluate(expr));
         }
 
+        /// <summary>
+        /// Bitwise AND (&amp;).
+        /// </summary>
         [Fact]
         public void Evaluate_BitwiseAnd_ReturnsCorrectResult()
         {
@@ -465,6 +592,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(2, interp.Evaluate(expr));
         }
 
+        /// <summary>
+        /// Bitwise OR (|)
+        /// </summary>
         [Fact]
         public void Evaluate_BitwiseOr_ReturnsCorrectResult()
         {
@@ -474,6 +604,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(7, interp.Evaluate(expr));
         }
 
+        /// <summary>
+        /// Array literal evaluates to a List&lt;object&gt;.
+        /// </summary>
         [Fact]
         public void Evaluate_ArrayLiteral_ReturnsList()
         {
@@ -485,6 +618,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(3, ((List<object>)result).Count);
         }
 
+        /// <summary>
+        /// Array access returns the correct element.
+        /// </summary>
         [Fact]
         public void Evaluate_ArrayAccess_ReturnsCorrectElement()
         {
@@ -497,6 +633,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(20, result);
         }
 
+        /// <summary>
+        /// Array assignment updates the element at index;
+        /// </summary>
         [Fact]
         public void Evaluate_ArrayAssignment_UpdatesArrayElement()
         {
@@ -511,6 +650,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(99, result);
         }
 
+        /// <summary>
+        /// null literal returns null.
+        /// </summary>
         [Fact]
         public void Evaluate_NullLiteral_ReturnsNull()
         {
@@ -520,6 +662,9 @@ namespace MinImpLangComp.Tests
             Assert.Null(result);
         }
 
+        /// <summary>
+        /// break exits a while loop early.
+        /// </summary>
         [Fact]
         public void Interpreter_Break_ExitsLoopEarly()
         {
@@ -544,6 +689,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(2, interp.GetEnvironment()["i"]);
         }
 
+        /// <summary>
+        /// continue skips the rest of the current iteration.
+        /// </summary>
         [Fact]
         public void Interpreter_Continue_SkipsCurrentIteration()
         {
@@ -585,6 +733,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(10, result);
         }
 
+        /// <summary>
+        /// Redeclaring a variable throws a runtime error.
+        /// </summary>
         [Fact]
         public void Interpreter_Throws_OnRedeclarationOfVariable()
         {
@@ -598,6 +749,9 @@ namespace MinImpLangComp.Tests
             Assert.Throws<RuntimeException>(() => interp.Evaluate(new Block(statements)));
         }
 
+        /// <summary>
+        /// Constants can be declared and read.
+        /// </summary>
         [Fact]
         public void Interpreter_CanDeclareAndUseConstant()
         {
@@ -612,6 +766,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(10, result);
         }
 
+        /// <summary>
+        /// Redeclaring a constant throws a runtime error.
+        /// </summary>
         [Fact]
         public void Interpreter_Throws_OnRedeclarationOfConstant()
         {
@@ -625,6 +782,9 @@ namespace MinImpLangComp.Tests
             Assert.Throws<RuntimeException>(() => interp.Evaluate(new Block(statement)));
         }
 
+        /// <summary>
+        /// Assigning to a constant throws a runtime error.
+        /// </summary>
         [Fact]
         public void Interpreter_Throws_OnAssignmentToConstant()
         {
@@ -638,6 +798,9 @@ namespace MinImpLangComp.Tests
             Assert.Throws<RuntimeException>(() => interp.Evaluate(new Block(statements)));
         }
 
+        /// <summary>
+        /// Type annotations are honored when correct.
+        /// </summary>
         [Fact]
         public void Interpreter_RespectsTypeAnnotation_CorrectType_DoesNotThrow()
         {
@@ -657,6 +820,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(true, interp.GetEnvironment()["d"]);
         }
 
+        /// <summary>
+        /// Type annotations reject incompatibles values.
+        /// </summary>
         [Fact]
         public void Interpreter_RespectsTypeAnnotation_WrongType_ThrowsException()
         {
@@ -669,6 +835,9 @@ namespace MinImpLangComp.Tests
             Assert.Throws<RuntimeException>(() => interp.Evaluate(block));
         }
 
+        /// <summary>
+        /// Constant declaration with correct type works.
+        /// </summary>
         [Fact]
         public void Interpreter_ConstantDeclaration_WithCorrectType_Works()
         {
@@ -682,6 +851,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(3.14, interp.GetEnvironment()["pi"]);
         }
 
+        /// <summary>
+        /// Assignment after typed declaration enforces type compatibility.
+        /// </summary>
         [Fact]
         public void Interpreter_Assignment_AfterTypeDeclaration_WithWrongType_Throws()
         {
