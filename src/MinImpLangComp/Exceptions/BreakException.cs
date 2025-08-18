@@ -27,6 +27,6 @@ namespace MinImpLangComp.Exceptions
         /// <summary>
         /// Serialization constructor.
         /// </summary>
-        protected BreakException(SerializationInfo Info, StreamingContext context) : base(info, context) { }
+        protected BreakException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 }

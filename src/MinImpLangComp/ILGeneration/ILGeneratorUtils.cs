@@ -313,7 +313,7 @@ namespace MinImpLangComp.ILGeneration
         /// <summary>
         /// Emits the IL instruction corresponding to a binary operator (assuming operands are already on stack).
         /// </summary>
-        /// <param name="oper">Operand to be IL emited.</param>
+        /// <param name="oper">Operator to be IL emited.</param>
         /// <param name="il">ILGenerator.</param>
         /// <exception cref="NotSupportedException">Throws if binary operator is not supported.</exception>
         private static void EmitBinaryOperator(OperatorType oper, ILGenerator il)
