@@ -1,12 +1,19 @@
-﻿using MinImpLangComp.AST;
-using MinImpLangComp.Facade;
+﻿using MinImpLangComp.Facade;
 using MinImpLangComp.ReplLoop;
 using System.Globalization;
 
 namespace MinImpLangComp.CLI
 { 
+    /// <summary>
+    /// Command-line netry point for MinImpLangComp.
+    /// </summary>
     public static class Program
     {
+        /// <summary>
+        /// Application entry point. Dispatches subcommands: run | samples | repl | repl-interp.
+        /// </summary>
+        /// <param name="args">CLI arguments.</param>
+        /// <returns>Process exit code.</returns>
         public static int Main(string[] args)
         {
             CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
@@ -20,24 +27,7 @@ namespace MinImpLangComp.CLI
             switch (args[0])
             {
                 case "run":
-                    if (args.Length < 2)
-                    {
-                        Console.Error.WriteLine("Missing file path. Use a .milc file or '-' for stdin.");
-                        return 2;
-                    }
-                    if (args[1] == "--pick") return RunPickSample();
-                    if (args[1].StartsWith("sample:", StringComparison.OrdinalIgnoreCase))
-                    {
-                        var name = args[1].Substring("sample:".Length);
-                        var path = ResolveSampleByName(name);
-                        if (path == null)
-                        {
-                            Console.Error.WriteLine($"Sample '{name}' not found.");
-                            return 4;
-                        }
-                        return RunFileOrStdin(path);
-                    }
-                    return RunFileOrStdin(args[1]);
+                    return HandleRun(args);
                 case "samples":
                     return ListSamples();
                 case "repl":
@@ -45,12 +35,15 @@ namespace MinImpLangComp.CLI
                 case "repl-interp":
                     return RunInterpreterRepl();
                 default:
-                    Console.Error.WriteLine($"Unknonw command '{args[0]}'.");
+                    Console.Error.WriteLine($"Unknown command '{args[0]}'.");
                     PrintUsage();
                     return 3;
             }
         }
 
+        /// <summary>
+        /// Prints usage information to stdout (with colored header).
+        /// </summary>
         private static void PrintUsage()
         {
             Console.ForegroundColor = ConsoleColor.Blue;
@@ -64,6 +57,39 @@ namespace MinImpLangComp.CLI
             Console.ResetColor();
         }
 
+        /// <summary>
+        /// Handles the <c>run</c> subcommand and its variants.
+        /// </summary>
+        /// <param name="args">CLI arguments.</param>
+        /// <returns></returns>
+        private static int HandleRun(string[] args)
+        {
+            if (args.Length < 2)
+            {
+                Console.Error.WriteLine("Missing file path. Use a .milc file or '-' for stdin.");
+                return 2;
+            }
+            if (args[1] == "--pick") return RunPickSample();
+            if (args[1].StartsWith("sample:", StringComparison.OrdinalIgnoreCase))
+            {
+                var name = args[1].Substring("sample:".Length);
+                var path = ResolveSampleByName(name);
+                if (path == null)
+                {
+                    Console.Error.WriteLine($"Sample '{name}' not found.");
+                    return 4;
+                }
+                return RunFileOrStdin(path);
+            }
+            return RunFileOrStdin(args[1]);
+        }
+
+        /// <summary>
+        /// Runs a source provided via file path (ending with .milc) or STDIN (when <c>-</c>).
+        /// Returns the corresponding exit codes.
+        /// </summary>
+        /// <param name="pathOrDash">File path (or -).</param>
+        /// <returns>Corresponding exit code.</returns>
         private static int RunFileOrStdin(string pathOrDash)
         {
             string source;
@@ -114,6 +140,10 @@ namespace MinImpLangComp.CLI
             }
         }
 
+        /// <summary>
+        /// Start the IL REPL loop (Ctrl+C to abort). Returns 0 on normal exit.
+        /// </summary>
+        /// <returns>0 on normal exit.</returns>
         private static int RunRepl()
         {
             Console.ForegroundColor = ConsoleColor.Blue;
@@ -140,7 +170,11 @@ namespace MinImpLangComp.CLI
             }
             return 0;
         }
-
+        
+        /// <summary>
+        /// Starts the legacy interpreter REPL. Returns specific error code on failure.
+        /// </summary>
+        /// <returns>0 on normal exit.</returns>
         private static int RunInterpreterRepl()
         {
             try
@@ -155,6 +189,10 @@ namespace MinImpLangComp.CLI
             }
         }
 
+        /// <summary>
+        /// Interactive sample picker, then executes the chosen samples.
+        /// </summary>
+        /// <returns>Execute the choosen sample. 0 on normal exit.</returns>
         private static int RunPickSample()
         {
             var files = GetSampleFiles();
@@ -184,6 +222,10 @@ namespace MinImpLangComp.CLI
             return RunFileOrStdin(files[index - 1]);
         }
 
+        /// <summary>
+        /// List available sample files to stdout. Returns 0 even when none exist.
+        /// </summary>
+        /// <returns>List of samples. 0 on exit.</returns>
         private static int ListSamples()
         {
             var files = GetSampleFiles();
@@ -196,6 +238,11 @@ namespace MinImpLangComp.CLI
             return 0;
         }
 
+        /// <summary>
+        /// Resolves a sample by name (with or without .milc extension).
+        /// </summary>
+        /// <param name="name">Sample name.</param>
+        /// <returns>Sample name path or null.</returns>
         private static string? ResolveSampleByName(string name)
         {
             var files = GetSampleFiles();
@@ -208,6 +255,10 @@ namespace MinImpLangComp.CLI
             return null;
         }
 
+        /// <summary>
+        /// Find sample files, honoring the MINIMPLANGCOMP_SAMPLES_DIR override, or walking up from AppContext.BaseDirectory.
+        /// </summary>
+        /// <returns>Sample files path.</returns>
         private static string[] GetSampleFiles()
         {
             var overrideDir = Environment.GetEnvironmentVariable("MINIMPLANGCOMP_SAMPLES_DIR");
