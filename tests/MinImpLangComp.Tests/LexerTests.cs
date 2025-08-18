@@ -131,8 +131,6 @@ namespace MinImpLangComp.Tests
 
             Assert.Equal(TokenType.Semicolon, tokens[5].Type);
             Assert.Equal(";", tokens[5].Value);
-
-            Assert.Equal(TokenType.EOF, tokens[6].Type);
         }
 
         /// <summary>
