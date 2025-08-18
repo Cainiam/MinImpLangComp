@@ -12,6 +12,27 @@ namespace MinImpLangComp.Tests
     [Collection("ConsoleSerial")]
     public class ILGeneratorRunnerTests
     {
+        #region Helper
+        /// <summary>
+        /// Captures <see cref="Console.Out"/> while executing provided action and returns the trimmed output.
+        /// </summary>
+        private string CaptureConsole(Action action) // Utilitaire
+        {
+            var originalOut = Console.Out;
+            var writer = new StringWriter();
+            try
+            {
+                Console.SetOut(writer);
+                action();
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+            }
+            return writer.ToString().Trim();
+        }
+        #endregion
+
         #region issue13
         /// <summary>
         /// 42 should evaluate 42.
@@ -546,27 +567,6 @@ namespace MinImpLangComp.Tests
 
 
         /////// ILGeneratorRunner.cs with statements here : //////
-
-        #region Helper
-        /// <summary>
-        /// Captures <see cref="Console.Out"/> while executing provided action and returns the trimmed output.
-        /// </summary>
-        private string CaptureConsole(Action action) // Utilitaire
-        {
-            var originalOut = Console.Out;
-            var writer = new StringWriter();            
-            try
-            {
-                Console.SetOut(writer);
-                action();
-            }
-            finally
-            {
-                Console.SetOut(originalOut);
-            }
-            return writer.ToString().Trim();
-        }
-        #endregion
 
         /// <summary>
         /// bind x:int = 123; should not throw.

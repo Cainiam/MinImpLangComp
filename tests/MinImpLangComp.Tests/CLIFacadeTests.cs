@@ -8,6 +8,7 @@ namespace MinImpLangComp.Tests
     /// </summary>
     public class CLIFacadeTests
     {
+        #region Helper
         /// <summary>
         /// Normalizes newlines to '\n' to make assertions platform-agnostic.
         /// </summary>
@@ -39,11 +40,11 @@ namespace MinImpLangComp.Tests
             if (!File.Exists(path)) throw new FileNotFoundException($"This sample does not exist: {path}");
             return File.ReadAllText(path);
         }
+        #endregion
 
-
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-        
-
+        /// <summary>
+        /// Loads sample "hello.milc" and executes.
+        /// </summary>
         [Fact]
         public void HelloSample_PrintsHello()
         {
@@ -57,6 +58,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("Hello!\n", Normalize(output));
         }
 
+        /// <summary>
+        /// Loads sample "ret.milc" and executes.
+        /// </summary>
         [Fact]
         public void RetSample_Prints8()
         {
@@ -66,6 +70,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("8\n", Normalize(output));
         }
 
+        /// <summary>
+        /// Loads sample "sum.milc" and executes.
+        /// </summary>
         [Fact]
         public void SumSample_Prints12()
         {
@@ -82,6 +89,7 @@ namespace MinImpLangComp.Tests
     [Collection("ConsoleSerial")]
     public class CLIFacadeCommandsTests
     {
+        #region Helper Commands
         /// <summary>
         /// Walks up for AppContext.BaseDirectory to find the 'samples' directory.
         /// </summary>
@@ -97,7 +105,6 @@ namespace MinImpLangComp.Tests
             throw new DirectoryNotFoundException("Directory 'samples' was not found");
         }
 
-        #region Helper
         /// <summary>
         /// Runs the CLI entry point with given args and optional stdin, capturing stdout.
         /// Also inject the 'MINIMPLANGCOMP_SAMPLES_DIR' env var so the LCI resolves samples deterministically.
@@ -132,6 +139,9 @@ namespace MinImpLangComp.Tests
         }
         #endregion
 
+        /// <summary>
+        /// Check if command print list of samples.
+        /// </summary>
         [Fact]
         public void SamplesCommand_ListFiles()
         {
@@ -146,6 +156,9 @@ namespace MinImpLangComp.Tests
             Assert.Contains("sum.milc", stdout);
         }
 
+        /// <summary>
+        /// Check if command executes file by name
+        /// </summary>
         [Fact]
         public void RunSample_ByName_HelloPrintsHello()
         {
@@ -156,6 +169,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("Hello!", stdout);
         }
 
+        /// <summary>
+        /// Check if simulated input executes choosen command.
+        /// </summary>
         [Fact]
         public void RunPick_Interactive_ChoosesFirstAndRuns()
         {

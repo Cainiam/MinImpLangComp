@@ -3,8 +3,28 @@ using Xunit;
 
 namespace MinImpLangComp.Tests
 {
+    /// <summary>
+    /// Unit tests for the <see cref="Lexer"/> covering literals, operators, keywords, string escapes, whitespace handling, and simple sequences.
+    /// </summary>
     public class LexerTests
     {
+        #region Helpers
+        /// <summary>
+        /// Lexes the entire input and returns all tokens up to (but no including) EOF.
+        /// </summary>
+        private static List<Token> LexAll(string input)
+        {
+            var lexer = new Lexer(input);
+            var tokens = new List<Token>();
+            Token t;
+            while ((t = lexer.GetNextToken()).Type != TokenType.EOF) tokens.Add(t);
+            return tokens;
+        }
+        #endregion
+
+        /// <summary>
+        /// Validates that single-token inputs are recognized with the correct type and value.
+        /// </summary>
         [Theory]
         [InlineData("10", TokenType.Integer, "10")]
         [InlineData("3.14", TokenType.Float, "3.14")]
@@ -32,6 +52,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(expectedValue, token.Value);
         }
 
+        /// <summary>
+        /// Ensure EOF is returned after consuming the final token.
+        /// </summary>
         [Fact]
         public void GetNextToken_ReturnsEOFAtEnd()
         {
@@ -42,6 +65,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(TokenType.EOF, token.Type);
         }
 
+        /// <summary>
+        /// Unknown characters should produce an <see cref="TokenType.Unknow"/> token.
+        /// </summary>
         [Fact]
         public void GetNextToken_ReturnsUnknow()
         {
@@ -52,6 +78,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("@", token.Value);
         }
 
+        /// <summary>
+        /// Invalid numeric fortmats (multiple dots) should yield a lexical error.
+        /// </summary>
         [Theory]
         [InlineData("1.2.3", "1.2.3")]
         [InlineData("1..2", "1..2")]
@@ -64,6 +93,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(expectedValue, token.Value);
         }
 
+        /// <summary>
+        /// Leading/trailing whitespace is skipped before tokenizing.
+        /// </summary>
         [Fact]
         public void GetNextToken_SkipsWhiteSpace()
         {
@@ -74,20 +106,13 @@ namespace MinImpLangComp.Tests
             Assert.Equal("50", token.Value);
         }
 
+        /// <summary>
+        /// Tokenizes a short assignment statement into the expected sequenec.
+        /// </summary>
         [Fact]
         public void GetNextToken_ReadsMultipleTokensInSequence()
         {
-            var lexer = new Lexer("var1 = 3 + 4;");
-            var tokens = new[]
-            {
-                lexer.GetNextToken(), //var1
-                lexer.GetNextToken(), //=
-                lexer.GetNextToken(), //3
-                lexer.GetNextToken(), //+
-                lexer.GetNextToken(), //4
-                lexer.GetNextToken(), //;
-                lexer.GetNextToken(), //end
-            };
+            var tokens = LexAll("var1 = 3 + 4;");
 
             Assert.Equal(TokenType.Identifier, tokens[0].Type);
             Assert.Equal("var1", tokens[0].Value);
@@ -110,6 +135,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(TokenType.EOF, tokens[6].Type);
         }
 
+        /// <summary>
+        /// Keywords like set/if/else/while/for should be recognized.
+        /// </summary>
         [Theory]
         [InlineData("set", TokenType.Set, "set")]
         [InlineData("if", TokenType.If, "if")]
@@ -125,6 +153,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(expectedValue, token.Value);
         }
 
+        /// <summary>
+        /// String literal handles escaped quote characters.
+        /// </summary>
         [Fact]
         public void GetNextToken_ReturnsStringLiteralWithEscapedQuote()
         {
@@ -135,6 +166,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("hello \"world\"", token.Value);
         }
 
+        /// <summary>
+        /// String literal handles escaped newline.
+        /// </summary>
         [Fact]
         public void GetNextToken_ReturnsStringLiteralWithNewline()
         {
@@ -145,6 +179,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("line1\nline2", token.Value);
         }
 
+        /// <summary>
+        /// String literal handles escpaed backslashes.
+        /// </summary>
         [Fact]
         public void GetNextToken_ReturnsStringLiteralWithBackSlash()
         {
@@ -155,6 +192,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("C:\\Program Files\\", token.Value);
         }
 
+        /// <summary>
+        /// Unterminated string should surface a lexical error with the original slice.
+        /// </summary>
         [Fact]
         public void GetNextToken_UnterminatedString_ReturnsLexicalError()
         {
@@ -166,6 +206,9 @@ namespace MinImpLangComp.Tests
             Assert.StartsWith("\"", token.Value);
         }
 
+        /// <summary>
+        /// Comparison and equality operators are recognized as multi-char tokens.
+        /// </summary>
         [Theory]
         [InlineData("<=", TokenType.LessEqual, "<=")]
         [InlineData(">=", TokenType.GreaterEqual, ">=")]
@@ -180,6 +223,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(expectedValue, token.Value);
         }
 
+        /// <summary>
+        /// Boolean keywords true/false are recognized.
+        /// </summary>
         [Theory]
         [InlineData("true", TokenType.True, "true")]
         [InlineData("false", TokenType.False, "false")]
@@ -192,6 +238,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal(excpectedValue, token.Value);
         }
 
+        /// <summary>
+        /// Logical-and / logical-or tokens.
+        /// </summary>
         [Fact]
         public void GetNextToken_ReturnsAndAndOrOrTokens()
         {
@@ -205,6 +254,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("||", token2.Value);
         }
 
+        /// <summary>
+        /// Prefix increment/decrement tokens.
+        /// </summary>
         [Fact]
         public void GetNextToken_ReturnsPlusPlusAndMinusMinusTokens()
         {
@@ -217,7 +269,10 @@ namespace MinImpLangComp.Tests
             Assert.Equal(TokenType.MinusMinus, token2.Type);
             Assert.Equal("--", token2.Value);
         }
-
+        
+        /// <summary>
+        /// Basic string literal tokenization.
+        /// </summary>
         [Fact]
         public void GetNextToken_ReturnsStringLiteralToken()
         {
@@ -228,6 +283,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("hello world", token.Value);
         }
 
+        /// <summary>
+        /// Logical NOT tokenization.
+        /// </summary>
         [Fact]
         public void GetNextToken_RetunsNotToken()
         {
@@ -238,6 +296,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("!", token.Value);
         }
 
+        /// <summary>
+        /// Bitwise AND tokenization.
+        /// </summary>
         [Fact]
         public void GetNextToken_ReturnsBitwiseAndToken()
         {
@@ -247,6 +308,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("&", token.Value);
         }
 
+        /// <summary>
+        /// Bitwise OR tokenization.
+        /// </summary>
         [Fact]
         public void GetNextToken_ReturnsBitwiseOrToken()
         {
@@ -257,6 +321,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("|", token.Value);
         }
 
+        /// <summary>
+        /// Null keyword tokenization.
+        /// </summary>
         [Fact]
         public void GetNextToken_ReturnsNullKeywordToken()
         {
@@ -267,6 +334,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("null", token.Value);
         }
 
+        /// <summary>
+        /// Break token tokenization.
+        /// </summary>
         [Fact]
         public void GetNextToken_ReturnsBreakToken()
         {
@@ -277,6 +347,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("break", token.Value);
         }
 
+        /// <summary>
+        /// Continue keyword tokenization.
+        /// </summary>
         [Fact]
         public void GetNextToken_ReturnsContinueToken()
         {
@@ -287,17 +360,20 @@ namespace MinImpLangComp.Tests
             Assert.Equal("continue", token.Value);
         }
 
+        /// <summary>
+        /// Verifies <c>set</c> is recognized within a longer input.
+        /// </summary>
         [Fact]
         public void Lexer_CanRecognizeSetKeyword()
         {
-            var lexer = new Lexer("set x = 10;");
-            var tokens = new List<Token>();
-            Token token;
-            while ((token = lexer.GetNextToken()).Type != TokenType.EOF) tokens.Add(token);
+            var tokens = LexAll("set x = 10;");
 
             Assert.Contains(tokens, t => t.Type == TokenType.Set);
         }
 
+        /// <summary>
+        /// Bind keyword tokenization.
+        /// </summary>
         [Fact]
         public void Lexer_CanRecognizeBindKeyword()
         {
@@ -308,6 +384,9 @@ namespace MinImpLangComp.Tests
             Assert.Equal("bind", token.Value);
         }
 
+        /// <summary>
+        /// Type keywords tokenization (int/float/bool/string).
+        /// </summary>
         [Theory]
         [InlineData("int", TokenType.TypeInt, "int")]
         [InlineData("float", TokenType.TypeFloat, "float")]
@@ -322,13 +401,13 @@ namespace MinImpLangComp.Tests
             Assert.Equal(expectedValue, token.Value);
         }
 
+        /// <summary>
+        /// Verifies a typed declaration breaks into the expected token sequence.
+        /// </summary>
         [Fact]
         public void GetNextToken_ReturnsTokensForTypedDeclaration()
         {
-            var lexer = new Lexer("set x: int = 5;");
-            var tokens = new List<Token>();
-            Token token;
-            while ((token = lexer.GetNextToken()).Type != TokenType.EOF) tokens.Add(token);
+            var tokens = LexAll("set x: int = 5;");
 
             Assert.Collection(tokens,
                 t => Assert.Equal(TokenType.Set, t.Type),
@@ -353,6 +432,9 @@ namespace MinImpLangComp.Tests
             );
         }
 
+        /// <summary>
+        /// Colon tokenization.
+        /// </summary>
         [Fact]
         public void GetNextToken_ReturnsColonToken()
         {
