@@ -546,7 +546,8 @@ namespace MinImpLangComp.Tests
 
 
         /////// ILGeneratorRunner.cs with statements here : //////
-        
+
+        #region Helper
         /// <summary>
         /// Captures <see cref="Console.Out"/> while executing provided action and returns the trimmed output.
         /// </summary>
@@ -565,6 +566,7 @@ namespace MinImpLangComp.Tests
             }
             return writer.ToString().Trim();
         }
+        #endregion
 
         /// <summary>
         /// bind x:int = 123; should not throw.

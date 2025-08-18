@@ -97,6 +97,7 @@ namespace MinImpLangComp.Tests
             throw new DirectoryNotFoundException("Directory 'samples' was not found");
         }
 
+        #region Helper
         /// <summary>
         /// Runs the CLI entry point with given args and optional stdin, capturing stdout.
         /// Also inject the 'MINIMPLANGCOMP_SAMPLES_DIR' env var so the LCI resolves samples deterministically.
@@ -129,6 +130,7 @@ namespace MinImpLangComp.Tests
                 Environment.SetEnvironmentVariable("MINIMPLANG_SAMPLES_DIR", originalEnv);
             }
         }
+        #endregion
 
         [Fact]
         public void SamplesCommand_ListFiles()
