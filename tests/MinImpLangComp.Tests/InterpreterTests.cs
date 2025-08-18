@@ -535,15 +535,23 @@ namespace MinImpLangComp.Tests
         public void Evaluate_FunctionCall_Input_ReadsUserInput()
         {
             var interp = new Interpreter();
-            var result1 = WithStdin("123\n", () =>
-                interp.Evaluate(new FunctionCall("input", new List<Expression>()))
-            );
+            object? result1 = null;
+            CaptureOut(() =>
+            {
+                result1 = WithStdin("123\n", () =>
+                    interp.Evaluate(new FunctionCall("input", new List<Expression>()))
+                );
+            });
 
             Assert.Equal(123, result1);
 
-            var result2 = WithStdin("hello world\n", () =>
-                interp.Evaluate(new FunctionCall("input", new List<Expression>()))
-            );
+            object? result2 = null;
+            CaptureOut(() =>
+            {
+                result2 = WithStdin("hello world\n", () =>
+                    interp.Evaluate(new FunctionCall("input", new List<Expression>()))
+                );
+            });
 
             Assert.Equal("hello world", result2);
         }
