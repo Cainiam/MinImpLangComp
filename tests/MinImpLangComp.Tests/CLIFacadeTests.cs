@@ -1,13 +1,21 @@
-﻿using Microsoft.VisualStudio.TestPlatform.TestHost;
-using MinImpLangComp.Facade;
+﻿using MinImpLangComp.Facade;
 using Xunit;
 
 namespace MinImpLangComp.Tests
 {
+    /// <summary>
+    /// Tests that exercise the facade against real sample files (no CLI involved here).
+    /// </summary>
     public class CLIFacadeTests
     {
+        /// <summary>
+        /// Normalizes newlines to '\n' to make assertions platform-agnostic.
+        /// </summary>
         private static string Normalize(string s) => s.Replace("\r\n", "\n").Replace("\r", "\n");
 
+        /// <summary>
+        /// Walks up for AppContext.BaseDirectory to find the 'samples' directory.
+        /// </summary>
         private static string FindSamplesDir()
         {
             var dir = new DirectoryInfo(AppContext.BaseDirectory);
@@ -20,6 +28,10 @@ namespace MinImpLangComp.Tests
             throw new DirectoryNotFoundException("Directory 'samples' was not found");
         }
 
+        /// <summary>
+        /// Loads a sample file's source text by name for the discovered 'samples' folder
+        /// </summary>
+        /// <param name="fileName"></param>
         private static string LoadSample(string fileName)
         {
             var samples = FindSamplesDir();
@@ -28,12 +40,20 @@ namespace MinImpLangComp.Tests
             return File.ReadAllText(path);
         }
 
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+        
+
         [Fact]
         public void HelloSample_PrintsHello()
         {
+            // Arange
             var source = LoadSample("hello.milc");
+
+            // Act
             var output = CompilerFacade.Run(source);
 
+            //Assert
             Assert.Equal("Hello!\n", Normalize(output));
         }
 
@@ -56,9 +76,15 @@ namespace MinImpLangComp.Tests
         }
     }
 
+    /// <summary>
+    /// CLI-level tests: execute Program.Main with arguments while capturing stdio.
+    /// </summary>
     [Collection("ConsoleSerial")]
     public class CLIFacadeCommandsTests
     {
+        /// <summary>
+        /// Walks up for AppContext.BaseDirectory to find the 'samples' directory.
+        /// </summary>
         private static string FindSamplesDir()
         {
             var dir = new DirectoryInfo(AppContext.BaseDirectory);
@@ -71,23 +97,33 @@ namespace MinImpLangComp.Tests
             throw new DirectoryNotFoundException("Directory 'samples' was not found");
         }
 
+        /// <summary>
+        /// Runs the CLI entry point with given args and optional stdin, capturing stdout.
+        /// Also inject the 'MINIMPLANGCOMP_SAMPLES_DIR' env var so the LCI resolves samples deterministically.
+        /// </summary>
         private static string CaptureConsole(string[] args,  out int exitCode, string? stdin = null)
         {
             var originalIn = Console.In;
             var originalOut = Console.Out;
-            var originalEnv = Environment.GetEnvironmentVariable("MINIMPLANG_SAMPLES_DIR");
+            const string EnvName = "MINIMPLANGCOMP_SAMPLES_DIR";
+            var originalEnv = Environment.GetEnvironmentVariable(EnvName);
             try
             {
-                Environment.SetEnvironmentVariable("MINIMPLANG_SAMPLES_DIR", FindSamplesDir());
+                Environment.SetEnvironmentVariable(EnvName, FindSamplesDir());
                 if (stdin != null) Console.SetIn(new StringReader(stdin));
                 using var sw = new StringWriter();
                 Console.SetOut(sw);
+
+                // Execute the CLI entry point
                 int code = CLI.Program.Main(args);
                 exitCode = code;
+
+                // Normalize newlines + trim trailing newline to simplify assertions
                 return sw.ToString().Replace("\r\n", "\n").Replace("\r", "\n").TrimEnd('\n');
             }
             finally
             {
+                // Restore console + environment
                 Console.SetIn(originalIn);
                 Console.SetOut(originalOut);
                 Environment.SetEnvironmentVariable("MINIMPLANG_SAMPLES_DIR", originalEnv);
@@ -97,9 +133,11 @@ namespace MinImpLangComp.Tests
         [Fact]
         public void SamplesCommand_ListFiles()
         {
+            // Act
             int code;
             var stdout = CaptureConsole(new[] { "samples" }, out code);
 
+            // Assert
             Assert.Equal(0, code);
             Assert.Contains("hello.milc", stdout);
             Assert.Contains("ret.milc", stdout);
@@ -119,11 +157,14 @@ namespace MinImpLangComp.Tests
         [Fact]
         public void RunPick_Interactive_ChoosesFirstAndRuns()
         {
+            // Simulate choosing index 1 (pressing "1" then Enter).
             int code;
             var stdout = CaptureConsole(new[] { "run", "--pick" }, out code, stdin: "1\n");
 
             Assert.Equal(0, code);
 
+            // Extract the payload after the pickerUI.
+            // Strategy: take substring after the last colon (if any), otherwise fallback to last non-empty line.
             var afterColonIdx = stdout.LastIndexOf(':');
             string payload;
             if (afterColonIdx >= 0 && afterColonIdx + 1 < stdout.Length) payload = stdout.Substring(afterColonIdx + 1).Trim();
@@ -133,7 +174,7 @@ namespace MinImpLangComp.Tests
                 payload = lines.Length > 0 ? lines[^1].Trim() : "";
             }
 
-            Assert.True(payload == "Hello!" || payload == "8" || payload == "12", $"Unexpected output for --pick '{stdout}' (extracted payloard: '{payload}')");
+            Assert.True(payload == "Hello!" || payload == "8" || payload == "12", $"Unexpected output for --pick '{stdout}' (extracted payload: '{payload}')");
         }
     }
 }
